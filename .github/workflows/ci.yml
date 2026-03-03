@@ -175,14 +175,14 @@ jobs:
           key: trivy-db-${{ github.run_id }}
           restore-keys: trivy-db-
       - name: Scan server image
-        uses: aquasecurity/trivy-action@0.34.0
+        uses: aquasecurity/trivy-action@0.34.2
         with:
           image-ref: ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
           exit-code: '0'
           severity: CRITICAL,HIGH
           cache-dir: /tmp/trivy-cache
       - name: Scan client image
-        uses: aquasecurity/trivy-action@0.34.0
+        uses: aquasecurity/trivy-action@0.34.2
         with:
           image-ref: ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}
           exit-code: '0'
