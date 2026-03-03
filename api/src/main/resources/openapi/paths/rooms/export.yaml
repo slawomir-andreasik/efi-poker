@@ -1,0 +1,14 @@
+get:
+  operationId: exportResults
+  tags: [rooms]
+  summary: Export results as CSV
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  responses:
+    '200':
+      description: CSV export
+      content:
+        text/csv:
+          schema:
+            type: string

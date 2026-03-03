@@ -1,0 +1,23 @@
+post:
+  operationId: login
+  tags: [auth]
+  summary: Admin login (local)
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/LoginRequest.yaml'
+  responses:
+    '200':
+      description: JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/AuthResponse.yaml'
+    '401':
+      description: Authentication required
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

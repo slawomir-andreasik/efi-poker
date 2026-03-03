@@ -1,0 +1,9 @@
+type: object
+properties:
+  participantId:
+    type: string
+    format: uuid
+  nickname:
+    type: string
+  hasVoted:
+    type: boolean

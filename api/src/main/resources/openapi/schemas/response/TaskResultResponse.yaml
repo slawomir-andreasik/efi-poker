@@ -1,0 +1,19 @@
+type: object
+properties:
+  taskId:
+    type: string
+    format: uuid
+  title:
+    type: string
+  estimates:
+    type: array
+    items:
+      $ref: './EstimateResponse.yaml'
+  averagePoints:
+    type: number
+    format: double
+  medianPoints:
+    type: number
+    format: double
+  finalEstimate:
+    type: string

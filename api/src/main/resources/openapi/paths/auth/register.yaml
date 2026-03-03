@@ -1,0 +1,36 @@
+post:
+  operationId: register
+  tags: [auth]
+  summary: Register a new user account
+  description: Creates a new local user account. Returns JWT token on success. Requires registration to be enabled on the server.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/RegisterRequest.yaml'
+  responses:
+    '201':
+      description: User registered successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/AuthResponse.yaml'
+    '400':
+      description: Validation error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ValidationErrorResponse.yaml'
+    '403':
+      description: Registration is disabled on this server
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '409':
+      description: Username already taken
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

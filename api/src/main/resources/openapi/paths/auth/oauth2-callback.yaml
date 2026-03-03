@@ -1,0 +1,49 @@
+get:
+  operationId: oauth2Callback
+  tags: [auth]
+  summary: Auth0 OAuth2 callback
+  description: >
+    Callback endpoint for Auth0 after successful authentication.
+    Exchanges authorization code for tokens, finds or creates the user,
+    issues an application JWT, and redirects back to the frontend.
+  security: []
+  parameters:
+    - name: code
+      in: query
+      description: Authorization code returned by Auth0
+      required: false
+      schema:
+        type: string
+    - name: state
+      in: query
+      description: State parameter for CSRF protection validation
+      required: false
+      schema:
+        type: string
+    - name: error
+      in: query
+      description: Error code if the user denies authentication
+      required: false
+      schema:
+        type: string
+  responses:
+    '302':
+      description: Redirect to frontend with JWT token in query parameter
+      headers:
+        Location:
+          description: Frontend URL with JWT token (e.g. /auth/callback?token=eyJ...)
+          schema:
+            type: string
+            format: uri
+    '400':
+      description: Bad request (missing code or state mismatch)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '401':
+      description: Authentication failed (invalid or expired code)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

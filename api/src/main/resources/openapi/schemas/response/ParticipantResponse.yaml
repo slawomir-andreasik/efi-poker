@@ -1,0 +1,16 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  nickname:
+    type: string
+  invitedRoomIds:
+    type: array
+    items:
+      type: string
+      format: uuid
+    description: Rooms this participant can access. Empty array means project-wide access.
+  createdAt:
+    type: string
+    format: date-time

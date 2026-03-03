@@ -1,0 +1,13 @@
+type: object
+properties:
+  roomId:
+    type: string
+    format: uuid
+  roomTitle:
+    type: string
+  roomSlug:
+    type: string
+  projectSlug:
+    type: string
+  projectName:
+    type: string

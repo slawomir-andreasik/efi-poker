@@ -1,0 +1,63 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: "participants-001-create"
+      author: "sandreasik"
+      comment: "Create participants table"
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE participants (
+                id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                nickname   VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT now(),
+                UNIQUE(project_id, nickname)
+              );
+      rollback:
+        - sql:
+            sql: "DROP TABLE IF EXISTS participants;"
+
+  - changeSet:
+      id: "participants-002-add-user-id"
+      author: "sandreasik"
+      comment: "Add user_id FK to link participants to user accounts"
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE participants ADD COLUMN user_id UUID REFERENCES users(id);
+              CREATE INDEX idx_participants_user_id ON participants(user_id);
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS idx_participants_user_id;
+              ALTER TABLE participants DROP COLUMN IF EXISTS user_id;
+
+  - changeSet:
+      id: "participants-003-room-access"
+      author: "sandreasik"
+      comment: "Join table for room-scoped participant access. Empty set means project-wide."
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE participant_room_access (
+                participant_id UUID NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
+                room_id        UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+                PRIMARY KEY (participant_id, room_id)
+              );
+              CREATE INDEX idx_pra_room ON participant_room_access(room_id);
+      rollback:
+        - sql:
+            sql: "DROP TABLE IF EXISTS participant_room_access;"
+
+  - changeSet:
+      id: "participants-004-fk-indexes"
+      author: "sandreasik"
+      comment: "Add project_id index for single-column lookups"
+      changes:
+        - sql:
+            sql: |
+              CREATE INDEX idx_participants_project_id ON participants(project_id);
+      rollback:
+        - sql:
+            sql: "DROP INDEX IF EXISTS idx_participants_project_id;"

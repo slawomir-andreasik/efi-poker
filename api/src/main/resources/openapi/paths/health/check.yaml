@@ -1,0 +1,12 @@
+get:
+  operationId: healthCheck
+  tags: [health]
+  summary: Health check
+  description: Returns application health status. No authentication required.
+  responses:
+    '200':
+      description: Application is healthy
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/HealthResponse.yaml'

@@ -1,0 +1,30 @@
+type: object
+properties:
+  roomId:
+    type: string
+    format: uuid
+  slug:
+    type: string
+    description: Human-readable room code (e.g. A3X-K7B)
+  title:
+    type: string
+  topic:
+    type: string
+  status:
+    $ref: '../enums/RoomStatus.yaml'
+  roundNumber:
+    type: integer
+  questionVotesCount:
+    type: integer
+  taskId:
+    type: string
+    format: uuid
+    description: Phantom task ID for submitting estimates
+  myEstimate:
+    $ref: './EstimateResponse.yaml'
+  participants:
+    type: array
+    items:
+      $ref: './LiveParticipantStatus.yaml'
+  results:
+    $ref: './LiveRoomResults.yaml'

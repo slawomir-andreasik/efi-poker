@@ -1,0 +1,30 @@
+patch:
+  operationId: updateTask
+  tags: [tasks]
+  summary: Update a task
+  parameters:
+    - $ref: '../../parameters/TaskIdPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/UpdateTaskRequest.yaml'
+  responses:
+    '200':
+      description: Task updated
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/TaskResponse.yaml'
+delete:
+  operationId: deleteTask
+  tags: [tasks]
+  summary: Delete a task
+  parameters:
+    - $ref: '../../parameters/TaskIdPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  responses:
+    '204':
+      description: Task deleted

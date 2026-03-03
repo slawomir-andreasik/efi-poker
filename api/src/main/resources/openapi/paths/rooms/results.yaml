@@ -1,0 +1,15 @@
+get:
+  operationId: getRoomResults
+  tags: [rooms]
+  summary: Get full results (only if REVEALED/CLOSED)
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+  responses:
+    '200':
+      description: Full results
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/RoomResultsResponse.yaml'
+    '403':
+      description: Not yet revealed

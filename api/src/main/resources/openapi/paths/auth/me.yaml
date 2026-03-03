@@ -1,0 +1,13 @@
+get:
+  operationId: getCurrentUser
+  tags: [auth]
+  summary: Get current authenticated user
+  security:
+    - bearerAuth: []
+  responses:
+    '200':
+      description: User profile
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/UserResponse.yaml'

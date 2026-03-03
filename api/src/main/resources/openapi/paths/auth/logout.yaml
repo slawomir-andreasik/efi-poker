@@ -1,0 +1,18 @@
+get:
+  operationId: logout
+  tags: [auth]
+  summary: Logout and clear session
+  description: >
+    Invalidates the server-side session and redirects to Auth0 federated
+    logout (if enabled) or directly to the frontend.
+    The frontend should navigate the window directly to this endpoint (not fetch/XHR).
+  security: []
+  responses:
+    '302':
+      description: Redirect to Auth0 logout or frontend
+      headers:
+        Location:
+          description: Logout redirect URL
+          schema:
+            type: string
+            format: uri

@@ -1,0 +1,49 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: "tasks-001-create"
+      author: "sandreasik"
+      comment: "Create tasks table"
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE tasks (
+                id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                room_id    UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+                title      VARCHAR(255) NOT NULL,
+                description TEXT,
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP NOT NULL DEFAULT now()
+              );
+              CREATE INDEX idx_tasks_room ON tasks(room_id);
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS idx_tasks_room;
+              DROP TABLE IF EXISTS tasks;
+
+  - changeSet:
+      id: "tasks-002-add-final-estimate"
+      author: "sandreasik"
+      comment: "Admin can set consensus story points after team reveal"
+      changes:
+        - sql:
+            sql: "ALTER TABLE tasks ADD COLUMN final_estimate VARCHAR(10);"
+      rollback:
+        - sql:
+            sql: "ALTER TABLE tasks DROP COLUMN final_estimate;"
+
+  - changeSet:
+      id: "tasks-003-live-mode-columns"
+      author: "sandreasik"
+      comment: "Live mode: per-task reveal flag and active-task indicator"
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE tasks ADD COLUMN revealed BOOLEAN NOT NULL DEFAULT false;
+              ALTER TABLE tasks ADD COLUMN active BOOLEAN NOT NULL DEFAULT false;
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE tasks DROP COLUMN active;
+              ALTER TABLE tasks DROP COLUMN revealed;

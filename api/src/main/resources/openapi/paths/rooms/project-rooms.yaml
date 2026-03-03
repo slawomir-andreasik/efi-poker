@@ -1,0 +1,42 @@
+post:
+  operationId: createRoom
+  tags: [rooms]
+  summary: Create a room
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/CreateRoomRequest.yaml'
+  responses:
+    '201':
+      description: Room created
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/RoomResponse.yaml'
+    '403':
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+get:
+  operationId: listRooms
+  tags: [rooms]
+  summary: List rooms for project
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+    - $ref: '../../parameters/ParticipantIdHeader.yaml'
+  responses:
+    '200':
+      description: List of rooms
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../../schemas/response/RoomResponse.yaml'

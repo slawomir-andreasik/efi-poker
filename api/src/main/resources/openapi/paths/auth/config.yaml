@@ -1,0 +1,12 @@
+get:
+  operationId: getAuthConfig
+  tags: [auth]
+  summary: Get authentication configuration
+  description: Returns feature flags for authentication methods (e.g. whether Auth0 OAuth2 is enabled).
+  responses:
+    '200':
+      description: Auth configuration
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/AuthConfigResponse.yaml'

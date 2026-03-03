@@ -1,0 +1,20 @@
+put:
+  operationId: setFinalEstimate
+  tags: [tasks]
+  summary: Set or update the final agreed story points for a task
+  parameters:
+    - $ref: '../../parameters/TaskIdPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/SetFinalEstimateRequest.yaml'
+  responses:
+    '200':
+      description: Final estimate set
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/TaskResponse.yaml'

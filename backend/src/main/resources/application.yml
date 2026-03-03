@@ -1,0 +1,81 @@
+spring:
+  application:
+    name: efi-poker
+
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:efipoker}
+    username: ${POSTGRES_USER:efipoker}
+    password: ${POSTGRES_PASSWORD:changeme}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    enabled: true
+
+  docker:
+    compose:
+      file: ${COMPOSE_FILE:docker-compose.yml}
+      lifecycle-management: start_only
+
+  jackson2:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  url: ${APP_URL:http://localhost:5173}
+  auth0:
+    enabled: ${AUTH0_ENABLED:false}
+    domain: ${AUTH0_DOMAIN:disabled}
+    client-id: ${AUTH0_CLIENT_ID:disabled}
+    client-secret: ${AUTH0_CLIENT_SECRET:disabled}
+  cors:
+    origins: ${CORS_ORIGINS:http://localhost:5173}
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-change-in-production-must-be-at-least-64-chars-long-for-hs512}
+    expiration: ${JWT_EXPIRATION:86400}
+  registration:
+    enabled: ${REGISTRATION_ENABLED:true}
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD:changeme}
+  rate-limit:
+    max-requests: ${RATE_LIMIT_MAX:60}
+    read-max-requests: ${RATE_LIMIT_READ_MAX:300}
+    window-seconds: ${RATE_LIMIT_WINDOW:10}
+
+logging:
+  level:
+    com.andreasik.efipoker: DEBUG
+    io.opentelemetry.exporter.internal.http.HttpExporter: "OFF"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLE_RATE:1.0}
+  opentelemetry:
+    tracing:
+      export:
+        endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  metrics:
+    tags:
+      application: efi-poker
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true

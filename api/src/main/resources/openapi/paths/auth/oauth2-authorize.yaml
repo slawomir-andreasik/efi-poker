@@ -1,0 +1,17 @@
+get:
+  operationId: oauth2Authorize
+  tags: [auth]
+  summary: Initiate Auth0 OAuth2 login
+  description: >
+    Redirects the browser to the Auth0 Universal Login page.
+    The frontend should navigate the window directly to this endpoint (not fetch/XHR).
+  security: []
+  responses:
+    '302':
+      description: Redirect to Auth0 authorization URL
+      headers:
+        Location:
+          description: Auth0 authorization URL
+          schema:
+            type: string
+            format: uri

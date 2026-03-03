@@ -1,0 +1,27 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  slug:
+    type: string
+    description: Human-readable room code (e.g. A3X-K7B)
+  title:
+    type: string
+  description:
+    type: string
+  roomType:
+    $ref: '../enums/RoomType.yaml'
+  deadline:
+    type: string
+    format: date-time
+  status:
+    $ref: '../enums/RoomStatus.yaml'
+  topic:
+    type: string
+  roundNumber:
+    type: integer
+  tasks:
+    type: array
+    items:
+      $ref: './TaskWithEstimateResponse.yaml'

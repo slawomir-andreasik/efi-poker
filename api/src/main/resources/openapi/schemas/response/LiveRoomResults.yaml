@@ -1,0 +1,12 @@
+type: object
+properties:
+  estimates:
+    type: array
+    items:
+      $ref: './EstimateResponse.yaml'
+  averagePoints:
+    type: number
+    format: double
+  medianPoints:
+    type: number
+    format: double

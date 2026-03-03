@@ -1,0 +1,105 @@
+openapi: 3.0.3
+info:
+  title: EFI Poker API
+  description: Sprint Planning Poker for Scrum teams
+  version: 1.0.0
+  contact:
+    name: Sandro Andreasik
+servers:
+  - url: /api/v1
+    description: API base path
+
+tags:
+  - name: health
+    description: Health check
+  - name: projects
+    description: Project management
+  - name: rooms
+    description: Estimation rooms
+  - name: tasks
+    description: Tasks within rooms
+  - name: estimates
+    description: Story point estimates
+  - name: participants
+    description: Project participants
+  - name: auth
+    description: Authentication
+  - name: admin
+    description: Admin user management
+
+paths:
+  /health:
+    $ref: './paths/health/check.yaml'
+  /projects:
+    $ref: './paths/projects/create.yaml'
+  /projects/{slug}:
+    $ref: './paths/projects/get-by-slug.yaml'
+  /projects/{slug}/admin:
+    $ref: './paths/projects/get-admin.yaml'
+  /projects/{slug}/rooms:
+    $ref: './paths/rooms/project-rooms.yaml'
+  /projects/{slug}/participants:
+    $ref: './paths/participants/join.yaml'
+  /projects/{slug}/participants/{participantId}:
+    $ref: './paths/participants/get-by-id.yaml'
+  /rooms/by-slug/{roomSlug}:
+    $ref: './paths/rooms/room-by-slug.yaml'
+  /rooms/{roomId}:
+    $ref: './paths/rooms/room.yaml'
+  /rooms/{roomId}/admin:
+    $ref: './paths/rooms/get-admin.yaml'
+  /rooms/{roomId}/reveal:
+    $ref: './paths/rooms/reveal.yaml'
+  /rooms/{roomId}/reopen:
+    $ref: './paths/rooms/reopen.yaml'
+  /rooms/{roomId}/progress:
+    $ref: './paths/rooms/progress.yaml'
+  /rooms/{roomId}/results:
+    $ref: './paths/rooms/results.yaml'
+  /rooms/{roomId}/results/export:
+    $ref: './paths/rooms/export.yaml'
+  /rooms/{roomId}/tasks:
+    $ref: './paths/tasks/create.yaml'
+  /rooms/{roomId}/tasks/import:
+    $ref: './paths/tasks/import.yaml'
+  /rooms/{roomId}/live:
+    $ref: './paths/rooms/live-state.yaml'
+  /rooms/{roomId}/new-round:
+    $ref: './paths/rooms/new-round.yaml'
+  /rooms/{roomId}/history:
+    $ref: './paths/rooms/history.yaml'
+  /tasks/{taskId}:
+    $ref: './paths/tasks/task.yaml'
+  /tasks/{taskId}/final-estimate:
+    $ref: './paths/tasks/final-estimate.yaml'
+  /tasks/{taskId}/estimates:
+    $ref: './paths/estimates/submit.yaml'
+  /auth/config:
+    $ref: './paths/auth/config.yaml'
+  /auth/register:
+    $ref: './paths/auth/register.yaml'
+  /auth/login:
+    $ref: './paths/auth/login.yaml'
+  /auth/me:
+    $ref: './paths/auth/me.yaml'
+  /auth/me/projects:
+    $ref: './paths/auth/me-projects.yaml'
+  /auth/me/participated-projects:
+    $ref: './paths/auth/me-participated-projects.yaml'
+  /auth/oauth2/authorize:
+    $ref: './paths/auth/oauth2-authorize.yaml'
+  /auth/oauth2/callback:
+    $ref: './paths/auth/oauth2-callback.yaml'
+  /auth/logout:
+    $ref: './paths/auth/logout.yaml'
+  /admin/users:
+    $ref: './paths/admin/users.yaml'
+  /admin/users/{id}:
+    $ref: './paths/admin/users-id.yaml'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

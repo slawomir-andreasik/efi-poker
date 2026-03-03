@@ -1,0 +1,46 @@
+get:
+  operationId: getRoom
+  tags: [rooms]
+  summary: Get room with tasks and own estimates
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+    - $ref: '../../parameters/ParticipantIdHeader.yaml'
+  responses:
+    '200':
+      description: Room details
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/RoomDetailResponse.yaml'
+    '404':
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+patch:
+  operationId: updateRoom
+  tags: [rooms]
+  summary: Update room
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/UpdateRoomRequest.yaml'
+  responses:
+    '200':
+      description: Updated room
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/RoomResponse.yaml'
+    '403':
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

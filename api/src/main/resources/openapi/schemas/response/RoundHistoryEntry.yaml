@@ -1,0 +1,24 @@
+type: object
+properties:
+  roundNumber:
+    type: integer
+  topic:
+    type: string
+    nullable: true
+  averagePts:
+    type: number
+    format: double
+    nullable: true
+  medianPts:
+    type: number
+    format: double
+    nullable: true
+  voteCount:
+    type: integer
+  votes:
+    type: array
+    items:
+      $ref: './RoundHistoryVote.yaml'
+  completedAt:
+    type: string
+    format: date-time

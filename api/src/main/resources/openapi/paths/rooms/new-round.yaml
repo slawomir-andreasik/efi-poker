@@ -1,0 +1,32 @@
+post:
+  operationId: newRound
+  tags: [rooms]
+  summary: Start a new round in a Live room (clears estimates, reopens)
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  requestBody:
+    required: false
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/NewRoundRequest.yaml'
+  responses:
+    '200':
+      description: New round started
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/LiveRoomStateResponse.yaml'
+    '403':
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '409':
+      description: Room is not LIVE type
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

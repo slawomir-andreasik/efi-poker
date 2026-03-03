@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+  <!-- Dev profile: human-readable colored console with traceId/spanId -->
+  <springProfile name="!prod">
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder>
+        <pattern>%clr(%d{HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%X{traceId:-}/%X{spanId:-}]){magenta} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx</pattern>
+      </encoder>
+    </appender>
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+    <logger name="com.andreasik.efipoker" level="DEBUG"/>
+  </springProfile>
+
+  <!-- Prod profile: JSON structured logging via Logstash encoder -->
+  <springProfile name="prod">
+    <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <includeMdcKeyName>traceId</includeMdcKeyName>
+        <includeMdcKeyName>spanId</includeMdcKeyName>
+        <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+          <rootCauseFirst>true</rootCauseFirst>
+          <maxDepthPerThrowable>20</maxDepthPerThrowable>
+        </throwableConverter>
+      </encoder>
+    </appender>
+
+    <root level="WARN">
+      <appender-ref ref="JSON"/>
+    </root>
+    <logger name="com.andreasik.efipoker" level="INFO"/>
+  </springProfile>
+
+</configuration>

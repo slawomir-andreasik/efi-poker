@@ -1,0 +1,13 @@
+type: object
+properties:
+  taskId:
+    type: string
+    format: uuid
+  title:
+    type: string
+  votedCount:
+    type: integer
+  questionVotesCount:
+    type: integer
+  totalParticipants:
+    type: integer

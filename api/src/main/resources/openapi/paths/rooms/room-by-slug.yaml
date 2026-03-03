@@ -1,0 +1,19 @@
+get:
+  operationId: getRoomBySlug
+  tags: [rooms]
+  summary: Look up room by slug code
+  parameters:
+    - $ref: '../../parameters/RoomSlugPath.yaml'
+  responses:
+    '200':
+      description: Room lookup result
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/RoomSlugResponse.yaml'
+    '404':
+      description: Room not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

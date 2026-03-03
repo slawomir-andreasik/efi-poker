@@ -1,0 +1,11 @@
+type: object
+required: [nickname]
+properties:
+  nickname:
+    type: string
+    minLength: 1
+    maxLength: 100
+  roomId:
+    type: string
+    format: uuid
+    description: When provided, adds access to this room. Multiple room joins accumulate access. Project-wide join (no roomId) clears room restrictions.

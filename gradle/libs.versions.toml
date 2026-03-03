@@ -1,0 +1,32 @@
+[versions]
+spring-boot = "4.0.3"
+openapi-generator = "7.20.0"
+mapstruct = "1.6.3"
+testcontainers = "2.0.3"
+spotless = "8.2.0"
+lombok = "1.18.40"
+swagger-annotations = "2.2.37"
+spring-modulith = "2.0.3"
+hibernate-orm = "7.2.4.Final"
+jacoco = "0.8.14"
+archunit = "1.4.1"
+logstash-logback = "8.1"
+lombok-mapstruct-binding = "0.2.0"
+
+[libraries]
+mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
+mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+lombok-mapstruct-binding = { module = "org.projectlombok:lombok-mapstruct-binding", version.ref = "lombok-mapstruct-binding" }
+testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
+archunit = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
+logstash-logback = { module = "net.logstash.logback:logstash-logback-encoder", version.ref = "logstash-logback" }
+swagger-annotations = { module = "io.swagger.core.v3:swagger-annotations", version.ref = "swagger-annotations" }
+spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-bom", version.ref = "spring-modulith" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator" }
+hibernate-orm = { id = "org.hibernate.orm", version.ref = "hibernate-orm" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

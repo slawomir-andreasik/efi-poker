@@ -1,0 +1,26 @@
+get:
+  operationId: getProjectAdmin
+  tags: [projects]
+  summary: Get project with admin data
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  responses:
+    '200':
+      description: Project admin info
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/ProjectAdminResponse.yaml'
+    '403':
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '404':
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

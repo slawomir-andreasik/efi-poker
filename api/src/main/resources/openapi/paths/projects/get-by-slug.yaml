@@ -1,0 +1,73 @@
+get:
+  operationId: getProjectBySlug
+  tags: [projects]
+  summary: Get project info
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+  responses:
+    '200':
+      description: Project info
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/ProjectResponse.yaml'
+    '404':
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+patch:
+  operationId: updateProject
+  tags: [projects]
+  summary: Update project (admin)
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/UpdateProjectRequest.yaml'
+  responses:
+    '200':
+      description: Updated project
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/ProjectAdminResponse.yaml'
+    '403':
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '404':
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+delete:
+  operationId: deleteProject
+  tags: [projects]
+  summary: Delete project and all associated data (admin)
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  responses:
+    '204':
+      description: Project deleted
+    '403':
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '404':
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

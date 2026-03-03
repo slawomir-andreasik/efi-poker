@@ -1,0 +1,2679 @@
+openapi: 3.0.3
+info:
+  contact:
+    name: Sandro Andreasik
+  description: Sprint Planning Poker for Scrum teams
+  title: EFI Poker API
+  version: 1.0.0
+servers:
+- description: API base path
+  url: /api/v1
+tags:
+- description: Health check
+  name: health
+- description: Project management
+  name: projects
+- description: Estimation rooms
+  name: rooms
+- description: Tasks within rooms
+  name: tasks
+- description: Story point estimates
+  name: estimates
+- description: Project participants
+  name: participants
+- description: Authentication
+  name: auth
+- description: Admin user management
+  name: admin
+paths:
+  /health:
+    get:
+      description: Returns application health status. No authentication required.
+      operationId: healthCheck
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+          description: Application is healthy
+      summary: Health check
+      tags:
+      - health
+  /projects:
+    post:
+      operationId: createProject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProjectRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectAdminResponse"
+          description: Project created
+      summary: Create a new project
+      tags:
+      - projects
+  /projects/{slug}:
+    delete:
+      operationId: deleteProject
+      parameters:
+      - in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Project deleted
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Resource not found
+      summary: Delete project and all associated data (admin)
+      tags:
+      - projects
+    get:
+      operationId: getProjectBySlug
+      parameters:
+      - in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectResponse"
+          description: Project info
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Resource not found
+      summary: Get project info
+      tags:
+      - projects
+    patch:
+      operationId: updateProject
+      parameters:
+      - in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProjectRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectAdminResponse"
+          description: Updated project
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Resource not found
+      summary: Update project (admin)
+      tags:
+      - projects
+  /projects/{slug}/admin:
+    get:
+      operationId: getProjectAdmin
+      parameters:
+      - in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectAdminResponse"
+          description: Project admin info
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Resource not found
+      summary: Get project with admin data
+      tags:
+      - projects
+  /projects/{slug}/rooms:
+    get:
+      operationId: listRooms
+      parameters:
+      - in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      - in: header
+        name: X-Participant-Id
+        required: false
+        schema:
+          format: uuid
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/RoomResponse"
+                type: array
+          description: List of rooms
+      summary: List rooms for project
+      tags:
+      - rooms
+    post:
+      operationId: createRoom
+      parameters:
+      - in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoomRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomResponse"
+          description: Room created
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+      summary: Create a room
+      tags:
+      - rooms
+  /projects/{slug}/participants:
+    get:
+      operationId: listProjectParticipants
+      parameters:
+      - in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/ParticipantResponse"
+                type: array
+          description: List of participants
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Resource not found
+      summary: List project participants (admin only)
+      tags:
+      - participants
+    post:
+      operationId: joinProject
+      parameters:
+      - in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinProjectRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParticipantResponse"
+          description: Participant info
+      summary: Join project (create/get participant by nickname)
+      tags:
+      - participants
+  /projects/{slug}/participants/{participantId}:
+    delete:
+      operationId: deleteParticipant
+      parameters:
+      - in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: participantId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Participant deleted
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Participant not found
+      summary: Delete participant (admin only)
+      tags:
+      - participants
+    get:
+      operationId: getParticipant
+      parameters:
+      - in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: participantId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParticipantResponse"
+          description: Participant info
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Participant not found
+      summary: Get participant by ID (magic link validation)
+      tags:
+      - participants
+    patch:
+      operationId: updateParticipant
+      parameters:
+      - in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: participantId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Participant-Id
+        required: false
+        schema:
+          format: uuid
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateParticipantRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParticipantResponse"
+          description: Updated participant
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Not allowed to update this participant
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Participant not found
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Nickname already taken in this project
+      summary: Update participant nickname (self-service)
+      tags:
+      - participants
+  /rooms/by-slug/{roomSlug}:
+    get:
+      operationId: getRoomBySlug
+      parameters:
+      - in: path
+        name: roomSlug
+        required: true
+        schema:
+          pattern: "^[A-Z0-9]{3}-[A-Z0-9]{3}$"
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomSlugResponse"
+          description: Room lookup result
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Room not found
+      summary: Look up room by slug code
+      tags:
+      - rooms
+  /rooms/{roomId}:
+    get:
+      operationId: getRoom
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Participant-Id
+        required: false
+        schema:
+          format: uuid
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomDetailResponse"
+          description: Room details
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Resource not found
+      summary: Get room with tasks and own estimates
+      tags:
+      - rooms
+    patch:
+      operationId: updateRoom
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoomRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomResponse"
+          description: Updated room
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+      summary: Update room
+      tags:
+      - rooms
+  /rooms/{roomId}/admin:
+    get:
+      operationId: getRoomAdmin
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomAdminResponse"
+          description: Room admin view
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+      summary: Get room with ALL estimates (admin)
+      tags:
+      - rooms
+  /rooms/{roomId}/reveal:
+    post:
+      operationId: revealEstimates
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomDetailResponse"
+          description: Estimates revealed
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+      summary: Force reveal all estimates
+      tags:
+      - rooms
+  /rooms/{roomId}/reopen:
+    post:
+      operationId: reopenRoom
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomDetailResponse"
+          description: Room reopened
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+      summary: Reopen a revealed or closed room
+      tags:
+      - rooms
+  /rooms/{roomId}/progress:
+    get:
+      operationId: getRoomProgress
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomProgressResponse"
+          description: Progress info
+      summary: Get voting progress (X/Y per task)
+      tags:
+      - rooms
+  /rooms/{roomId}/results:
+    get:
+      operationId: getRoomResults
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomResultsResponse"
+          description: Full results
+        "403":
+          description: Not yet revealed
+      summary: Get full results (only if REVEALED/CLOSED)
+      tags:
+      - rooms
+  /rooms/{roomId}/results/export:
+    get:
+      operationId: exportResults
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            text/csv:
+              schema:
+                type: string
+          description: CSV export
+      summary: Export results as CSV
+      tags:
+      - rooms
+  /rooms/{roomId}/tasks:
+    post:
+      operationId: createTask
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+          description: Task created
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+      summary: Create a task
+      tags:
+      - tasks
+  /rooms/{roomId}/tasks/import:
+    post:
+      operationId: importTasks
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportTasksRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/TaskResponse"
+                type: array
+          description: Tasks imported
+      summary: Bulk import tasks
+      tags:
+      - tasks
+  /rooms/{roomId}/live:
+    get:
+      operationId: getLiveRoomState
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Participant-Id
+        required: false
+        schema:
+          format: uuid
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LiveRoomStateResponse"
+          description: Live room state
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Room not found
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Room is not LIVE type
+      summary: Get live room state with participant vote statuses
+      tags:
+      - rooms
+  /rooms/{roomId}/new-round:
+    post:
+      operationId: newRound
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewRoundRequest"
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LiveRoomStateResponse"
+          description: New round started
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Room is not LIVE type
+      summary: "Start a new round in a Live room (clears estimates, reopens)"
+      tags:
+      - rooms
+  /rooms/{roomId}/history:
+    get:
+      description: Returns all completed (revealed) rounds with results. Only available
+        for LIVE rooms.
+      operationId: getRoundHistory
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/RoundHistoryEntry"
+                type: array
+          description: Round history entries ordered by round number ascending
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Room not found
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Room is not LIVE type
+      summary: Get round history for a live room
+      tags:
+      - rooms
+  /tasks/{taskId}:
+    delete:
+      operationId: deleteTask
+      parameters:
+      - in: path
+        name: taskId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Task deleted
+      summary: Delete a task
+      tags:
+      - tasks
+    patch:
+      operationId: updateTask
+      parameters:
+      - in: path
+        name: taskId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+          description: Task updated
+      summary: Update a task
+      tags:
+      - tasks
+  /tasks/{taskId}/final-estimate:
+    put:
+      operationId: setFinalEstimate
+      parameters:
+      - in: path
+        name: taskId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetFinalEstimateRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+          description: Final estimate set
+      summary: Set or update the final agreed story points for a task
+      tags:
+      - tasks
+  /tasks/{taskId}/estimates:
+    delete:
+      operationId: deleteEstimate
+      parameters:
+      - in: path
+        name: taskId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Participant-Id
+        required: false
+        schema:
+          format: uuid
+          type: string
+      responses:
+        "204":
+          description: Estimate removed
+      summary: Remove estimate (unvote)
+      tags:
+      - estimates
+    post:
+      operationId: submitEstimate
+      parameters:
+      - in: path
+        name: taskId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Participant-Id
+        required: false
+        schema:
+          format: uuid
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitEstimateRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstimateResponse"
+          description: Estimate submitted
+      summary: Submit or update estimate
+      tags:
+      - estimates
+  /auth/config:
+    get:
+      description: Returns feature flags for authentication methods (e.g. whether
+        Auth0 OAuth2 is enabled).
+      operationId: getAuthConfig
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthConfigResponse"
+          description: Auth configuration
+      summary: Get authentication configuration
+      tags:
+      - auth
+  /auth/register:
+    post:
+      description: Creates a new local user account. Returns JWT token on success.
+        Requires registration to be enabled on the server.
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+          description: User registered successfully
+        "400":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+          description: Validation error
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Registration is disabled on this server
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Username already taken
+      summary: Register a new user account
+      tags:
+      - auth
+  /auth/login:
+    post:
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+          description: JWT token
+        "401":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Authentication required
+      summary: Admin login (local)
+      tags:
+      - auth
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+          description: User profile
+      security:
+      - bearerAuth: []
+      summary: Get current authenticated user
+      tags:
+      - auth
+  /auth/me/projects:
+    get:
+      description: Returns all projects where the authenticated user is the owner.
+      operationId: getMyProjects
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/ProjectAdminResponse"
+                type: array
+          description: List of owned projects
+      security:
+      - bearerAuth: []
+      summary: Get projects owned by current user
+      tags:
+      - projects
+  /auth/me/participated-projects:
+    get:
+      description: Returns projects the authenticated user has joined as a participant.
+      operationId: getMyParticipatedProjects
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/ProjectResponse"
+                type: array
+          description: List of participated projects
+      security:
+      - bearerAuth: []
+      summary: Get projects where current user is a participant
+      tags:
+      - projects
+  /auth/oauth2/authorize:
+    get:
+      description: |
+        Redirects the browser to the Auth0 Universal Login page. The frontend should navigate the window directly to this endpoint (not fetch/XHR).
+      operationId: oauth2Authorize
+      responses:
+        "302":
+          description: Redirect to Auth0 authorization URL
+          headers:
+            Location:
+              description: Auth0 authorization URL
+              schema:
+                format: uri
+                type: string
+      security: []
+      summary: Initiate Auth0 OAuth2 login
+      tags:
+      - auth
+  /auth/oauth2/callback:
+    get:
+      description: |
+        Callback endpoint for Auth0 after successful authentication. Exchanges authorization code for tokens, finds or creates the user, issues an application JWT, and redirects back to the frontend.
+      operationId: oauth2Callback
+      parameters:
+      - description: Authorization code returned by Auth0
+        in: query
+        name: code
+        required: false
+        schema:
+          type: string
+      - description: State parameter for CSRF protection validation
+        in: query
+        name: state
+        required: false
+        schema:
+          type: string
+      - description: Error code if the user denies authentication
+        in: query
+        name: error
+        required: false
+        schema:
+          type: string
+      responses:
+        "302":
+          description: Redirect to frontend with JWT token in query parameter
+          headers:
+            Location:
+              description: Frontend URL with JWT token (e.g. /auth/callback?token=eyJ...)
+              schema:
+                format: uri
+                type: string
+        "400":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Bad request (missing code or state mismatch)
+        "401":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Authentication failed (invalid or expired code)
+      security: []
+      summary: Auth0 OAuth2 callback
+      tags:
+      - auth
+  /auth/logout:
+    get:
+      description: |
+        Invalidates the server-side session and redirects to Auth0 federated logout (if enabled) or directly to the frontend. The frontend should navigate the window directly to this endpoint (not fetch/XHR).
+      operationId: logout
+      responses:
+        "302":
+          description: Redirect to Auth0 logout or frontend
+          headers:
+            Location:
+              description: Logout redirect URL
+              schema:
+                format: uri
+                type: string
+      security: []
+      summary: Logout and clear session
+      tags:
+      - auth
+  /admin/users:
+    get:
+      description: Returns a paginated list of all users. Requires ADMIN role.
+      operationId: listUsers
+      parameters:
+      - description: Page number (0-based)
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          type: integer
+      - description: Page size
+        in: query
+        name: size
+        required: false
+        schema:
+          default: 20
+          type: integer
+      - description: Search by username or email
+        in: query
+        name: search
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedUsersResponse"
+          description: List of users
+      security:
+      - bearerAuth: []
+      summary: List all users
+      tags:
+      - admin
+    post:
+      description: Admin creates a new local user account. Requires ADMIN role.
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCreateUserRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserResponse"
+          description: User created
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Username already taken
+      security:
+      - bearerAuth: []
+      summary: Create a new user
+      tags:
+      - admin
+  /admin/users/{id}:
+    delete:
+      description: Delete a user account. Cannot delete yourself. Requires ADMIN role.
+      operationId: deleteUser
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+      responses:
+        "204":
+          description: User deleted
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: User not found
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Cannot delete yourself
+      security:
+      - bearerAuth: []
+      summary: Delete user
+      tags:
+      - admin
+    get:
+      description: Returns details of a specific user. Requires ADMIN role.
+      operationId: getUser
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserResponse"
+          description: User details
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: User not found
+      security:
+      - bearerAuth: []
+      summary: Get user details
+      tags:
+      - admin
+    patch:
+      description: Update user role or email. Requires ADMIN role.
+      operationId: updateUser
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateUserRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserResponse"
+          description: User updated
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: User not found
+      security:
+      - bearerAuth: []
+      summary: Update user
+      tags:
+      - admin
+components:
+  parameters:
+    SlugPath:
+      in: path
+      name: slug
+      required: true
+      schema:
+        type: string
+    AdminCodeHeader:
+      in: header
+      name: X-Admin-Code
+      required: false
+      schema:
+        type: string
+    ParticipantIdHeader:
+      in: header
+      name: X-Participant-Id
+      required: false
+      schema:
+        format: uuid
+        type: string
+    RoomSlugPath:
+      in: path
+      name: roomSlug
+      required: true
+      schema:
+        pattern: "^[A-Z0-9]{3}-[A-Z0-9]{3}$"
+        type: string
+    RoomIdPath:
+      in: path
+      name: roomId
+      required: true
+      schema:
+        format: uuid
+        type: string
+    TaskIdPath:
+      in: path
+      name: taskId
+      required: true
+      schema:
+        format: uuid
+        type: string
+  schemas:
+    HealthResponse:
+      example:
+        version: 0.1.12
+        status: UP
+      properties:
+        status:
+          example: UP
+          type: string
+        version:
+          example: 0.1.12
+          type: string
+      required:
+      - status
+      - version
+      type: object
+    CreateProjectRequest:
+      example:
+        name: name
+      properties:
+        name:
+          maxLength: 255
+          minLength: 1
+          type: string
+      required:
+      - name
+      type: object
+    ProjectAdminResponse:
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        name: name
+        adminCode: adminCode
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        slug: slug
+      properties:
+        id:
+          format: uuid
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        adminCode:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+      type: object
+    ProjectResponse:
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        name: name
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        slug: slug
+      properties:
+        id:
+          format: uuid
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+      type: object
+    ProblemDetail:
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+      type: object
+    UpdateProjectRequest:
+      example:
+        name: name
+      properties:
+        name:
+          maxLength: 255
+          minLength: 1
+          type: string
+      type: object
+    RoomResponse:
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        roundNumber: 0
+        description: description
+        topic: topic
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        title: title
+        deadline: 2000-01-23T04:56:07.000+00:00
+        projectId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        slug: slug
+        roomType: ASYNC
+        status: OPEN
+      properties:
+        id:
+          format: uuid
+          type: string
+        slug:
+          description: Human-readable room code (e.g. A3X-K7B)
+          type: string
+        projectId:
+          format: uuid
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        roomType:
+          $ref: "#/components/schemas/RoomType"
+        deadline:
+          format: date-time
+          type: string
+        status:
+          $ref: "#/components/schemas/RoomStatus"
+        topic:
+          type: string
+        roundNumber:
+          type: integer
+        createdAt:
+          format: date-time
+          type: string
+      type: object
+    CreateRoomRequest:
+      example:
+        description: description
+        title: title
+        deadline: 2000-01-23T04:56:07.000+00:00
+        roomType: ASYNC
+      properties:
+        title:
+          maxLength: 255
+          minLength: 1
+          type: string
+        description:
+          type: string
+        roomType:
+          $ref: "#/components/schemas/RoomType"
+        deadline:
+          format: date-time
+          type: string
+      required:
+      - roomType
+      - title
+      type: object
+    ParticipantResponse:
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        nickname: nickname
+        invitedRoomIds:
+        - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          type: string
+        nickname:
+          type: string
+        invitedRoomIds:
+          description: Rooms this participant can access. Empty array means project-wide
+            access.
+          items:
+            format: uuid
+            type: string
+          type: array
+        createdAt:
+          format: date-time
+          type: string
+      type: object
+    JoinProjectRequest:
+      example:
+        nickname: nickname
+        roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        nickname:
+          maxLength: 100
+          minLength: 1
+          type: string
+        roomId:
+          description: "When provided, adds access to this room. Multiple room joins\
+            \ accumulate access. Project-wide join (no roomId) clears room restrictions."
+          format: uuid
+          type: string
+      required:
+      - nickname
+      type: object
+    UpdateParticipantRequest:
+      example:
+        nickname: nickname
+      properties:
+        nickname:
+          maxLength: 100
+          minLength: 1
+          type: string
+      required:
+      - nickname
+      type: object
+    RoomSlugResponse:
+      example:
+        roomTitle: roomTitle
+        roomSlug: roomSlug
+        projectName: projectName
+        roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        projectSlug: projectSlug
+      properties:
+        roomId:
+          format: uuid
+          type: string
+        roomTitle:
+          type: string
+        roomSlug:
+          type: string
+        projectSlug:
+          type: string
+        projectName:
+          type: string
+      type: object
+    RoomDetailResponse:
+      example:
+        roundNumber: 0
+        description: description
+        topic: topic
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        title: title
+        deadline: 2000-01-23T04:56:07.000+00:00
+        slug: slug
+        roomType: ASYNC
+        tasks:
+        - averagePoints: 1.4658129805029452
+          allEstimates:
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          questionVotesCount: 2
+          description: description
+          active: true
+          title: title
+          finalEstimate: finalEstimate
+          sortOrder: 6
+          revealed: true
+          votedCount: 5
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          totalParticipants: 7
+          myEstimate:
+            participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          medianPoints: 5.962133916683182
+        - averagePoints: 1.4658129805029452
+          allEstimates:
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          questionVotesCount: 2
+          description: description
+          active: true
+          title: title
+          finalEstimate: finalEstimate
+          sortOrder: 6
+          revealed: true
+          votedCount: 5
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          totalParticipants: 7
+          myEstimate:
+            participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          medianPoints: 5.962133916683182
+        status: OPEN
+      properties:
+        id:
+          format: uuid
+          type: string
+        slug:
+          description: Human-readable room code (e.g. A3X-K7B)
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        roomType:
+          $ref: "#/components/schemas/RoomType"
+        deadline:
+          format: date-time
+          type: string
+        status:
+          $ref: "#/components/schemas/RoomStatus"
+        topic:
+          type: string
+        roundNumber:
+          type: integer
+        tasks:
+          items:
+            $ref: "#/components/schemas/TaskWithEstimateResponse"
+          type: array
+      type: object
+    UpdateRoomRequest:
+      example:
+        description: description
+        topic: topic
+        title: title
+        deadline: 2000-01-23T04:56:07.000+00:00
+      properties:
+        title:
+          maxLength: 255
+          type: string
+        description:
+          type: string
+        deadline:
+          format: date-time
+          type: string
+        topic:
+          maxLength: 500
+          type: string
+      type: object
+    RoomAdminResponse:
+      example:
+        roundNumber: 0
+        description: description
+        topic: topic
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        title: title
+        deadline: 2000-01-23T04:56:07.000+00:00
+        slug: slug
+        roomType: ASYNC
+        tasks:
+        - sortOrder: 6
+          revealed: true
+          description: description
+          active: true
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          title: title
+          finalEstimate: finalEstimate
+          estimates:
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - sortOrder: 6
+          revealed: true
+          description: description
+          active: true
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          title: title
+          finalEstimate: finalEstimate
+          estimates:
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        status: OPEN
+        participants:
+        - createdAt: 2000-01-23T04:56:07.000+00:00
+          nickname: nickname
+          invitedRoomIds:
+          - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - createdAt: 2000-01-23T04:56:07.000+00:00
+          nickname: nickname
+          invitedRoomIds:
+          - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          type: string
+        slug:
+          description: Human-readable room code (e.g. A3X-K7B)
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        roomType:
+          $ref: "#/components/schemas/RoomType"
+        deadline:
+          format: date-time
+          type: string
+        status:
+          $ref: "#/components/schemas/RoomStatus"
+        topic:
+          type: string
+        roundNumber:
+          type: integer
+        tasks:
+          items:
+            $ref: "#/components/schemas/TaskWithAllEstimatesResponse"
+          type: array
+        participants:
+          items:
+            $ref: "#/components/schemas/ParticipantResponse"
+          type: array
+      type: object
+    RoomProgressResponse:
+      example:
+        totalParticipants: 0
+        roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        slug: slug
+        tasks:
+        - questionVotesCount: 1
+          votedCount: 6
+          totalParticipants: 5
+          title: title
+          taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - questionVotesCount: 1
+          votedCount: 6
+          totalParticipants: 5
+          title: title
+          taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        status: OPEN
+      properties:
+        roomId:
+          format: uuid
+          type: string
+        slug:
+          description: Human-readable room code (e.g. A3X-K7B)
+          type: string
+        status:
+          $ref: "#/components/schemas/RoomStatus"
+        totalParticipants:
+          type: integer
+        tasks:
+          items:
+            $ref: "#/components/schemas/TaskProgressResponse"
+          type: array
+      type: object
+    RoomResultsResponse:
+      example:
+        title: title
+        roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        slug: slug
+        tasks:
+        - averagePoints: 0.8008281904610115
+          title: title
+          medianPoints: 6.027456183070403
+          finalEstimate: finalEstimate
+          taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          estimates:
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - averagePoints: 0.8008281904610115
+          title: title
+          medianPoints: 6.027456183070403
+          finalEstimate: finalEstimate
+          taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          estimates:
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        status: OPEN
+      properties:
+        roomId:
+          format: uuid
+          type: string
+        slug:
+          description: Human-readable room code (e.g. A3X-K7B)
+          type: string
+        title:
+          type: string
+        status:
+          $ref: "#/components/schemas/RoomStatus"
+        tasks:
+          items:
+            $ref: "#/components/schemas/TaskResultResponse"
+          type: array
+      type: object
+    CreateTaskRequest:
+      example:
+        sortOrder: 0
+        description: description
+        title: title
+      properties:
+        title:
+          maxLength: 255
+          minLength: 1
+          type: string
+        description:
+          type: string
+        sortOrder:
+          default: 0
+          type: integer
+      required:
+      - title
+      type: object
+    TaskResponse:
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        sortOrder: 0
+        revealed: true
+        description: description
+        active: true
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        title: title
+        finalEstimate: finalEstimate
+        roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          type: string
+        roomId:
+          format: uuid
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        sortOrder:
+          type: integer
+        finalEstimate:
+          type: string
+        revealed:
+          type: boolean
+        active:
+          type: boolean
+        createdAt:
+          format: date-time
+          type: string
+      type: object
+    ImportTasksRequest:
+      example:
+        titles:
+        - titles
+        - titles
+      properties:
+        titles:
+          items:
+            maxLength: 255
+            minLength: 1
+            type: string
+          minItems: 1
+          type: array
+      required:
+      - titles
+      type: object
+    LiveRoomStateResponse:
+      example:
+        roundNumber: 0
+        questionVotesCount: 6
+        topic: topic
+        title: title
+        myEstimate:
+          participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          storyPoints: storyPoints
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          participantNickname: participantNickname
+          comment: comment
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        results:
+          averagePoints: 1.4658129805029452
+          medianPoints: 5.962133916683182
+          estimates:
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            storyPoints: storyPoints
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            participantNickname: participantNickname
+            comment: comment
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        slug: slug
+        taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        status: OPEN
+        participants:
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          hasVoted: true
+          nickname: nickname
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          hasVoted: true
+          nickname: nickname
+      properties:
+        roomId:
+          format: uuid
+          type: string
+        slug:
+          description: Human-readable room code (e.g. A3X-K7B)
+          type: string
+        title:
+          type: string
+        topic:
+          type: string
+        status:
+          $ref: "#/components/schemas/RoomStatus"
+        roundNumber:
+          type: integer
+        questionVotesCount:
+          type: integer
+        taskId:
+          description: Phantom task ID for submitting estimates
+          format: uuid
+          type: string
+        myEstimate:
+          $ref: "#/components/schemas/EstimateResponse"
+        participants:
+          items:
+            $ref: "#/components/schemas/LiveParticipantStatus"
+          type: array
+        results:
+          $ref: "#/components/schemas/LiveRoomResults"
+      type: object
+    NewRoundRequest:
+      example:
+        topic: topic
+      properties:
+        topic:
+          maxLength: 500
+          type: string
+      type: object
+    RoundHistoryEntry:
+      example:
+        completedAt: 2000-01-23T04:56:07.000+00:00
+        roundNumber: 0
+        medianPts: 1.4658129805029452
+        topic: topic
+        votes:
+        - storyPoints: storyPoints
+          nickname: nickname
+        - storyPoints: storyPoints
+          nickname: nickname
+        voteCount: 5
+        averagePts: 6.027456183070403
+      properties:
+        roundNumber:
+          type: integer
+        topic:
+          nullable: true
+          type: string
+        averagePts:
+          format: double
+          nullable: true
+          type: number
+        medianPts:
+          format: double
+          nullable: true
+          type: number
+        voteCount:
+          type: integer
+        votes:
+          items:
+            $ref: "#/components/schemas/RoundHistoryVote"
+          type: array
+        completedAt:
+          format: date-time
+          type: string
+      type: object
+    UpdateTaskRequest:
+      example:
+        sortOrder: 0
+        description: description
+        title: title
+      properties:
+        title:
+          maxLength: 255
+          type: string
+        description:
+          type: string
+        sortOrder:
+          type: integer
+      type: object
+    SetFinalEstimateRequest:
+      example:
+        storyPoints: "0"
+      properties:
+        storyPoints:
+          $ref: "#/components/schemas/StoryPoints"
+      required:
+      - storyPoints
+      type: object
+    SubmitEstimateRequest:
+      example:
+        storyPoints: "0"
+        comment: comment
+      properties:
+        storyPoints:
+          $ref: "#/components/schemas/StoryPoints"
+        comment:
+          maxLength: 500
+          type: string
+      required:
+      - storyPoints
+      type: object
+    EstimateResponse:
+      example:
+        participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        storyPoints: storyPoints
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        participantNickname: participantNickname
+        comment: comment
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          type: string
+        participantId:
+          format: uuid
+          type: string
+        participantNickname:
+          type: string
+        storyPoints:
+          type: string
+        comment:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+      type: object
+    AuthConfigResponse:
+      example:
+        registrationEnabled: true
+        auth0Enabled: true
+      properties:
+        auth0Enabled:
+          description: Whether Auth0 OAuth2 login is enabled on this server
+          type: boolean
+        registrationEnabled:
+          description: Whether public user registration is enabled on this server
+          type: boolean
+      required:
+      - auth0Enabled
+      - registrationEnabled
+      type: object
+    RegisterRequest:
+      example:
+        password: password
+        email: email
+        username: username
+      properties:
+        username:
+          description: Unique username for the new account
+          maxLength: 100
+          minLength: 3
+          type: string
+        password:
+          description: Password (8-128 characters)
+          maxLength: 128
+          minLength: 8
+          type: string
+        email:
+          description: Optional email address
+          format: email
+          type: string
+      required:
+      - password
+      - username
+      type: object
+    AuthResponse:
+      example:
+        expiresAt: 2000-01-23T04:56:07.000+00:00
+        token: token
+      properties:
+        token:
+          type: string
+        expiresAt:
+          format: date-time
+          type: string
+      type: object
+    ValidationErrorResponse:
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        violations:
+          items:
+            $ref: "#/components/schemas/ValidationErrorResponse_violations_inner"
+          type: array
+      type: object
+    LoginRequest:
+      example:
+        password: password
+        username: username
+      properties:
+        username:
+          maxLength: 100
+          minLength: 3
+          type: string
+        password:
+          minLength: 8
+          type: string
+      required:
+      - password
+      - username
+      type: object
+    UserResponse:
+      example:
+        role: ADMIN
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        email: email
+        username: username
+      properties:
+        id:
+          format: uuid
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          enum:
+          - ADMIN
+          - USER
+          type: string
+      type: object
+    PagedUsersResponse:
+      example:
+        size: 5
+        totalPages: 6
+        page: 1
+        content:
+        - authProvider: authProvider
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          role: ADMIN
+          lastLoginAt: 2000-01-23T04:56:07.000+00:00
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          email: email
+          username: username
+        - authProvider: authProvider
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          role: ADMIN
+          lastLoginAt: 2000-01-23T04:56:07.000+00:00
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          email: email
+          username: username
+        totalElements: 0
+      properties:
+        content:
+          items:
+            $ref: "#/components/schemas/AdminUserResponse"
+          type: array
+        totalElements:
+          format: int64
+          type: integer
+        totalPages:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+      type: object
+    AdminCreateUserRequest:
+      example:
+        password: password
+        role: ADMIN
+        email: email
+        username: username
+      properties:
+        username:
+          maxLength: 100
+          minLength: 3
+          type: string
+        password:
+          maxLength: 128
+          minLength: 8
+          type: string
+        email:
+          format: email
+          type: string
+        role:
+          enum:
+          - ADMIN
+          - USER
+          type: string
+      required:
+      - password
+      - role
+      - username
+      type: object
+    AdminUserResponse:
+      example:
+        authProvider: authProvider
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        role: ADMIN
+        lastLoginAt: 2000-01-23T04:56:07.000+00:00
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        email: email
+        username: username
+      properties:
+        id:
+          format: uuid
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          enum:
+          - ADMIN
+          - USER
+          type: string
+        authProvider:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        lastLoginAt:
+          format: date-time
+          type: string
+      type: object
+    AdminUpdateUserRequest:
+      example:
+        role: ADMIN
+        email: email
+      properties:
+        email:
+          format: email
+          type: string
+        role:
+          enum:
+          - ADMIN
+          - USER
+          type: string
+      type: object
+    RoomType:
+      enum:
+      - ASYNC
+      - LIVE
+      type: string
+    RoomStatus:
+      enum:
+      - OPEN
+      - REVEALED
+      - CLOSED
+      type: string
+    TaskWithEstimateResponse:
+      example:
+        averagePoints: 1.4658129805029452
+        allEstimates:
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          storyPoints: storyPoints
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          participantNickname: participantNickname
+          comment: comment
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          storyPoints: storyPoints
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          participantNickname: participantNickname
+          comment: comment
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        questionVotesCount: 2
+        description: description
+        active: true
+        title: title
+        finalEstimate: finalEstimate
+        sortOrder: 6
+        revealed: true
+        votedCount: 5
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        totalParticipants: 7
+        myEstimate:
+          participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          storyPoints: storyPoints
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          participantNickname: participantNickname
+          comment: comment
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        medianPoints: 5.962133916683182
+      properties:
+        id:
+          format: uuid
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        sortOrder:
+          type: integer
+        myEstimate:
+          $ref: "#/components/schemas/EstimateResponse"
+        allEstimates:
+          items:
+            $ref: "#/components/schemas/EstimateResponse"
+          type: array
+        averagePoints:
+          format: double
+          type: number
+        medianPoints:
+          format: double
+          type: number
+        finalEstimate:
+          type: string
+        votedCount:
+          type: integer
+        questionVotesCount:
+          type: integer
+        totalParticipants:
+          type: integer
+        revealed:
+          type: boolean
+        active:
+          type: boolean
+      type: object
+    TaskWithAllEstimatesResponse:
+      example:
+        sortOrder: 6
+        revealed: true
+        description: description
+        active: true
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        title: title
+        finalEstimate: finalEstimate
+        estimates:
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          storyPoints: storyPoints
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          participantNickname: participantNickname
+          comment: comment
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          storyPoints: storyPoints
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          participantNickname: participantNickname
+          comment: comment
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        sortOrder:
+          type: integer
+        finalEstimate:
+          type: string
+        estimates:
+          items:
+            $ref: "#/components/schemas/EstimateResponse"
+          type: array
+        revealed:
+          type: boolean
+        active:
+          type: boolean
+      type: object
+    TaskProgressResponse:
+      example:
+        questionVotesCount: 1
+        votedCount: 6
+        totalParticipants: 5
+        title: title
+        taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        taskId:
+          format: uuid
+          type: string
+        title:
+          type: string
+        votedCount:
+          type: integer
+        questionVotesCount:
+          type: integer
+        totalParticipants:
+          type: integer
+      type: object
+    TaskResultResponse:
+      example:
+        averagePoints: 0.8008281904610115
+        title: title
+        medianPoints: 6.027456183070403
+        finalEstimate: finalEstimate
+        taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        estimates:
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          storyPoints: storyPoints
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          participantNickname: participantNickname
+          comment: comment
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          storyPoints: storyPoints
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          participantNickname: participantNickname
+          comment: comment
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        taskId:
+          format: uuid
+          type: string
+        title:
+          type: string
+        estimates:
+          items:
+            $ref: "#/components/schemas/EstimateResponse"
+          type: array
+        averagePoints:
+          format: double
+          type: number
+        medianPoints:
+          format: double
+          type: number
+        finalEstimate:
+          type: string
+      type: object
+    LiveParticipantStatus:
+      example:
+        participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        hasVoted: true
+        nickname: nickname
+      properties:
+        participantId:
+          format: uuid
+          type: string
+        nickname:
+          type: string
+        hasVoted:
+          type: boolean
+      type: object
+    LiveRoomResults:
+      example:
+        averagePoints: 1.4658129805029452
+        medianPoints: 5.962133916683182
+        estimates:
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          storyPoints: storyPoints
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          participantNickname: participantNickname
+          comment: comment
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          storyPoints: storyPoints
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          participantNickname: participantNickname
+          comment: comment
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        estimates:
+          items:
+            $ref: "#/components/schemas/EstimateResponse"
+          type: array
+        averagePoints:
+          format: double
+          type: number
+        medianPoints:
+          format: double
+          type: number
+      type: object
+    RoundHistoryVote:
+      example:
+        storyPoints: storyPoints
+        nickname: nickname
+      properties:
+        nickname:
+          type: string
+        storyPoints:
+          type: string
+      type: object
+    StoryPoints:
+      enum:
+      - "0"
+      - "0.5"
+      - "1"
+      - "2"
+      - "3"
+      - "5"
+      - "8"
+      - "13"
+      - "21"
+      - '?'
+      type: string
+    ValidationErrorResponse_violations_inner:
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+      type: object
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http

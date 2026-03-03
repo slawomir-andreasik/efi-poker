@@ -1,0 +1,17 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  participantId:
+    type: string
+    format: uuid
+  participantNickname:
+    type: string
+  storyPoints:
+    type: string
+  comment:
+    type: string
+  createdAt:
+    type: string
+    format: date-time

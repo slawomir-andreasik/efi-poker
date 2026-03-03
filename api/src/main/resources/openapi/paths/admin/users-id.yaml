@@ -1,0 +1,91 @@
+get:
+  operationId: getUser
+  tags: [admin]
+  summary: Get user details
+  description: Returns details of a specific user. Requires ADMIN role.
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    '200':
+      description: User details
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/AdminUserResponse.yaml'
+    '404':
+      description: User not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+
+patch:
+  operationId: updateUser
+  tags: [admin]
+  summary: Update user
+  description: Update user role or email. Requires ADMIN role.
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/AdminUpdateUserRequest.yaml'
+  responses:
+    '200':
+      description: User updated
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/AdminUserResponse.yaml'
+    '404':
+      description: User not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+
+delete:
+  operationId: deleteUser
+  tags: [admin]
+  summary: Delete user
+  description: Delete a user account. Cannot delete yourself. Requires ADMIN role.
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    '204':
+      description: User deleted
+    '404':
+      description: User not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '409':
+      description: Cannot delete yourself
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

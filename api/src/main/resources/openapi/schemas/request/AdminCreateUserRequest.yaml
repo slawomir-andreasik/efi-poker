@@ -1,0 +1,17 @@
+type: object
+required: [username, password, role]
+properties:
+  username:
+    type: string
+    minLength: 3
+    maxLength: 100
+  password:
+    type: string
+    minLength: 8
+    maxLength: 128
+  email:
+    type: string
+    format: email
+  role:
+    type: string
+    enum: [ADMIN, USER]

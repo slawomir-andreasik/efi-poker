@@ -1,0 +1,158 @@
+package com.andreasik.efipoker.auth;
+
+import com.andreasik.efipoker.api.AuthApi;
+import com.andreasik.efipoker.api.model.AuthConfigResponse;
+import com.andreasik.efipoker.api.model.AuthResponse;
+import com.andreasik.efipoker.api.model.LoginRequest;
+import com.andreasik.efipoker.api.model.RegisterRequest;
+import com.andreasik.efipoker.api.model.UserResponse;
+import com.andreasik.efipoker.shared.exception.UnauthorizedException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+@Slf4j
+@RestController
+@RequiredArgsConstructor
+public class AuthController implements AuthApi {
+
+  private final UserService userService;
+  private final JwtService jwtService;
+  private final PasswordEncoder passwordEncoder;
+  private final Auth0Properties auth0Properties;
+  private final AppProperties appProperties;
+  private final RegistrationProperties registrationProperties;
+
+  @Override
+  public ResponseEntity<AuthConfigResponse> getAuthConfig() {
+    log.debug("GET /auth/config");
+    return ResponseEntity.ok(
+        new AuthConfigResponse()
+            .auth0Enabled(auth0Properties.enabled())
+            .registrationEnabled(registrationProperties.enabled()));
+  }
+
+  @Override
+  public ResponseEntity<AuthResponse> register(RegisterRequest registerRequest) {
+    log.debug("POST /auth/register username={}", registerRequest.getUsername());
+
+    if (!registrationProperties.enabled()) {
+      log.warn("Registration attempt while registration is disabled");
+      throw new UnauthorizedException("Registration is disabled on this server");
+    }
+
+    User user =
+        userService.registerLocalUser(
+            registerRequest.getUsername(),
+            registerRequest.getPassword(),
+            registerRequest.getEmail());
+
+    String token = jwtService.generateToken(user);
+    Instant expiresAt = jwtService.getTokenExpiresAt();
+
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(new AuthResponse().token(token).expiresAt(expiresAt));
+  }
+
+  @Override
+  public ResponseEntity<AuthResponse> login(LoginRequest loginRequest) {
+    log.debug("POST /auth/login username={}", loginRequest.getUsername());
+    User user =
+        userService
+            .findByUsername(loginRequest.getUsername())
+            .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
+
+    if (!passwordEncoder.matches(loginRequest.getPassword(), user.passwordHash())) {
+      throw new UnauthorizedException("Invalid credentials");
+    }
+
+    userService.updateLastLogin(loginRequest.getUsername());
+
+    String token = jwtService.generateToken(user);
+    Instant expiresAt = jwtService.getTokenExpiresAt();
+
+    log.info("User logged in: {}", loginRequest.getUsername());
+    return ResponseEntity.ok(new AuthResponse().token(token).expiresAt(expiresAt));
+  }
+
+  // OAuth2 endpoints are handled by Spring Security's oauth2Login() filter.
+  // These stub implementations satisfy the generated AuthApi interface contract.
+  // The actual redirect logic is performed by Auth0SuccessHandler.
+
+  @Override
+  public ResponseEntity<Void> oauth2Authorize() {
+    // Intercepted by Spring Security before reaching this controller
+    return ResponseEntity.status(302).build();
+  }
+
+  @Override
+  public ResponseEntity<Void> oauth2Callback(
+      @Nullable String code, @Nullable String state, @Nullable String error) {
+    // Intercepted by Spring Security before reaching this controller
+    return ResponseEntity.status(302).build();
+  }
+
+  @Override
+  public ResponseEntity<UserResponse> getCurrentUser() {
+    log.debug("GET /auth/me");
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    UUID userId = UUID.fromString(authentication.getName());
+
+    User user =
+        userService.findById(userId).orElseThrow(() -> new UnauthorizedException("User not found"));
+
+    UserResponse response =
+        new UserResponse()
+            .id(user.id())
+            .username(user.username())
+            .role(UserResponse.RoleEnum.fromValue(user.role()));
+
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  public ResponseEntity<Void> logout() {
+    log.debug("GET /auth/logout");
+    HttpServletRequest request =
+        ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+    HttpSession session = request.getSession(false);
+    if (session != null) {
+      session.invalidate();
+    }
+
+    String redirectUrl;
+    if (auth0Properties.enabled()) {
+      String returnTo = URLEncoder.encode(appProperties.url(), StandardCharsets.UTF_8);
+      redirectUrl =
+          "https://"
+              + auth0Properties.domain()
+              + "/v2/logout?client_id="
+              + auth0Properties.clientId()
+              + "&returnTo="
+              + returnTo;
+      log.info("Federated logout: redirecting to Auth0");
+    } else {
+      redirectUrl = appProperties.url();
+      log.info("Local logout: redirecting to frontend");
+    }
+
+    return ResponseEntity.status(HttpStatus.FOUND)
+        .header(HttpHeaders.LOCATION, redirectUrl)
+        .build();
+  }
+}

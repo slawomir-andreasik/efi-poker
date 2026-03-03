@@ -1,0 +1,26 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: "round-history-001-create"
+      author: "sandreasik"
+      comment: "Snapshot completed live rounds before estimate reset"
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE round_history (
+                id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                room_id      UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+                round_number INTEGER NOT NULL,
+                topic        VARCHAR(500),
+                average_pts  DECIMAL(5, 2),
+                median_pts   DECIMAL(5, 2),
+                vote_count   INTEGER NOT NULL DEFAULT 0,
+                votes_json   TEXT NOT NULL DEFAULT '[]',
+                completed_at TIMESTAMP NOT NULL DEFAULT NOW()
+              );
+              CREATE INDEX idx_round_history_room ON round_history(room_id, round_number);
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS idx_round_history_room;
+              DROP TABLE IF EXISTS round_history;

@@ -1,0 +1,26 @@
+get:
+  operationId: getLiveRoomState
+  tags: [rooms]
+  summary: Get live room state with participant vote statuses
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+    - $ref: '../../parameters/ParticipantIdHeader.yaml'
+  responses:
+    '200':
+      description: Live room state
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/LiveRoomStateResponse.yaml'
+    '404':
+      description: Room not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '409':
+      description: Room is not LIVE type
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

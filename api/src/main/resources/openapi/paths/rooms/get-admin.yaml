@@ -1,0 +1,20 @@
+get:
+  operationId: getRoomAdmin
+  tags: [rooms]
+  summary: Get room with ALL estimates (admin)
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  responses:
+    '200':
+      description: Room admin view
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/RoomAdminResponse.yaml'
+    '403':
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

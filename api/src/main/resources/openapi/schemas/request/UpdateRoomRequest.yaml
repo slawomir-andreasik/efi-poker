@@ -1,0 +1,13 @@
+type: object
+properties:
+  title:
+    type: string
+    maxLength: 255
+  description:
+    type: string
+  deadline:
+    type: string
+    format: date-time
+  topic:
+    type: string
+    maxLength: 500

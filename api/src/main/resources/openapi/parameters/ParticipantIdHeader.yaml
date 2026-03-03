@@ -1,0 +1,6 @@
+name: X-Participant-Id
+in: header
+required: false
+schema:
+  type: string
+  format: uuid

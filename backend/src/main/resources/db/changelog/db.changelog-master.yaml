@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/tables/users.yaml
+  - include:
+      file: db/changelog/tables/projects.yaml
+  - include:
+      file: db/changelog/tables/rooms.yaml
+  - include:
+      file: db/changelog/tables/tasks.yaml
+  - include:
+      file: db/changelog/tables/participants.yaml
+  - include:
+      file: db/changelog/tables/estimates.yaml
+  - include:
+      file: db/changelog/tables/round_history.yaml

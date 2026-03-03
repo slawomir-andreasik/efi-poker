@@ -1,0 +1,36 @@
+spring:
+  docker:
+    compose:
+      enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  # Disable OAuth2 client auto-config in tests - no external issuer available
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration
+
+app:
+  cors:
+    origins: http://localhost:5173
+  jwt:
+    secret: test-secret-for-jwt-signing-must-be-at-least-64-characters-long-for-hs512-algorithm
+    expiration: 3600
+  registration:
+    enabled: true
+  admin:
+    username: testadmin
+    password: testpassword
+  rate-limit:
+    max-requests: 10000
+    read-max-requests: 50000
+    window-seconds: 1
+
+management:
+  tracing:
+    enabled: false
+  otlp:
+    metrics:
+      export:
+        enabled: false

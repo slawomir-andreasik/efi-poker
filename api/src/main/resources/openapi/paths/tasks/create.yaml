@@ -1,0 +1,26 @@
+post:
+  operationId: createTask
+  tags: [tasks]
+  summary: Create a task
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/CreateTaskRequest.yaml'
+  responses:
+    '201':
+      description: Task created
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/TaskResponse.yaml'
+    '403':
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

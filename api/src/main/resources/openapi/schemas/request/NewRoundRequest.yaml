@@ -1,0 +1,5 @@
+type: object
+properties:
+  topic:
+    type: string
+    maxLength: 500

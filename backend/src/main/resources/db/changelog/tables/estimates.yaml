@@ -1,0 +1,27 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: "estimates-001-create"
+      author: "sandreasik"
+      comment: "Create estimates table - participant votes per task, one vote per participant per task"
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE estimates (
+                id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                task_id        UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                participant_id UUID NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
+                story_points   VARCHAR(10) NOT NULL,
+                comment        VARCHAR(500),
+                created_at     TIMESTAMP NOT NULL DEFAULT now(),
+                updated_at     TIMESTAMP NOT NULL DEFAULT now(),
+                UNIQUE(task_id, participant_id)
+              );
+              CREATE INDEX idx_estimates_task ON estimates(task_id);
+              CREATE INDEX idx_estimates_participant ON estimates(participant_id);
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS idx_estimates_participant;
+              DROP INDEX IF EXISTS idx_estimates_task;
+              DROP TABLE IF EXISTS estimates;

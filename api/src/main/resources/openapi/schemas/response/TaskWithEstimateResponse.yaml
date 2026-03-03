@@ -1,0 +1,35 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  title:
+    type: string
+  description:
+    type: string
+  sortOrder:
+    type: integer
+  myEstimate:
+    $ref: "./EstimateResponse.yaml"
+  allEstimates:
+    type: array
+    items:
+      $ref: "./EstimateResponse.yaml"
+  averagePoints:
+    type: number
+    format: double
+  medianPoints:
+    type: number
+    format: double
+  finalEstimate:
+    type: string
+  votedCount:
+    type: integer
+  questionVotesCount:
+    type: integer
+  totalParticipants:
+    type: integer
+  revealed:
+    type: boolean
+  active:
+    type: boolean

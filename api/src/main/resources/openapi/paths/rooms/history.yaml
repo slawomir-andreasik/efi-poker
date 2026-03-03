@@ -1,0 +1,28 @@
+get:
+  operationId: getRoundHistory
+  tags: [rooms]
+  summary: Get round history for a live room
+  description: Returns all completed (revealed) rounds with results. Only available for LIVE rooms.
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+  responses:
+    '200':
+      description: Round history entries ordered by round number ascending
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../../schemas/response/RoundHistoryEntry.yaml'
+    '404':
+      description: Room not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '409':
+      description: Room is not LIVE type
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

@@ -1,0 +1,21 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  title:
+    type: string
+  description:
+    type: string
+  sortOrder:
+    type: integer
+  finalEstimate:
+    type: string
+  estimates:
+    type: array
+    items:
+      $ref: './EstimateResponse.yaml'
+  revealed:
+    type: boolean
+  active:
+    type: boolean

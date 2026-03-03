@@ -1,0 +1,20 @@
+post:
+  operationId: reopenRoom
+  tags: [rooms]
+  summary: Reopen a revealed or closed room
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  responses:
+    '200':
+      description: Room reopened
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/RoomDetailResponse.yaml'
+    '403':
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

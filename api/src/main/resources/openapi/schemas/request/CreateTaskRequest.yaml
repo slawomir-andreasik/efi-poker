@@ -1,0 +1,12 @@
+type: object
+required: [title]
+properties:
+  title:
+    type: string
+    minLength: 1
+    maxLength: 255
+  description:
+    type: string
+  sortOrder:
+    type: integer
+    default: 0

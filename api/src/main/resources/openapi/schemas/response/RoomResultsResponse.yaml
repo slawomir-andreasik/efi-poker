@@ -1,0 +1,16 @@
+type: object
+properties:
+  roomId:
+    type: string
+    format: uuid
+  slug:
+    type: string
+    description: Human-readable room code (e.g. A3X-K7B)
+  title:
+    type: string
+  status:
+    $ref: '../enums/RoomStatus.yaml'
+  tasks:
+    type: array
+    items:
+      $ref: './TaskResultResponse.yaml'

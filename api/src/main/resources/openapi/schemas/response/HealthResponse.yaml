@@ -1,0 +1,9 @@
+type: object
+required: [status, version]
+properties:
+  status:
+    type: string
+    example: UP
+  version:
+    type: string
+    example: 0.1.12

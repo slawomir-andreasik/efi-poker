@@ -1,0 +1,11 @@
+type: object
+required:
+  - auth0Enabled
+  - registrationEnabled
+properties:
+  auth0Enabled:
+    type: boolean
+    description: Whether Auth0 OAuth2 login is enabled on this server
+  registrationEnabled:
+    type: boolean
+    description: Whether public user registration is enabled on this server

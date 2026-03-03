@@ -1,0 +1,13 @@
+get:
+  operationId: getRoomProgress
+  tags: [rooms]
+  summary: Get voting progress (X/Y per task)
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+  responses:
+    '200':
+      description: Progress info
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/RoomProgressResponse.yaml'

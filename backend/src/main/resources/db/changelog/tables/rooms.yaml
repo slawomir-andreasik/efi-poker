@@ -1,0 +1,67 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: "rooms-001-create"
+      author: "sandreasik"
+      comment: "Create rooms table"
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE rooms (
+                id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                project_id  UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                title       VARCHAR(255) NOT NULL,
+                description TEXT,
+                deadline    TIMESTAMP,
+                status      VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+                room_type   VARCHAR(10) NOT NULL DEFAULT 'ASYNC',
+                created_at  TIMESTAMP NOT NULL DEFAULT now()
+              );
+              CREATE INDEX idx_rooms_project ON rooms(project_id);
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS idx_rooms_project;
+              DROP TABLE IF EXISTS rooms;
+
+  - changeSet:
+      id: "rooms-004-live-fields"
+      author: "sandreasik"
+      comment: "Live mode redesign: per-round topic tracking and round counter"
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE rooms ADD COLUMN topic VARCHAR(500);
+              ALTER TABLE rooms ADD COLUMN round_number INTEGER NOT NULL DEFAULT 1;
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE rooms DROP COLUMN round_number;
+              ALTER TABLE rooms DROP COLUMN topic;
+
+  - changeSet:
+      id: "rooms-005-slug"
+      author: "sandreasik"
+      comment: "Add human-readable slug (A3X-K7B format) to rooms for easy sharing"
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE rooms ADD COLUMN slug VARCHAR(7);
+
+              UPDATE rooms SET slug =
+                substr('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', floor(random()*36+1)::int, 1) ||
+                substr('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', floor(random()*36+1)::int, 1) ||
+                substr('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', floor(random()*36+1)::int, 1) ||
+                '-' ||
+                substr('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', floor(random()*36+1)::int, 1) ||
+                substr('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', floor(random()*36+1)::int, 1) ||
+                substr('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', floor(random()*36+1)::int, 1)
+              WHERE slug IS NULL;
+
+              ALTER TABLE rooms ALTER COLUMN slug SET NOT NULL;
+              CREATE UNIQUE INDEX idx_rooms_slug ON rooms(slug);
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS idx_rooms_slug;
+              ALTER TABLE rooms DROP COLUMN slug;

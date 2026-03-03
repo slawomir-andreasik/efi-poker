@@ -1,0 +1,97 @@
+get:
+  operationId: getParticipant
+  tags: [participants]
+  summary: Get participant by ID (magic link validation)
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+    - name: participantId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    '200':
+      description: Participant info
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/ParticipantResponse.yaml'
+    '404':
+      description: Participant not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+patch:
+  operationId: updateParticipant
+  tags: [participants]
+  summary: Update participant nickname (self-service)
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+    - name: participantId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - $ref: '../../parameters/ParticipantIdHeader.yaml'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/UpdateParticipantRequest.yaml'
+  responses:
+    '200':
+      description: Updated participant
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/ParticipantResponse.yaml'
+    '403':
+      description: Not allowed to update this participant
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '404':
+      description: Participant not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '409':
+      description: Nickname already taken in this project
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+delete:
+  operationId: deleteParticipant
+  tags: [participants]
+  summary: Delete participant (admin only)
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+    - name: participantId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  responses:
+    '204':
+      description: Participant deleted
+    '403':
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '404':
+      description: Participant not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

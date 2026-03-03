@@ -1,0 +1,23 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  roomId:
+    type: string
+    format: uuid
+  title:
+    type: string
+  description:
+    type: string
+  sortOrder:
+    type: integer
+  finalEstimate:
+    type: string
+  revealed:
+    type: boolean
+  active:
+    type: boolean
+  createdAt:
+    type: string
+    format: date-time

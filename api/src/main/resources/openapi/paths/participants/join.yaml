@@ -1,0 +1,47 @@
+get:
+  operationId: listProjectParticipants
+  tags: [participants]
+  summary: List project participants (admin only)
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  responses:
+    '200':
+      description: List of participants
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../../schemas/response/ParticipantResponse.yaml'
+    '403':
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '404':
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+post:
+  operationId: joinProject
+  tags: [participants]
+  summary: Join project (create/get participant by nickname)
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/JoinProjectRequest.yaml'
+  responses:
+    '200':
+      description: Participant info
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/ParticipantResponse.yaml'

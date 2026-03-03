@@ -1,0 +1,14 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+  slug:
+    type: string
+  adminCode:
+    type: string
+  createdAt:
+    type: string
+    format: date-time

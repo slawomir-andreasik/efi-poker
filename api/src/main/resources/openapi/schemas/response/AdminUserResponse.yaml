@@ -1,0 +1,20 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  username:
+    type: string
+  email:
+    type: string
+  role:
+    type: string
+    enum: [ADMIN, USER]
+  authProvider:
+    type: string
+  createdAt:
+    type: string
+    format: date-time
+  lastLoginAt:
+    type: string
+    format: date-time

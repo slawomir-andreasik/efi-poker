@@ -1,0 +1,27 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: "users-001-create"
+      author: "sandreasik"
+      comment: "Create users table with local and OAuth provider support"
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE users (
+                id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                username         VARCHAR(100) NOT NULL UNIQUE,
+                email            VARCHAR(255),
+                password_hash    VARCHAR(255),
+                auth_provider    VARCHAR(20) NOT NULL DEFAULT 'LOCAL',
+                auth_provider_id VARCHAR(255),
+                role             VARCHAR(20) NOT NULL DEFAULT 'USER',
+                created_at       TIMESTAMP NOT NULL DEFAULT now(),
+                last_login_at    TIMESTAMP,
+                CONSTRAINT chk_auth CHECK (
+                  (auth_provider = 'LOCAL' AND password_hash IS NOT NULL) OR
+                  (auth_provider != 'LOCAL' AND auth_provider_id IS NOT NULL)
+                )
+              );
+      rollback:
+        - sql:
+            sql: "DROP TABLE IF EXISTS users;"

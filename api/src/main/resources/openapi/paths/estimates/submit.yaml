@@ -1,0 +1,31 @@
+post:
+  operationId: submitEstimate
+  tags: [estimates]
+  summary: Submit or update estimate
+  parameters:
+    - $ref: '../../parameters/TaskIdPath.yaml'
+    - $ref: '../../parameters/ParticipantIdHeader.yaml'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/SubmitEstimateRequest.yaml'
+  responses:
+    '200':
+      description: Estimate submitted
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/EstimateResponse.yaml'
+
+delete:
+  operationId: deleteEstimate
+  tags: [estimates]
+  summary: Remove estimate (unvote)
+  parameters:
+    - $ref: '../../parameters/TaskIdPath.yaml'
+    - $ref: '../../parameters/ParticipantIdHeader.yaml'
+  responses:
+    '204':
+      description: Estimate removed

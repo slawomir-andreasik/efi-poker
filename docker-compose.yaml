@@ -1,0 +1,72 @@
+name: efi-poker
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: efipoker
+      POSTGRES_USER: efipoker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U efipoker"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  app:
+    image: ghcr.io/slawomir-andreasik/efi-poker/backend:latest
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: efipoker
+      POSTGRES_USER: efipoker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-64-chars-minimum-for-hs512-security}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+      APP_URL: http://localhost:${PORT:-8080}
+      CORS_ORIGINS: http://localhost:${PORT:-8080}
+    networks: [frontend, backend]
+    expose: ["8080"]
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+
+  client:
+    image: ghcr.io/slawomir-andreasik/efi-poker/frontend:latest
+    depends_on:
+      app: { condition: service_healthy }
+    ports: ["${PORT:-8080}:8080"]
+    networks: [frontend]
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  pgdata:
