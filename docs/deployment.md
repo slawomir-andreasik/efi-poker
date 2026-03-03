@@ -1,0 +1,332 @@
+# Deployment Guide
+
+## Docker Compose (quickstart)
+
+The root `docker-compose.yaml` runs EFI Poker with pre-built images from GHCR:
+
+```bash
+# Optional: create .env with custom passwords
+cp .env.example .env
+# Edit .env to set JWT_SECRET, POSTGRES_PASSWORD, ADMIN_PASSWORD
+
+docker compose up -d
+```
+
+Open [http://localhost:8080](http://localhost:8080). Default login: `admin` / `changeme`.
+
+To use a different port:
+
+```bash
+PORT=3000 docker compose up -d
+```
+
+## Environment Variables
+
+### Required for production
+
+| Variable | Description |
+|----------|-------------|
+| `JWT_SECRET` | JWT signing secret (minimum 64 characters for HS512) |
+| `POSTGRES_PASSWORD` | PostgreSQL password |
+| `ADMIN_PASSWORD` | Initial admin user password |
+
+### Optional
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ADMIN_USERNAME` | `admin` | Admin username |
+| `POSTGRES_DB` | `efipoker` | Database name |
+| `POSTGRES_USER` | `efipoker` | Database user |
+| `APP_URL` | `http://localhost:8080` | Public URL (used for OAuth callbacks) |
+| `CORS_ORIGINS` | `http://localhost:8080` | Allowed CORS origins |
+| `REGISTRATION_ENABLED` | `true` | Allow public user registration |
+| `AUTH0_ENABLED` | `false` | Enable Auth0 OAuth2 login |
+| `AUTH0_DOMAIN` | - | Auth0 tenant domain |
+| `AUTH0_CLIENT_ID` | - | Auth0 client ID |
+| `AUTH0_CLIENT_SECRET` | - | Auth0 client secret |
+
+## Kubernetes
+
+### Namespace and Secret
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: efi-poker
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: efi-poker-secrets
+  namespace: efi-poker
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "your-strong-password"
+  JWT_SECRET: "your-64-char-minimum-random-string-for-hs512-jwt-signing-key"
+  ADMIN_PASSWORD: "your-admin-password"
+```
+
+### ConfigMap
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: efi-poker-config
+  namespace: efi-poker
+data:
+  POSTGRES_HOST: "postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "efipoker"
+  POSTGRES_USER: "efipoker"
+  ADMIN_USERNAME: "admin"
+  APP_URL: "https://poker.example.com"
+  CORS_ORIGINS: "https://poker.example.com"
+  REGISTRATION_ENABLED: "true"
+```
+
+### PostgreSQL StatefulSet
+
+For production, consider using a managed database (AWS RDS, Google Cloud SQL, etc.) instead.
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: efi-poker
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:17-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: efi-poker-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: efi-poker-config
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: efi-poker-secrets
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              memory: 256Mi
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "efipoker"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: efi-poker
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+  clusterIP: None
+```
+
+### Backend Deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: efi-poker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/slawomir-andreasik/efi-poker/backend:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: efi-poker-config
+            - secretRef:
+                name: efi-poker-secrets
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: efi-poker
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 8080
+```
+
+### Frontend Deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: efi-poker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/slawomir-andreasik/efi-poker/frontend:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              memory: 64Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: efi-poker
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 8080
+```
+
+### Ingress
+
+Example using nginx-ingress controller:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: efi-poker
+  namespace: efi-poker
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: poker.example.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
+          - path: /actuator
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - poker.example.com
+      secretName: efi-poker-tls
+```
+
+## Notes
+
+### Custom domain
+
+Update these variables to match your domain:
+- `APP_URL` - full URL including protocol (e.g. `https://poker.example.com`)
+- `CORS_ORIGINS` - same as APP_URL
+
+### Auth0 integration
+
+1. Create an Auth0 application (Regular Web Application)
+2. Set callback URL to `{APP_URL}/api/v1/auth/oauth2/callback`
+3. Configure environment variables: `AUTH0_ENABLED=true`, `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`
+
+### Changing admin password
+
+The admin user is created on first startup with the configured `ADMIN_PASSWORD`. To change it later, use the admin API or update the user directly in the database.
