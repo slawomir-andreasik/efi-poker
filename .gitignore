@@ -1,0 +1,41 @@
+# Gradle
+.gradle/
+build/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+.factorypath
+
+# Java
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.war
+
+# Node / Bun
+node_modules/
+dist/
+.bun/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Generated
+api/build/
+frontend/src/api/generated/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Dev PIDs
+.dev-server.pid
+.dev-client.pid
