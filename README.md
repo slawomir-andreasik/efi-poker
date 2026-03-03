@@ -108,7 +108,7 @@ frontend/             React SPA
   src/                          TypeScript source
   public/                       Static assets
 docker-compose.yml    Dev database (PostgreSQL)
-docker-compose.yaml   Quick start with pre-built images
+compose.yaml          Quick start with pre-built images
 compose.dev.yaml      Full Docker dev environment
 ```
 

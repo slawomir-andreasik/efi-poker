@@ -101,7 +101,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     response
         .getWriter()
         .write(
-            "{\"type\":\"https://api.efipoker.com/errors/rate-limit-exceeded\","
+            "{\"type\":\"https://github.com/slawomir-andreasik/efi-poker/errors/rate-limit-exceeded\","
                 + "\"title\":\"Too Many Requests\","
                 + "\"status\":429,"
                 + "\"detail\":\"Rate limit exceeded. Try again later.\"}");

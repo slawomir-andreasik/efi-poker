@@ -2,7 +2,7 @@
 
 ## Docker Compose (quickstart)
 
-The root `docker-compose.yaml` runs EFI Poker with pre-built images from GHCR:
+The root `compose.yaml` runs EFI Poker with pre-built images from GHCR:
 
 ```bash
 # Optional: create .env with custom passwords
@@ -293,13 +293,6 @@ spec:
                 name: backend
                 port:
                   number: 8080
-          - path: /actuator
-            pathType: Prefix
-            backend:
-              service:
-                name: backend
-                port:
-                  number: 8080
           - path: /
             pathType: Prefix
             backend:
@@ -314,6 +307,25 @@ spec:
 ```
 
 ## Notes
+
+### Actuator / management endpoints
+
+The backend exposes Spring Boot Actuator at `/actuator/health` for health checks. In the default profile, actuator runs on the same port as the application (8080).
+
+When using the `prod` profile (`SPRING_PROFILES_ACTIVE=prod`), the management server runs on a **separate port 9091**. Update your Kubernetes probes accordingly:
+
+```yaml
+readinessProbe:
+  httpGet:
+    path: /actuator/health
+    port: 9091    # management port in prod profile
+livenessProbe:
+  httpGet:
+    path: /actuator/health
+    port: 9091
+```
+
+Never expose `/actuator` through Ingress - Kubernetes probes access pods directly and don't need Ingress routing.
 
 ### Custom domain
 
