@@ -72,7 +72,9 @@ public class SecurityConfig {
                           ProblemDetail.forStatusAndDetail(
                               HttpStatus.UNAUTHORIZED, "Authentication required");
                       problem.setTitle("Unauthorized");
-                      problem.setType(URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/unauthorized"));
+                      problem.setType(
+                          URI.create(
+                              "https://github.com/slawomir-andreasik/efi-poker/errors/unauthorized"));
 
                       response.setStatus(HttpStatus.UNAUTHORIZED.value());
                       response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);

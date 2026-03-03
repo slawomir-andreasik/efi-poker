@@ -34,7 +34,8 @@ public class GlobalExceptionHandler {
     log.warn("Unauthorized access: {}", ex.getMessage());
     ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
     problem.setTitle("Unauthorized");
-    problem.setType(URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/unauthorized"));
+    problem.setType(
+        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/unauthorized"));
     return withTraceId(problem);
   }
 
@@ -44,7 +45,8 @@ public class GlobalExceptionHandler {
     ProblemDetail problem =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");
     problem.setTitle("Validation Error");
-    problem.setType(URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/validation"));
+    problem.setType(
+        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/validation"));
 
     Map<String, String> fieldErrors = new HashMap<>();
     ex.getBindingResult()
@@ -61,7 +63,8 @@ public class GlobalExceptionHandler {
     ProblemDetail problem =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");
     problem.setTitle("Validation Error");
-    problem.setType(URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/validation"));
+    problem.setType(
+        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/validation"));
 
     Map<String, String> fieldErrors = new HashMap<>();
     ex.getConstraintViolations()
@@ -77,7 +80,8 @@ public class GlobalExceptionHandler {
     ProblemDetail problem =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     problem.setTitle("Missing Required Header");
-    problem.setType(URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/bad-request"));
+    problem.setType(
+        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/bad-request"));
     return withTraceId(problem);
   }
 
@@ -87,7 +91,8 @@ public class GlobalExceptionHandler {
     ProblemDetail problem =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Malformed request body");
     problem.setTitle("Bad Request");
-    problem.setType(URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/bad-request"));
+    problem.setType(
+        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/bad-request"));
     return withTraceId(problem);
   }
 
@@ -115,7 +120,8 @@ public class GlobalExceptionHandler {
     ProblemDetail problem =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     problem.setTitle("Bad Request");
-    problem.setType(URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/bad-request"));
+    problem.setType(
+        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/bad-request"));
     return withTraceId(problem);
   }
 
@@ -127,7 +133,8 @@ public class GlobalExceptionHandler {
         ProblemDetail.forStatusAndDetail(
             HttpStatus.METHOD_NOT_ALLOWED, ex.getMethod() + " method is not supported");
     problem.setTitle("Method Not Allowed");
-    problem.setType(URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/method-not-allowed"));
+    problem.setType(
+        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/method-not-allowed"));
     problem.setProperty("allowedMethods", ex.getSupportedHttpMethods());
     return withTraceId(problem);
   }
