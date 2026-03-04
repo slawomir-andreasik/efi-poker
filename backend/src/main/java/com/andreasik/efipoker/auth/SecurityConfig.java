@@ -1,7 +1,7 @@
 package com.andreasik.efipoker.auth;
 
+import com.andreasik.efipoker.shared.exception.ErrorType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -72,9 +72,7 @@ public class SecurityConfig {
                           ProblemDetail.forStatusAndDetail(
                               HttpStatus.UNAUTHORIZED, "Authentication required");
                       problem.setTitle("Unauthorized");
-                      problem.setType(
-                          URI.create(
-                              "https://github.com/slawomir-andreasik/efi-poker/errors/unauthorized"));
+                      problem.setType(ErrorType.UNAUTHORIZED.uri());
 
                       response.setStatus(HttpStatus.UNAUTHORIZED.value());
                       response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);

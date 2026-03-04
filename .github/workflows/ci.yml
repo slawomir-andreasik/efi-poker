@@ -56,7 +56,7 @@ jobs:
           name: test-results
           path: '**/build/reports/'
 
-      # Docker build only on main
+      # Docker build only on main/tags
       - uses: docker/login-action@v3
         if: github.ref == 'refs/heads/main'
         with:
@@ -126,7 +126,7 @@ jobs:
       - name: Install, lint and build
         run: cd frontend && bun install && bun run lint && VITE_APP_VERSION=${{ steps.version.outputs.version }} bun run build
 
-      # Docker build only on main
+      # Docker build only on main/tags
       - uses: docker/login-action@v3
         if: github.ref == 'refs/heads/main'
         with:

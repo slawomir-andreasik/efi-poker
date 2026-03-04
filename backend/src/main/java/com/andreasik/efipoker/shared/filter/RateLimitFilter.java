@@ -1,6 +1,7 @@
 package com.andreasik.efipoker.shared.filter;
 
 import com.andreasik.efipoker.shared.config.RateLimitConfig;
+import com.andreasik.efipoker.shared.exception.ErrorType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -101,7 +102,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     response
         .getWriter()
         .write(
-            "{\"type\":\"https://github.com/slawomir-andreasik/efi-poker/errors/rate-limit-exceeded\","
+            "{\"type\":\"" + ErrorType.RATE_LIMIT_EXCEEDED.uri() + "\","
                 + "\"title\":\"Too Many Requests\","
                 + "\"status\":429,"
                 + "\"detail\":\"Rate limit exceeded. Try again later.\"}");

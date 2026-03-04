@@ -1,7 +1,6 @@
 package com.andreasik.efipoker.shared.exception;
 
 import jakarta.validation.ConstraintViolationException;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +24,7 @@ public class GlobalExceptionHandler {
     log.warn("Resource not found: {}", ex.getMessage());
     ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     problem.setTitle("Resource Not Found");
-    problem.setType(URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/not-found"));
+    problem.setType(ErrorType.NOT_FOUND.uri());
     return withTraceId(problem);
   }
 
@@ -34,8 +33,7 @@ public class GlobalExceptionHandler {
     log.warn("Unauthorized access: {}", ex.getMessage());
     ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
     problem.setTitle("Unauthorized");
-    problem.setType(
-        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/unauthorized"));
+    problem.setType(ErrorType.UNAUTHORIZED.uri());
     return withTraceId(problem);
   }
 
@@ -45,8 +43,7 @@ public class GlobalExceptionHandler {
     ProblemDetail problem =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");
     problem.setTitle("Validation Error");
-    problem.setType(
-        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/validation"));
+    problem.setType(ErrorType.VALIDATION.uri());
 
     Map<String, String> fieldErrors = new HashMap<>();
     ex.getBindingResult()
@@ -63,8 +60,7 @@ public class GlobalExceptionHandler {
     ProblemDetail problem =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");
     problem.setTitle("Validation Error");
-    problem.setType(
-        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/validation"));
+    problem.setType(ErrorType.VALIDATION.uri());
 
     Map<String, String> fieldErrors = new HashMap<>();
     ex.getConstraintViolations()
@@ -80,8 +76,7 @@ public class GlobalExceptionHandler {
     ProblemDetail problem =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     problem.setTitle("Missing Required Header");
-    problem.setType(
-        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/bad-request"));
+    problem.setType(ErrorType.BAD_REQUEST.uri());
     return withTraceId(problem);
   }
 
@@ -91,8 +86,7 @@ public class GlobalExceptionHandler {
     ProblemDetail problem =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Malformed request body");
     problem.setTitle("Bad Request");
-    problem.setType(
-        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/bad-request"));
+    problem.setType(ErrorType.BAD_REQUEST.uri());
     return withTraceId(problem);
   }
 
@@ -101,7 +95,7 @@ public class GlobalExceptionHandler {
     log.warn("Conflict: {}", ex.getMessage());
     ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     problem.setTitle("Conflict");
-    problem.setType(URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/conflict"));
+    problem.setType(ErrorType.CONFLICT.uri());
     return withTraceId(problem);
   }
 
@@ -110,7 +104,7 @@ public class GlobalExceptionHandler {
     log.warn("Conflict: {}", ex.getMessage());
     ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     problem.setTitle("Conflict");
-    problem.setType(URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/conflict"));
+    problem.setType(ErrorType.CONFLICT.uri());
     return withTraceId(problem);
   }
 
@@ -120,8 +114,7 @@ public class GlobalExceptionHandler {
     ProblemDetail problem =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     problem.setTitle("Bad Request");
-    problem.setType(
-        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/bad-request"));
+    problem.setType(ErrorType.BAD_REQUEST.uri());
     return withTraceId(problem);
   }
 
@@ -133,8 +126,7 @@ public class GlobalExceptionHandler {
         ProblemDetail.forStatusAndDetail(
             HttpStatus.METHOD_NOT_ALLOWED, ex.getMethod() + " method is not supported");
     problem.setTitle("Method Not Allowed");
-    problem.setType(
-        URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/method-not-allowed"));
+    problem.setType(ErrorType.METHOD_NOT_ALLOWED.uri());
     problem.setProperty("allowedMethods", ex.getSupportedHttpMethods());
     return withTraceId(problem);
   }
@@ -144,7 +136,7 @@ public class GlobalExceptionHandler {
     log.debug("No resource found: {}", ex.getMessage());
     ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     problem.setTitle("Not Found");
-    problem.setType(URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/not-found"));
+    problem.setType(ErrorType.NOT_FOUND.uri());
     return withTraceId(problem);
   }
 
@@ -155,7 +147,7 @@ public class GlobalExceptionHandler {
         ProblemDetail.forStatusAndDetail(
             HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
     problem.setTitle("Internal Server Error");
-    problem.setType(URI.create("https://github.com/slawomir-andreasik/efi-poker/errors/internal"));
+    problem.setType(ErrorType.INTERNAL.uri());
     return withTraceId(problem);
   }
 
