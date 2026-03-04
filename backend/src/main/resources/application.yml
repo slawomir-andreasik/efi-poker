@@ -7,7 +7,7 @@ spring:
       enabled: true
 
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:efipoker}
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:efipoker}
     username: ${POSTGRES_USER:efipoker}
     password: ${POSTGRES_PASSWORD:changeme}
     driver-class-name: org.postgresql.Driver

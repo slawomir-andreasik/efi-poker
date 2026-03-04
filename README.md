@@ -82,7 +82,7 @@ make docker-dev
 | `ADMIN_USERNAME` | `admin` | Bootstrap admin username |
 | `ADMIN_PASSWORD` | `changeme` | Bootstrap admin password |
 | `POSTGRES_HOST` | `localhost` | Database host |
-| `POSTGRES_PORT` | `5433` | Database port |
+| `POSTGRES_PORT` | `5432` | Database port |
 | `POSTGRES_DB` | `efipoker` | Database name |
 | `POSTGRES_USER` | `efipoker` | Database user |
 | `POSTGRES_PASSWORD` | `changeme` | Database password |
