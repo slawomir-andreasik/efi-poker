@@ -102,7 +102,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
     response
         .getWriter()
         .write(
-            "{\"type\":\"" + ErrorType.RATE_LIMIT_EXCEEDED.uri() + "\","
+            "{\"type\":\""
+                + ErrorType.RATE_LIMIT_EXCEEDED.uri()
+                + "\","
                 + "\"title\":\"Too Many Requests\","
                 + "\"status\":429,"
                 + "\"detail\":\"Rate limit exceeded. Try again later.\"}");
