@@ -10,6 +10,8 @@ import type {
   AdminUserResponse,
   AdminCreateUserRequest,
   AdminUpdateUserRequest,
+  ChangePasswordRequest,
+  AdminResetPasswordRequest,
 } from './types';
 
 // --- Auth mutations ---
@@ -32,6 +34,17 @@ export function useRegister() {
       setJwt(res.token);
       setIdentity(body.username);
       return res;
+    },
+  });
+}
+
+export function useChangePassword() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ChangePasswordRequest) =>
+      api<void>('/auth/me/password', { method: 'PUT', body }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.auth.me });
     },
   });
 }
@@ -274,6 +287,17 @@ export function useAdminUpdateUser() {
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: AdminUpdateUserRequest }) =>
       api<AdminUserResponse>(`/admin/users/${id}`, { method: 'PATCH', body }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'users'] });
+    },
+  });
+}
+
+export function useAdminResetPassword() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: AdminResetPasswordRequest }) =>
+      api<void>(`/admin/users/${id}/password`, { method: 'PUT', body }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['admin', 'users'] });
     },

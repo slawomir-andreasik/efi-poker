@@ -12,6 +12,7 @@ import { RoundHistoryPanel } from '@/components/RoundHistoryPanel';
 import { EstimateButtons } from '@/components/EstimateButtons';
 import type { StoryPoints, RoomDetailResponse } from '@/api/types';
 import { getErrorMessage } from '@/utils/error';
+import { TextInput } from '@/components/TextInput';
 
 interface LiveRoomViewProps {
   slug: string;
@@ -234,7 +235,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
           className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 glass-gold rounded-xl p-4 mb-6"
         >
           <p className="text-sm text-efi-gold-light font-medium sm:mr-2">Join as voter to estimate</p>
-          <input
+          <TextInput
             type="text"
             value={joinNickname}
             onChange={(e) => setJoinNickname(e.target.value)}
@@ -258,7 +259,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
           <h2 className="text-xs font-semibold text-efi-text-secondary uppercase tracking-wider mb-3">Admin Controls</h2>
           {!isRevealed ? (
             <div className="flex flex-col sm:flex-row gap-3">
-              <input
+              <TextInput
                 type="text"
                 value={editingTopic ?? liveState?.topic ?? ''}
                 onChange={(e) => setEditingTopic(e.target.value)}
@@ -285,7 +286,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row gap-3">
-              <input
+              <TextInput
                 type="text"
                 value={topicInput}
                 onChange={(e) => setTopicInput(e.target.value)}

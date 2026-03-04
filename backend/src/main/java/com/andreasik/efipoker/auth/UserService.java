@@ -2,6 +2,7 @@ package com.andreasik.efipoker.auth;
 
 import com.andreasik.efipoker.shared.exception.ConflictException;
 import com.andreasik.efipoker.shared.exception.ResourceNotFoundException;
+import com.andreasik.efipoker.shared.exception.UnauthorizedException;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -106,6 +107,40 @@ public class UserService {
                         return userEntityMapper.toDomain(userRepository.save(newUser));
                       });
             });
+  }
+
+  @Transactional
+  public void changePassword(UUID userId, String currentPassword, String newPassword) {
+    UserEntity entity =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
+    if (entity.getPasswordHash() != null) {
+      // User has existing password - must verify current password
+      if (currentPassword == null
+          || !passwordEncoder.matches(currentPassword, entity.getPasswordHash())) {
+        log.warn("Password change failed: invalid current password for user={}", userId);
+        throw new UnauthorizedException("Current password is incorrect");
+      }
+    }
+    // Auth0 user without password can set one without currentPassword
+
+    entity.setPasswordHash(passwordEncoder.encode(newPassword));
+    userRepository.save(entity);
+    log.info("Password changed for user: id={}", userId);
+  }
+
+  @Transactional
+  public void adminResetPassword(UUID userId, String newPassword) {
+    UserEntity entity =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
+    entity.setPasswordHash(passwordEncoder.encode(newPassword));
+    userRepository.save(entity);
+    log.info("Admin reset password for user: id={}", userId);
   }
 
   public Page<User> listUsers(int page, int size, String search) {

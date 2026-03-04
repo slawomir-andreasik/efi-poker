@@ -27,6 +27,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Skip if release already exists (created manually before tag push)
+          if gh release view "$GITHUB_REF_NAME" &>/dev/null; then
+            echo "Release $GITHUB_REF_NAME already exists, skipping."
+            exit 0
+          fi
           PREV_TAG=$(git tag --sort=-version:refname | grep '^v' | sed -n '2p')
           NOTES_FLAG=""
           if [ -n "$PREV_TAG" ]; then

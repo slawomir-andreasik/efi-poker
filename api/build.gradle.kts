@@ -137,7 +137,10 @@ tasks.named("clean") {
     dependsOn("cleanGeneratedApi")
 }
 
-// All Java in this module is generated from OpenAPI - skip Spotless formatting
+// All Java in this module is generated from OpenAPI - skip Spotless entirely
 spotless {
     isEnforceCheck = false
+    java {
+        targetExclude("build/**")
+    }
 }

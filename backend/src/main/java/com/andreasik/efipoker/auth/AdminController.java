@@ -2,6 +2,7 @@ package com.andreasik.efipoker.auth;
 
 import com.andreasik.efipoker.api.AdminApi;
 import com.andreasik.efipoker.api.model.AdminCreateUserRequest;
+import com.andreasik.efipoker.api.model.AdminResetPasswordRequest;
 import com.andreasik.efipoker.api.model.AdminUpdateUserRequest;
 import com.andreasik.efipoker.api.model.AdminUserResponse;
 import com.andreasik.efipoker.api.model.PagedUsersResponse;
@@ -85,6 +86,16 @@ public class AdminController implements AdminApi {
 
     User user = userService.adminUpdateUser(id, email, role);
     return ResponseEntity.ok(userMapper.toAdminResponse(user));
+  }
+
+  @Override
+  public ResponseEntity<Void> adminResetPassword(
+      UUID id, AdminResetPasswordRequest adminResetPasswordRequest) {
+    log.debug("PUT /admin/users/{}/password", id);
+
+    userService.adminResetPassword(id, adminResetPasswordRequest.getNewPassword());
+
+    return ResponseEntity.noContent().build();
   }
 
   @Override

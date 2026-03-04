@@ -45,7 +45,30 @@ class UserMapperTest extends BaseUnitTest {
       assertAll(
           () -> assertThat(response.getId()).isEqualTo(id),
           () -> assertThat(response.getUsername()).isEqualTo("john.doe"),
-          () -> assertThat(response.getEmail()).isEqualTo("john@example.com"));
+          () -> assertThat(response.getEmail()).isEqualTo("john@example.com"),
+          () -> assertThat(response.getHasPassword()).isTrue(),
+          () -> assertThat(response.getAuthProvider()).isEqualTo("LOCAL"));
+    }
+
+    @Test
+    void should_map_has_password_false_when_no_password() {
+      // Arrange
+      User user =
+          User.builder()
+              .id(UUID.randomUUID())
+              .username("auth0user")
+              .authProvider("AUTH0")
+              .role("USER")
+              .createdAt(Instant.now())
+              .build();
+
+      // Act
+      UserResponse response = mapper.toResponse(user);
+
+      // Assert
+      assertAll(
+          () -> assertThat(response.getHasPassword()).isFalse(),
+          () -> assertThat(response.getAuthProvider()).isEqualTo("AUTH0"));
     }
 
     @ParameterizedTest

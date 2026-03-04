@@ -8,6 +8,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useToast } from '@/components/Toast';
 import { Spinner, ButtonSpinner } from '@/components/Spinner';
 import { RandomNameButton } from '@/components/RandomNameButton';
+import { TextInput } from '@/components/TextInput';
 import type { ParticipantResponse } from '@/api/types';
 
 type Mode = 'loading' | 'welcome-back' | 'join-form';
@@ -171,7 +172,7 @@ export function JoinPage() {
             Your Nickname
           </label>
           <div className="flex items-center gap-1">
-            <input
+            <TextInput
               id="nickname"
               type="text"
               value={nickname}

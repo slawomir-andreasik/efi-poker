@@ -75,7 +75,9 @@ class AuthControllerIntegrationTest extends BaseComponentTest {
           .perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + token))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.username").value("testadmin"))
-          .andExpect(jsonPath("$.role").value("ADMIN"));
+          .andExpect(jsonPath("$.role").value("ADMIN"))
+          .andExpect(jsonPath("$.hasPassword").value(true))
+          .andExpect(jsonPath("$.authProvider").value("LOCAL"));
     }
 
     @Test

@@ -5,10 +5,12 @@ import com.andreasik.efipoker.api.model.UserResponse;
 import com.andreasik.efipoker.shared.mapper.EfiMapperConfig;
 import java.util.List;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(config = EfiMapperConfig.class)
 public interface UserMapper {
 
+  @Mapping(target = "hasPassword", expression = "java(user.passwordHash() != null)")
   UserResponse toResponse(User user);
 
   AdminUserResponse toAdminResponse(User user);

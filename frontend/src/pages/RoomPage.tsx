@@ -17,6 +17,7 @@ import { TaskCard } from '@/components/TaskCard';
 import { SortControls } from '@/components/SortControls';
 import { RoomSidebar } from '@/components/RoomSidebar';
 import { LiveRoomView } from '@/components/LiveRoomView';
+import { TextInput } from '@/components/TextInput';
 import type { StoryPoints } from '@/api/types';
 
 export function RoomPage() {
@@ -269,7 +270,7 @@ export function RoomPage() {
           <p className="text-sm text-efi-gold-light font-medium sm:mr-2">
             Join as voter to estimate tasks
           </p>
-          <input
+          <TextInput
             type="text"
             value={joinNickname}
             onChange={(e) => setJoinNickname(e.target.value)}

@@ -14,6 +14,7 @@ import { Spinner } from '@/components/Spinner';
 import { RandomNameButton } from '@/components/RandomNameButton';
 import { JoinByCodeModal } from '@/components/JoinByCodeModal';
 import { CreateProjectModal } from '@/components/CreateProjectModal';
+import { TextInput } from '@/components/TextInput';
 import type { RoomResponse, ParticipantResponse } from '@/api/types';
 
 interface ProjectEntry {
@@ -199,7 +200,7 @@ export function HomePage() {
               What&apos;s your name?
             </label>
             <div className="flex items-center gap-1">
-              <input
+              <TextInput
                 id="name-input"
                 type="text"
                 value={nameInput}

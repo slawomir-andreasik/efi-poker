@@ -10,6 +10,7 @@ import { Copy, Menu } from 'lucide-react';
 import { useToast } from '@/components/Toast';
 import { NicknameDropdown } from './NicknameDropdown';
 import { MobileSidebar } from './MobileSidebar';
+import { ChangePasswordModal } from '@/components/ChangePasswordModal';
 
 export function Header() {
   const location = useLocation();
@@ -25,6 +26,7 @@ export function Header() {
   const { auth0Enabled, registrationEnabled } = useAuthConfig();
   const { user: currentUser, isAdmin: isAppAdmin } = useCurrentUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
@@ -164,6 +166,8 @@ export function Header() {
                 participantId={participantId}
                 onNicknameChanged={setDisplayName}
                 onLogout={jwt ? handleLogout : handleGuestLogout}
+                onPasswordClick={jwt ? () => setPasswordModalOpen(true) : undefined}
+                isLoggedIn={Boolean(jwt)}
               />
             )}
 
@@ -188,6 +192,11 @@ export function Header() {
           </div>
         </div>
       </header>
+      <ChangePasswordModal
+        isOpen={passwordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
+        hasPassword={currentUser?.hasPassword ?? true}
+      />
     </>
   );
 }

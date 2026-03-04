@@ -3,6 +3,7 @@ import { EstimateButtons } from './EstimateButtons';
 import { ProgressBar } from './ProgressBar';
 import { Linkify } from '@/lib/linkify';
 import { SP_VALUES } from '@/api/types';
+import { TextArea } from '@/components/TextInput';
 import type { StoryPoints, EstimateResponse } from '@/api/types';
 
 interface TaskCardProps {
@@ -180,7 +181,7 @@ function InlineDescription({
   }
 
   return (
-    <textarea
+    <TextArea
       value={text}
       onChange={(e) => setText(e.target.value)}
       onBlur={handleBlur}

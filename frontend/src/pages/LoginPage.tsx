@@ -6,6 +6,7 @@ import { useToast } from '@/components/Toast';
 import { getErrorMessage } from '@/utils/error';
 import { ButtonSpinner } from '@/components/Spinner';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { TextInput } from '@/components/TextInput';
 
 export function LoginPage() {
   useDocumentTitle('Login');
@@ -49,7 +50,7 @@ export function LoginPage() {
               <label htmlFor="login-username" className="block text-sm font-medium text-efi-text-secondary mb-1">
                 Username
               </label>
-              <input
+              <TextInput
                 id="login-username"
                 type="text"
                 value={username}

@@ -27,6 +27,8 @@ export interface UserResponse {
   id: string;
   username: string;
   role: UserRole;
+  hasPassword: boolean;
+  authProvider: string;
 }
 
 // Admin
@@ -59,6 +61,15 @@ export interface AdminCreateUserRequest {
 export interface AdminUpdateUserRequest {
   email?: string;
   role?: UserRole;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword?: string;
+  newPassword: string;
+}
+
+export interface AdminResetPasswordRequest {
+  newPassword: string;
 }
 
 // Enums

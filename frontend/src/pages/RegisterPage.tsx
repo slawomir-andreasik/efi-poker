@@ -5,6 +5,7 @@ import { useToast } from '@/components/Toast';
 import { getErrorMessage } from '@/utils/error';
 import { ButtonSpinner } from '@/components/Spinner';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { TextInput } from '@/components/TextInput';
 
 export function RegisterPage() {
   useDocumentTitle('Register');
@@ -54,7 +55,7 @@ export function RegisterPage() {
               <label htmlFor="reg-username" className="block text-sm font-medium text-efi-text-secondary mb-1">
                 Username
               </label>
-              <input
+              <TextInput
                 id="reg-username"
                 type="text"
                 value={username}
@@ -90,7 +91,7 @@ export function RegisterPage() {
               <label htmlFor="reg-email" className="block text-sm font-medium text-efi-text-secondary mb-1">
                 Email <span className="text-efi-text-tertiary">(optional)</span>
               </label>
-              <input
+              <TextInput
                 id="reg-email"
                 type="email"
                 value={email}

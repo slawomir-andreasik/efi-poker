@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logger } from '@/utils/logger';
+import { TextInput } from '@/components/TextInput';
 
 export function JoinByCodeForm() {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ export function JoinByCodeForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
-      <input
+      <TextInput
         type="text"
         value={code}
         onChange={(e) => setCode(e.target.value)}

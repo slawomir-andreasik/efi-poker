@@ -3,13 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import { Navigate } from 'react-router-dom';
 import { queryKeys } from '@/api/queryKeys';
 import { adminApi } from '@/api/queries';
-import { useAdminCreateUser, useAdminUpdateUser, useAdminDeleteUser } from '@/api/mutations';
+import { useAdminCreateUser, useAdminUpdateUser, useAdminDeleteUser, useAdminResetPassword } from '@/api/mutations';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useToast } from '@/components/Toast';
 import { getErrorMessage } from '@/utils/error';
-import { Pencil, Trash2 } from 'lucide-react';
+import { logger } from '@/utils/logger';
+import { Pencil, Trash2, KeyRound } from 'lucide-react';
 import { Spinner, ButtonSpinner } from '@/components/Spinner';
+import { TextInput } from '@/components/TextInput';
 import type { AdminUserResponse, UserRole } from '@/api/types';
 
 const PAGE_SIZE = 20;
@@ -35,6 +37,10 @@ export function AdminUsersPage() {
   const [editRole, setEditRole] = useState<UserRole>('USER');
   const [editEmail, setEditEmail] = useState('');
 
+  // Password reset
+  const [resetPasswordId, setResetPasswordId] = useState<string | null>(null);
+  const [resetPasswordValue, setResetPasswordValue] = useState('');
+
   // Delete confirm
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -47,6 +53,7 @@ export function AdminUsersPage() {
   const createUser = useAdminCreateUser();
   const updateUser = useAdminUpdateUser();
   const deleteUser = useAdminDeleteUser();
+  const resetPassword = useAdminResetPassword();
 
   if (userLoading) {
     return (
@@ -108,6 +115,19 @@ export function AdminUsersPage() {
     }
   }
 
+  async function handleResetPassword(id: string) {
+    if (resetPasswordValue.length < 8) return;
+    try {
+      await resetPassword.mutateAsync({ id, body: { newPassword: resetPasswordValue } });
+      setResetPasswordId(null);
+      setResetPasswordValue('');
+      showToast('Password reset', 'success');
+    } catch (err) {
+      logger.warn('Failed to reset password:', getErrorMessage(err));
+      showToast(getErrorMessage(err));
+    }
+  }
+
   async function handleDelete(id: string) {
     try {
       await deleteUser.mutateAsync(id);
@@ -141,7 +161,7 @@ export function AdminUsersPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="new-username" className="block text-sm font-medium text-efi-text-secondary mb-1">Username</label>
-              <input
+              <TextInput
                 id="new-username"
                 type="text"
                 value={newUsername}
@@ -169,7 +189,7 @@ export function AdminUsersPage() {
               <label htmlFor="new-email" className="block text-sm font-medium text-efi-text-secondary mb-1">
                 Email <span className="text-efi-text-tertiary">(optional)</span>
               </label>
-              <input
+              <TextInput
                 id="new-email"
                 type="email"
                 value={newEmail}
@@ -203,7 +223,7 @@ export function AdminUsersPage() {
 
       {/* Search */}
       <form onSubmit={handleSearch} className="flex gap-2 mb-4">
-        <input
+        <TextInput
           type="text"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
@@ -258,7 +278,7 @@ export function AdminUsersPage() {
                     <td className="px-4 py-3 text-efi-text-primary font-medium">{user.username}</td>
                     <td className="px-4 py-3 text-efi-text-secondary hidden sm:table-cell">
                       {editingId === user.id ? (
-                        <input
+                        <TextInput
                           type="email"
                           value={editEmail}
                           onChange={(e) => setEditEmail(e.target.value)}
@@ -330,6 +350,33 @@ export function AdminUsersPage() {
                           </button>
                         </div>
                       ) : (
+                        resetPasswordId === user.id ? (
+                        <div className="flex items-center gap-1">
+                          <TextInput
+                            type="password"
+                            value={resetPasswordValue}
+                            onChange={(e) => setResetPasswordValue(e.target.value)}
+                            placeholder="New password"
+                            autoComplete="new-password"
+                            className="rounded bg-efi-well border border-efi-gold-light/20 px-2 py-1 text-efi-text-primary text-base w-28 focus:outline-none focus:border-efi-gold"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => void handleResetPassword(user.id)}
+                            disabled={resetPassword.isPending || resetPasswordValue.length < 8}
+                            className="text-xs px-2 py-1 rounded text-efi-success hover:bg-efi-success/10 transition-colors cursor-pointer disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+                          >
+                            {resetPassword.isPending ? 'Saving...' : 'Set'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setResetPasswordId(null); setResetPasswordValue(''); }}
+                            className="text-xs px-2 py-1 rounded text-efi-text-tertiary hover:text-efi-text-secondary transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
@@ -341,6 +388,14 @@ export function AdminUsersPage() {
                           </button>
                           <button
                             type="button"
+                            onClick={() => setResetPasswordId(user.id)}
+                            title="Reset password"
+                            className="p-1.5 rounded text-efi-text-tertiary hover:text-efi-text-primary hover:bg-white/5 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+                          >
+                            <KeyRound className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setDeletingId(user.id)}
                             title="Delete user"
                             className="p-1.5 rounded text-efi-text-tertiary hover:text-red-400 hover:bg-white/5 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
@@ -348,6 +403,7 @@ export function AdminUsersPage() {
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
+                      )
                       )}
                     </td>
                   </tr>

@@ -3,6 +3,7 @@ package com.andreasik.efipoker.auth;
 import com.andreasik.efipoker.api.AuthApi;
 import com.andreasik.efipoker.api.model.AuthConfigResponse;
 import com.andreasik.efipoker.api.model.AuthResponse;
+import com.andreasik.efipoker.api.model.ChangePasswordRequest;
 import com.andreasik.efipoker.api.model.LoginRequest;
 import com.andreasik.efipoker.api.model.RegisterRequest;
 import com.andreasik.efipoker.api.model.UserResponse;
@@ -32,6 +33,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 public class AuthController implements AuthApi {
 
   private final UserService userService;
+  private final UserMapper userMapper;
   private final JwtService jwtService;
   private final PasswordEncoder passwordEncoder;
   private final Auth0Properties auth0Properties;
@@ -77,7 +79,8 @@ public class AuthController implements AuthApi {
             .findByUsername(loginRequest.getUsername())
             .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
 
-    if (!passwordEncoder.matches(loginRequest.getPassword(), user.passwordHash())) {
+    if (user.passwordHash() == null
+        || !passwordEncoder.matches(loginRequest.getPassword(), user.passwordHash())) {
       throw new UnauthorizedException("Invalid credentials");
     }
 
@@ -88,6 +91,18 @@ public class AuthController implements AuthApi {
 
     log.info("User logged in: {}", loginRequest.getUsername());
     return ResponseEntity.ok(new AuthResponse().token(token).expiresAt(expiresAt));
+  }
+
+  @Override
+  public ResponseEntity<Void> changePassword(ChangePasswordRequest changePasswordRequest) {
+    log.debug("PUT /auth/me/password");
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    UUID userId = UUID.fromString(authentication.getName());
+
+    userService.changePassword(
+        userId, changePasswordRequest.getCurrentPassword(), changePasswordRequest.getNewPassword());
+
+    return ResponseEntity.noContent().build();
   }
 
   // OAuth2 endpoints are handled by Spring Security's oauth2Login() filter.
@@ -116,13 +131,7 @@ public class AuthController implements AuthApi {
     User user =
         userService.findById(userId).orElseThrow(() -> new UnauthorizedException("User not found"));
 
-    UserResponse response =
-        new UserResponse()
-            .id(user.id())
-            .username(user.username())
-            .role(UserResponse.RoleEnum.fromValue(user.role()));
-
-    return ResponseEntity.ok(response);
+    return ResponseEntity.ok(userMapper.toResponse(user));
   }
 
   @Override

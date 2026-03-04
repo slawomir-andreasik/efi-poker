@@ -1108,6 +1108,37 @@ paths:
       summary: Get current authenticated user
       tags:
       - auth
+  /auth/me/password:
+    put:
+      description: |
+        Authenticated users can change their password (requires currentPassword) or Auth0 users can set a local password for the first time (omit currentPassword).
+      operationId: changePassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+        required: true
+      responses:
+        "204":
+          description: Password changed
+        "400":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Validation error
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Current password is incorrect
+      security:
+      - bearerAuth: []
+      summary: Change or set password for current user
+      tags:
+      - auth
   /auth/me/projects:
     get:
       description: Returns all projects where the authenticated user is the owner.
@@ -1384,6 +1415,37 @@ paths:
       security:
       - bearerAuth: []
       summary: Update user
+      tags:
+      - admin
+  /admin/users/{id}/password:
+    put:
+      description: Admin can reset any user's password. Requires ADMIN role.
+      operationId: adminResetPassword
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminResetPasswordRequest"
+        required: true
+      responses:
+        "204":
+          description: Password reset
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: User not found
+      security:
+      - bearerAuth: []
+      summary: Reset user password
       tags:
       - admin
 components:
@@ -2290,8 +2352,10 @@ components:
       type: object
     UserResponse:
       example:
+        authProvider: authProvider
         role: ADMIN
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        hasPassword: true
         email: email
         username: username
       properties:
@@ -2307,6 +2371,30 @@ components:
           - ADMIN
           - USER
           type: string
+        hasPassword:
+          description: Whether the user has a local password set
+          type: boolean
+        authProvider:
+          description: Authentication provider (LOCAL or AUTH0)
+          type: string
+      type: object
+    ChangePasswordRequest:
+      example:
+        newPassword: newPassword
+        currentPassword: currentPassword
+      properties:
+        currentPassword:
+          description: Required when user already has a password. Omit when Auth0
+            user sets password for the first time.
+          maxLength: 128
+          minLength: 8
+          type: string
+        newPassword:
+          maxLength: 128
+          minLength: 8
+          type: string
+      required:
+      - newPassword
       type: object
     PagedUsersResponse:
       example:
@@ -2416,6 +2504,17 @@ components:
           - ADMIN
           - USER
           type: string
+      type: object
+    AdminResetPasswordRequest:
+      example:
+        newPassword: newPassword
+      properties:
+        newPassword:
+          maxLength: 128
+          minLength: 8
+          type: string
+      required:
+      - newPassword
       type: object
     RoomType:
       enum:

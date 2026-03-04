@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TextInput, TextArea } from '@/components/TextInput';
 
 interface AddTaskFormProps {
   onAdd: (title: string, description?: string) => Promise<void>;
@@ -28,7 +29,7 @@ export function AddTaskForm({ onAdd, onImport, inputBg = 'bg-efi-well' }: AddTas
     <div className="mb-4 space-y-2">
       <div className="flex flex-col sm:flex-row gap-2">
         <form onSubmit={(e) => void handleSubmit(e)} className="flex-1 flex gap-2">
-          <input
+          <TextInput
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -53,7 +54,7 @@ export function AddTaskForm({ onAdd, onImport, inputBg = 'bg-efi-well' }: AddTas
           </button>
         )}
       </div>
-      <textarea
+      <TextArea
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Task description (optional)"

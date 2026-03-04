@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TextArea } from '@/components/TextInput';
 
 interface ImportModalProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ export function ImportModal({ isOpen, onClose, onImport }: ImportModalProps) {
       <div className="glass-crystal rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-lg animate-[fade-in-scale_0.2s_ease-out]">
         <h2 className="text-lg font-semibold text-efi-text-primary mb-4">Import Tasks</h2>
 
-        <textarea
+        <TextArea
           value={text}
           onChange={(e) => { setText(e.target.value); setValidationError(null); }}
           placeholder="Paste task titles, one per line..."

@@ -31,6 +31,7 @@ import { RandomNameButton } from '@/components/RandomNameButton';
 import { generateRoomName } from '@/utils/nameGenerator';
 import { Linkify } from '@/lib/linkify';
 import { statusBadge, roomTypeBadge, statusLabel } from '@/utils/roomBadges';
+import { TextInput, TextArea } from '@/components/TextInput';
 import type { RoomType } from '@/api/types';
 
 export function ProjectPage() {
@@ -364,7 +365,7 @@ export function ProjectPage() {
           <div>
             {editingName != null ? (
               <div className="flex items-center gap-2">
-                <input
+                <TextInput
                   type="text"
                   value={editingName}
                   onChange={(e) => setEditingName(e.target.value)}
@@ -651,14 +652,14 @@ export function ProjectPage() {
                             <td className="py-2 px-2">
                               {editingTask?.id === task.id ? (
                                 <div className="space-y-1.5">
-                                  <input
+                                  <TextInput
                                     type="text"
                                     value={editingTask.title}
                                     onChange={(e) => setEditingTask((prev) => prev && { ...prev, title: e.target.value })}
                                     maxLength={255}
                                     className="w-full rounded bg-efi-well border border-efi-gold-light/20 px-2 py-1 text-base text-efi-text-primary focus:outline-none focus:border-efi-gold"
                                   />
-                                  <textarea
+                                  <TextArea
                                     value={editingTask.description}
                                     onChange={(e) => setEditingTask((prev) => prev && { ...prev, description: e.target.value })}
                                     rows={2}
@@ -818,7 +819,7 @@ export function ProjectPage() {
               <h2 className="text-lg font-semibold text-efi-text-primary mb-4">New Room</h2>
               <form onSubmit={(e) => void handleCreateRoom(e)} className="space-y-3">
                 <div className="flex items-center gap-1">
-                  <input
+                  <TextInput
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -828,7 +829,7 @@ export function ProjectPage() {
                   />
                   <RandomNameButton onGenerate={setTitle} generator={generateRoomName} />
                 </div>
-                <textarea
+                <TextArea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Estimate remaining backlog items"

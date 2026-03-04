@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { RandomNameButton } from '@/components/RandomNameButton';
 import { generateProjectName } from '@/utils/nameGenerator';
 import { ButtonSpinner } from '@/components/Spinner';
+import { TextInput } from '@/components/TextInput';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -53,7 +54,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreate, isPending, isGue
             Project Name
           </label>
           <div className="flex items-center gap-1">
-            <input
+            <TextInput
               id="modal-project-name"
               type="text"
               value={projectName}

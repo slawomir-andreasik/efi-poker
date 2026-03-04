@@ -82,6 +82,8 @@ paths:
     $ref: './paths/auth/login.yaml'
   /auth/me:
     $ref: './paths/auth/me.yaml'
+  /auth/me/password:
+    $ref: './paths/auth/me-password.yaml'
   /auth/me/projects:
     $ref: './paths/auth/me-projects.yaml'
   /auth/me/participated-projects:
@@ -96,6 +98,8 @@ paths:
     $ref: './paths/admin/users.yaml'
   /admin/users/{id}:
     $ref: './paths/admin/users-id.yaml'
+  /admin/users/{id}/password:
+    $ref: './paths/admin/user-password.yaml'
 
 components:
   securitySchemes:

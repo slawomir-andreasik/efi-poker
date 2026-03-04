@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, ChevronUp, Pencil, LogOut } from 'lucide-react';
+import { ChevronDown, ChevronUp, Pencil, KeyRound, LogOut } from 'lucide-react';
 import { updateNickname } from '@/api/client';
 import { useToast } from '@/components/Toast';
 import { getErrorMessage } from '@/utils/error';
+import { TextInput } from '@/components/TextInput';
 
 interface NicknameDropdownProps {
   displayName: string;
@@ -10,9 +11,11 @@ interface NicknameDropdownProps {
   participantId: string | undefined;
   onNicknameChanged: (newNickname: string) => void;
   onLogout?: () => void;
+  onPasswordClick?: () => void;
+  isLoggedIn?: boolean;
 }
 
-export function NicknameDropdown({ displayName, slug, participantId, onNicknameChanged, onLogout }: NicknameDropdownProps) {
+export function NicknameDropdown({ displayName, slug, participantId, onNicknameChanged, onLogout, onPasswordClick, isLoggedIn }: NicknameDropdownProps) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [newName, setNewName] = useState(displayName);
@@ -44,7 +47,7 @@ export function NicknameDropdown({ displayName, slug, participantId, onNicknameC
   }, [editing]);
 
   const canEditNickname = Boolean(slug && participantId);
-  const canOpenDropdown = canEditNickname || Boolean(onLogout);
+  const canOpenDropdown = canEditNickname || Boolean(onLogout) || Boolean(onPasswordClick);
 
   function handleToggle() {
     if (!canOpenDropdown) return;
@@ -115,7 +118,7 @@ export function NicknameDropdown({ displayName, slug, participantId, onNicknameC
               <label className="text-[10px] text-efi-text-tertiary uppercase tracking-wider mb-1.5 block">
                 New nickname
               </label>
-              <input
+              <TextInput
                 ref={inputRef}
                 type="text"
                 value={newName}
@@ -152,6 +155,15 @@ export function NicknameDropdown({ displayName, slug, participantId, onNicknameC
                 >
                   <Pencil className="w-3.5 h-3.5" />
                   Change nickname
+                </button>
+              )}
+              {isLoggedIn && onPasswordClick && (
+                <button
+                  onClick={() => { setOpen(false); onPasswordClick(); }}
+                  className="w-full text-left px-3 py-2 text-sm text-efi-text-secondary hover:text-efi-text-primary hover:bg-white/6 transition-colors flex items-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  Change password
                 </button>
               )}
               {onLogout && (
