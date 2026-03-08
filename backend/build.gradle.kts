@@ -56,6 +56,10 @@ dependencies {
     // JWT (Spring Security OAuth2 Resource Server + Nimbus JOSE)
     implementation("org.springframework.boot:spring-boot-starter-security-oauth2-resource-server")
 
+    // LDAP Authentication (Spring Security + Spring LDAP)
+    implementation("org.springframework.security:spring-security-ldap")
+    implementation("org.springframework.ldap:spring-ldap-core")
+
     // Lombok
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
@@ -71,6 +75,7 @@ dependencies {
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.archunit)
+    testImplementation("com.unboundid:unboundid-ldapsdk")
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")
     testRuntimeOnly("org.postgresql:postgresql")
 }

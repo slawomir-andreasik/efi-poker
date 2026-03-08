@@ -40,6 +40,17 @@ app:
     domain: ${AUTH0_DOMAIN:disabled}
     client-id: ${AUTH0_CLIENT_ID:disabled}
     client-secret: ${AUTH0_CLIENT_SECRET:disabled}
+  ldap:
+    enabled: ${LDAP_ENABLED:false}
+    url: ${LDAP_URL:ldap://localhost:1389}
+    base-dn: ${LDAP_BASE_DN:dc=example,dc=com}
+    users-dn: ${LDAP_USERS_DN:ou=users}
+    bind-dn: ${LDAP_BIND_DN:}
+    bind-password: ${LDAP_BIND_PASSWORD:}
+    user-filter: ${LDAP_USER_FILTER:(&(uid={0})(info=userInternal)(info=active))}
+    uid-attribute: ${LDAP_UID_ATTRIBUTE:uid}
+    mail-attribute: ${LDAP_MAIL_ATTRIBUTE:mail}
+    admin-group: ${LDAP_ADMIN_GROUP:}
   cors:
     origins: ${CORS_ORIGINS:http://localhost:5173}
   jwt:

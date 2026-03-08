@@ -12,5 +12,6 @@ export function useAuthConfig() {
   return {
     auth0Enabled: data?.auth0Enabled ?? false,
     registrationEnabled: data?.registrationEnabled ?? false,
+    ldapEnabled: data?.ldapEnabled ?? false,
   };
 }

@@ -2,6 +2,7 @@ type: object
 required:
   - auth0Enabled
   - registrationEnabled
+  - ldapEnabled
 properties:
   auth0Enabled:
     type: boolean
@@ -9,3 +10,6 @@ properties:
   registrationEnabled:
     type: boolean
     description: Whether public user registration is enabled on this server
+  ldapEnabled:
+    type: boolean
+    description: Whether LDAP authentication is enabled on this server

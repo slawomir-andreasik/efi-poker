@@ -2271,6 +2271,7 @@ components:
       example:
         registrationEnabled: true
         auth0Enabled: true
+        ldapEnabled: true
       properties:
         auth0Enabled:
           description: Whether Auth0 OAuth2 login is enabled on this server
@@ -2278,8 +2279,12 @@ components:
         registrationEnabled:
           description: Whether public user registration is enabled on this server
           type: boolean
+        ldapEnabled:
+          description: Whether LDAP authentication is enabled on this server
+          type: boolean
       required:
       - auth0Enabled
+      - ldapEnabled
       - registrationEnabled
       type: object
     RegisterRequest:

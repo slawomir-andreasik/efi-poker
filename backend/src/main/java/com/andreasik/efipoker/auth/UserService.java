@@ -78,9 +78,10 @@ public class UserService {
             })
         .orElseGet(
             () -> {
-              // Fall back to email match (merges with existing local account)
+              // Fall back to email match (merges with existing local account, but not LDAP)
               return userRepository
                   .findByEmail(email)
+                  .filter(entity -> !AuthProvider.LDAP.name().equals(entity.getAuthProvider()))
                   .map(
                       entity -> {
                         log.info(
@@ -110,11 +111,50 @@ public class UserService {
   }
 
   @Transactional
+  public User findOrCreateLdapUser(String uid, String email, boolean isAdmin) {
+    return userRepository
+        .findByAuthProviderAndAuthProviderId(AuthProvider.LDAP.name(), uid)
+        .map(
+            entity -> {
+              log.debug("Found existing LDAP user: {}", entity.getUsername());
+              String expectedRole = isAdmin ? UserRole.ADMIN.name() : UserRole.USER.name();
+              if (!expectedRole.equals(entity.getRole())) {
+                entity.setRole(expectedRole);
+                userRepository.save(entity);
+                log.info(
+                    "LDAP user role synced: username={}, role={}",
+                    entity.getUsername(),
+                    expectedRole);
+              }
+              return userEntityMapper.toDomain(entity);
+            })
+        .orElseGet(
+            () -> {
+              log.info("Creating new LDAP user: uid={}", uid);
+              String role = isAdmin ? UserRole.ADMIN.name() : UserRole.USER.name();
+              UserEntity newUser =
+                  UserEntity.builder()
+                      .username(uid)
+                      .email(email)
+                      .authProvider(AuthProvider.LDAP.name())
+                      .authProviderId(uid)
+                      .role(role)
+                      .build();
+              return userEntityMapper.toDomain(userRepository.save(newUser));
+            });
+  }
+
+  @Transactional
   public void changePassword(UUID userId, String currentPassword, String newPassword) {
     UserEntity entity =
         userRepository
             .findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
+    if (AuthProvider.LDAP.name().equals(entity.getAuthProvider())) {
+      log.warn("Password change blocked for LDAP user: id={}", userId);
+      throw new UnauthorizedException("Password changes are not allowed for LDAP users");
+    }
 
     if (entity.getPasswordHash() != null) {
       // User has existing password - must verify current password
@@ -138,16 +178,26 @@ public class UserService {
             .findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
 
+    if (AuthProvider.LDAP.name().equals(entity.getAuthProvider())) {
+      log.warn("Admin password reset blocked for LDAP user: id={}", userId);
+      throw new UnauthorizedException("Password resets are not allowed for LDAP users");
+    }
+
     entity.setPasswordHash(passwordEncoder.encode(newPassword));
     userRepository.save(entity);
     log.info("Admin reset password for user: id={}", userId);
   }
 
   public Page<User> listUsers(int page, int size, String search) {
-    PageRequest pageRequest = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    int clampedSize = Math.min(size, 100);
+    PageRequest pageRequest = PageRequest.of(page, clampedSize, Sort.by("createdAt").descending());
     Page<UserEntity> entities;
     if (search != null && !search.isBlank()) {
-      entities = userRepository.searchByUsernameOrEmail(search.trim(), pageRequest);
+      String trimmed = search.trim();
+      if (trimmed.length() > 100) {
+        trimmed = trimmed.substring(0, 100);
+      }
+      entities = userRepository.searchByUsernameOrEmail(trimmed, pageRequest);
     } else {
       entities = userRepository.findAll(pageRequest);
     }
