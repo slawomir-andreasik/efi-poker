@@ -1,7 +1,5 @@
 openapi: 3.0.3
 info:
-  contact:
-    name: Sandro Andreasik
   description: Sprint Planning Poker for Scrum teams
   title: EFI Poker API
   version: 1.0.0

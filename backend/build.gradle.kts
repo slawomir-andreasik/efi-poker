@@ -10,7 +10,7 @@ hibernate {
     enhancement {
         enableLazyInitialization = true
         enableDirtyTracking = true
-        enableAssociationManagement = true
+        enableAssociationManagement = false
         enableExtendedEnhancement = false
     }
 }
@@ -21,6 +21,7 @@ dependencies {
     implementation(platform(libs.spring.modulith.bom))
     implementation(project(":api"))
     compileOnly(libs.swagger.annotations)
+    testCompileOnly(libs.swagger.annotations)
 
     // Spring Boot + Modulith
     implementation("org.springframework.modulith:spring-modulith-starter-core")
@@ -128,6 +129,7 @@ tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("boot
             "-Dspring.sql.init.mode=never",
             "-Dspring.jpa.properties.hibernate.boot.allow_jdbc_metadata_access=false",
             "-Dspring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect",
+            "-Dspring.profiles.active=prod",
         ).joinToString(" "),
     ))
     docker {
