@@ -9,7 +9,7 @@ val appVersion = file("version.properties").readText().trim().substringAfter("="
 
 allprojects {
     group = "com.andreasik"
-    version = if (providers.environmentVariable("RELEASE").getOrElse("false") == "true") appVersion else "$appVersion-SNAPSHOT"
+    version = appVersion // version.properties is the literal source of truth (SNAPSHOT on dev, release on main)
 }
 
 configure(subprojects.filter { it.name != "frontend" }) {

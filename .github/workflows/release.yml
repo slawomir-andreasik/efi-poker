@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
+    branches: [main]
 
 jobs:
   release:
@@ -14,29 +14,45 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate tag matches version.properties
-        run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          FILE_VERSION="$(grep -oP '(?<=version=).+' version.properties)"
-          if [ "$TAG_VERSION" != "$FILE_VERSION" ]; then
-            echo "::error::Tag $TAG_VERSION != version.properties $FILE_VERSION"
-            exit 1
-          fi
+      - name: Read version
+        id: version
+        run: echo "version=$(grep -oP '(?<=version=).+' version.properties)" >> "$GITHUB_OUTPUT"
 
-      - name: Create GitHub Release
+      - name: Skip SNAPSHOT versions
+        if: contains(steps.version.outputs.version, 'SNAPSHOT')
+        run: |
+          echo "Skipping release for SNAPSHOT version: ${{ steps.version.outputs.version }}"
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+        id: check
+
+      - name: Create tag and release
+        if: steps.check.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Skip if release already exists (created manually before tag push)
-          if gh release view "$GITHUB_REF_NAME" &>/dev/null; then
-            echo "Release $GITHUB_REF_NAME already exists, skipping."
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="v${VERSION}"
+
+          # Skip if tag already exists
+          if git rev-parse "$TAG" &>/dev/null; then
+            echo "Tag $TAG already exists, skipping."
             exit 0
           fi
+
+          git tag "$TAG"
+          git push origin "$TAG"
+
+          # Skip if release already exists
+          if gh release view "$TAG" &>/dev/null; then
+            echo "Release $TAG already exists, skipping."
+            exit 0
+          fi
+
           PREV_TAG=$(git tag --sort=-version:refname | grep '^v' | sed -n '2p')
           NOTES_FLAG=""
           if [ -n "$PREV_TAG" ]; then
             NOTES_FLAG="--notes-start-tag $PREV_TAG"
           fi
-          gh release create "$GITHUB_REF_NAME" \
-            --title "EFI Poker $GITHUB_REF_NAME" \
+          gh release create "$TAG" \
+            --title "EFI Poker $TAG" \
             --generate-notes $NOTES_FLAG
