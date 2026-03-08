@@ -1,0 +1,10 @@
+# Jackson-core DoS vulnerabilities - managed by Spring Boot 4.0.3 BOM
+# Cannot upgrade without Spring Boot upgrade. Both are DoS (not RCE/data leak).
+# Revisit when Spring Boot 4.1.x ships with Jackson 2.21.x / 3.1.x
+# Last reviewed: 2026-03-07
+
+# DoS via async parser number length bypass (jackson-core 2.20.2 + 3.0.4)
+GHSA-72hv-8253-57qq
+
+# DoS via excessive JSON nesting (jackson-core 3.0.4)
+CVE-2026-29062
