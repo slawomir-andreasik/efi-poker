@@ -12,7 +12,7 @@ Sprint Planning Poker for Scrum teams. Replace manual estimation on video calls 
 - **Admin tools** - user management, RBAC, project admin codes
 - **CSV export** of estimation results
 - **PWA support** - installable on mobile
-- **Auth0 integration** (optional) - OAuth2 login alongside built-in auth
+- **Flexible auth** - built-in password, LDAP, and OAuth2 (Auth0) providers
 
 ## Quick Start
 
@@ -71,7 +71,7 @@ make docker-dev
 | Frontend | React 19, TypeScript, Vite 7, Tailwind 4 |
 | Runtime | Bun (frontend), Gradle 9 (backend) |
 | API | OpenAPI-first (spec generates Java interfaces + TypeScript client) |
-| Auth | JWT + optional Auth0 OAuth2 |
+| Auth | JWT + password, LDAP, OAuth2 (Auth0) |
 | Observability | Micrometer + OpenTelemetry, Prometheus metrics |
 | Containers | Docker, Paketo Buildpacks (backend), nginx (frontend) |
 
@@ -92,6 +92,12 @@ make docker-dev
 | `AUTH0_DOMAIN` | - | Auth0 tenant domain |
 | `AUTH0_CLIENT_ID` | - | Auth0 client ID |
 | `AUTH0_CLIENT_SECRET` | - | Auth0 client secret |
+| `LDAP_ENABLED` | `false` | Enable LDAP authentication |
+| `LDAP_URL` | - | LDAP server URL (e.g. `ldap://localhost:389`) |
+| `LDAP_BASE_DN` | - | LDAP search base (e.g. `dc=example,dc=com`) |
+| `LDAP_BIND_DN` | - | LDAP bind DN for search |
+| `LDAP_BIND_PASSWORD` | - | LDAP bind password |
+| `LDAP_USER_FILTER` | `(uid={0})` | LDAP user search filter |
 | `REGISTRATION_ENABLED` | `true` | Allow public user registration |
 
 ## Project Structure
