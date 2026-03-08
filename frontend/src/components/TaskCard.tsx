@@ -186,6 +186,7 @@ function InlineDescription({
       onChange={(e) => setText(e.target.value)}
       onBlur={handleBlur}
       placeholder="Add description..."
+      maxLength={2000}
       rows={1}
       className="w-full mt-1 bg-transparent border-b border-dashed border-efi-gold-light/20 text-base text-efi-text-secondary placeholder-efi-text-tertiary px-0 py-1 resize-none focus:outline-none focus:border-efi-gold"
     />

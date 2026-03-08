@@ -54,6 +54,8 @@ public interface ParticipantRepository extends JpaRepository<ParticipantEntity, 
       """)
   List<UUID> findProjectIdsByUserId(@Param("userId") UUID userId);
 
+  boolean existsByIdAndProjectId(UUID id, UUID projectId);
+
   long countByProjectId(UUID projectId);
 
   @Query(

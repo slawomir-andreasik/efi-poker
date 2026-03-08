@@ -14,6 +14,10 @@ spring:
       leak-detection-threshold: 30000
 
 management:
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
   server:
     port: 9091
   endpoints:
@@ -34,7 +38,6 @@ management:
 
 server:
   shutdown: graceful
-  forward-headers-strategy: FRAMEWORK
   tomcat:
     threads:
       max: 50

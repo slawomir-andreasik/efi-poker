@@ -61,6 +61,16 @@ class AuthControllerIntegrationTest extends BaseComponentTest {
           .perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content(body))
           .andExpect(status().isForbidden());
     }
+
+    @Test
+    void should_reject_too_long_password_400() throws Exception {
+      String longPassword = "a".repeat(129);
+      String body = "{\"username\":\"testadmin\",\"password\":\"" + longPassword + "\"}";
+
+      mockMvc
+          .perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content(body))
+          .andExpect(status().isBadRequest());
+    }
   }
 
   @Nested

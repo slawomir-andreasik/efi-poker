@@ -14,4 +14,5 @@ properties:
   email:
     type: string
     format: email
+    maxLength: 254
     description: Optional email address

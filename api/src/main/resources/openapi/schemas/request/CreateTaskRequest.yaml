@@ -7,6 +7,7 @@ properties:
     maxLength: 255
   description:
     type: string
+    maxLength: 2000
   sortOrder:
     type: integer
     default: 0

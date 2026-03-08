@@ -4,6 +4,8 @@ import com.andreasik.efipoker.auth.UserEntity;
 import com.andreasik.efipoker.shared.event.ProjectCreatedEvent;
 import com.andreasik.efipoker.shared.exception.ResourceNotFoundException;
 import com.andreasik.efipoker.shared.exception.UnauthorizedException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.UUID;
@@ -84,7 +86,7 @@ public class ProjectService implements ProjectApi {
         projectRepository
             .findBySlug(slug)
             .orElseThrow(() -> new ResourceNotFoundException("Project", slug));
-    if (isOwner(entity, currentUserId) || entity.getAdminCode().equals(adminCode)) {
+    if (isOwner(entity, currentUserId) || adminCodeMatches(entity.getAdminCode(), adminCode)) {
       return projectEntityMapper.toDomain(entity);
     }
     log.warn("Invalid admin access for project: slug={}", slug);
@@ -100,7 +102,7 @@ public class ProjectService implements ProjectApi {
         projectRepository
             .findById(projectId)
             .orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
-    if (isOwner(entity, currentUserId) || entity.getAdminCode().equals(adminCode)) {
+    if (isOwner(entity, currentUserId) || adminCodeMatches(entity.getAdminCode(), adminCode)) {
       return;
     }
     log.warn("Invalid admin code for project: id={}", projectId);
@@ -154,6 +156,15 @@ public class ProjectService implements ProjectApi {
     if (!projectRepository.existsById(projectId)) {
       throw new ResourceNotFoundException("Project", projectId);
     }
+  }
+
+  private boolean adminCodeMatches(String stored, String provided) {
+    if (provided == null) {
+      return false;
+    }
+    byte[] a = stored.getBytes(StandardCharsets.UTF_8);
+    byte[] b = provided.getBytes(StandardCharsets.UTF_8);
+    return MessageDigest.isEqual(a, b);
   }
 
   private String generateSlug() {

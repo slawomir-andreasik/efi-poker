@@ -83,6 +83,25 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
                   .content(body))
           .andExpect(status().isForbidden());
     }
+
+    @Test
+    void should_reject_too_long_description_400() throws Exception {
+      String longDescription = "a".repeat(2001);
+      String body =
+          "{\"title\":\"Sprint 1\",\"roomType\":\"ASYNC\","
+              + "\"deadline\":\"2030-01-01T00:00:00Z\","
+              + "\"description\":\""
+              + longDescription
+              + "\"}";
+
+      mockMvc
+          .perform(
+              post("/api/v1/projects/{slug}/rooms", project.getSlug())
+                  .header("X-Admin-Code", project.getAdminCode())
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
+          .andExpect(status().isBadRequest());
+    }
   }
 
   @Nested

@@ -10,5 +10,7 @@ public interface ParticipantApi {
 
   void validateParticipantExists(UUID participantId);
 
+  void validateParticipantBelongsToProject(UUID participantId, UUID projectId);
+
   List<UUID> listParticipatedProjectIds(UUID userId);
 }

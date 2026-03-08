@@ -70,7 +70,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
           clientIp,
           request.getMethod(),
           timestamps.size());
-      writeRateLimitResponse(response);
+      writeRateLimitResponse(response, limit);
       return;
     }
 
@@ -87,18 +87,22 @@ public class RateLimitFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  private String resolveClientIp(HttpServletRequest request) {
-    String forwardedFor = request.getHeader("X-Forwarded-For");
-    if (forwardedFor != null && !forwardedFor.isBlank()) {
-      // First IP in the chain is the original client
-      return forwardedFor.split(",")[0].trim();
-    }
+  String resolveClientIp(HttpServletRequest request) {
+    // Tomcat RemoteIpValve (forward-headers-strategy: NATIVE) resolves X-Forwarded-For
+    // from trusted proxies (Docker 172.x, K8s 10.x, localhost) before servlet filters run.
+    // remoteAddr is already the real client IP in all deployment scenarios:
+    //   - Direct access: remoteAddr = client IP
+    //   - Behind proxy (Docker/K8s/nginx): valve resolves from X-Forwarded-For
+    //   - Behind Cloudflare+nginx: nginx resolves CF-Connecting-IP, valve resolves X-Forwarded-For
     return request.getRemoteAddr();
   }
 
-  private void writeRateLimitResponse(HttpServletResponse response) throws IOException {
+  private void writeRateLimitResponse(HttpServletResponse response, int limit) throws IOException {
     response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
     response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+    response.setIntHeader("Retry-After", windowSeconds);
+    response.setIntHeader("X-RateLimit-Limit", limit);
+    response.setIntHeader("X-RateLimit-Remaining", 0);
     response
         .getWriter()
         .write(

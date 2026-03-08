@@ -12,7 +12,7 @@ export function LoginPage() {
   useDocumentTitle('Login');
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { auth0Enabled, registrationEnabled } = useAuthConfig();
+  const { auth0Enabled, registrationEnabled, ldapEnabled } = useAuthConfig();
   const login = useLogin();
 
   const [username, setUsername] = useState('');
@@ -43,7 +43,10 @@ export function LoginPage() {
 
       <div className="w-full max-w-sm animate-[fade-in-up_0.6s_ease-out_0.15s_both] motion-reduce:animate-none">
         <div className="glass-frost rounded-2xl p-4 sm:p-6">
-          <h2 className="text-lg font-semibold text-efi-text-primary mb-4">Log in</h2>
+          <h2 className={`text-lg font-semibold text-efi-text-primary ${ldapEnabled ? 'mb-1' : 'mb-4'}`}>Log in</h2>
+          {ldapEnabled && (
+            <p className="text-xs text-efi-text-tertiary mb-3">Use your corporate credentials</p>
+          )}
 
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3">
             <div>
@@ -55,7 +58,7 @@ export function LoginPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. alice"
+                placeholder={ldapEnabled ? 'Corporate username (uid)' : 'e.g. alice'}
                 maxLength={100}
                 autoFocus
                 autoComplete="username"
@@ -73,6 +76,7 @@ export function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Your password"
+                maxLength={128}
                 autoComplete="current-password"
                 className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
               />

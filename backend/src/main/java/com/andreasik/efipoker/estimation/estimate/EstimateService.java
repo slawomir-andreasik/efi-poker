@@ -61,6 +61,8 @@ public class EstimateService {
             .findById(taskId)
             .orElseThrow(() -> new ResourceNotFoundException("Task", taskId));
     participantApi.validateParticipantExists(participantId);
+    participantApi.validateParticipantBelongsToProject(
+        participantId, task.getRoom().getProject().getId());
     ParticipantEntity participant =
         entityManager.getReference(ParticipantEntity.class, participantId);
 
@@ -97,6 +99,12 @@ public class EstimateService {
 
   @Transactional
   public void deleteEstimate(UUID taskId, UUID participantId) {
+    TaskEntity task =
+        taskRepository
+            .findById(taskId)
+            .orElseThrow(() -> new ResourceNotFoundException("Task", taskId));
+    participantApi.validateParticipantBelongsToProject(
+        participantId, task.getRoom().getProject().getId());
     estimateRepository.deleteByTaskIdAndParticipantId(taskId, participantId);
     log.info("Estimate deleted: taskId={}, participantId={}", taskId, participantId);
   }

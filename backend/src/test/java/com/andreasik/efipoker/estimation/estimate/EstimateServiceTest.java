@@ -1,10 +1,13 @@
 package com.andreasik.efipoker.estimation.estimate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 
+import com.andreasik.efipoker.estimation.room.RoomEntity;
 import com.andreasik.efipoker.estimation.task.Task;
 import com.andreasik.efipoker.estimation.task.TaskEntity;
 import com.andreasik.efipoker.estimation.task.TaskRepository;
@@ -12,10 +15,13 @@ import com.andreasik.efipoker.participant.Participant;
 import com.andreasik.efipoker.participant.ParticipantApi;
 import com.andreasik.efipoker.participant.ParticipantEntity;
 import com.andreasik.efipoker.project.Project;
+import com.andreasik.efipoker.project.ProjectEntity;
+import com.andreasik.efipoker.shared.exception.UnauthorizedException;
 import com.andreasik.efipoker.shared.test.BaseUnitTest;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -129,6 +135,66 @@ class EstimateServiceTest extends BaseUnitTest {
 
       // Assert
       assertThat(result).isEmpty();
+    }
+  }
+
+  @Nested
+  @DisplayName("submitEstimate - cross-project validation")
+  class SubmitEstimateCrossProject {
+
+    @Test
+    void should_reject_estimate_from_participant_in_different_project() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+      UUID projectId = UUID.randomUUID();
+
+      ProjectEntity project = ProjectEntity.builder().id(projectId).build();
+      RoomEntity room = RoomEntity.builder().id(UUID.randomUUID()).project(project).build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.empty());
+      given(taskRepository.findById(taskId)).willReturn(Optional.of(task));
+      willThrow(new UnauthorizedException("Participant does not belong to this project"))
+          .given(participantApi)
+          .validateParticipantBelongsToProject(participantId, projectId);
+
+      // Act & Assert
+      assertThatThrownBy(() -> estimateService.submitEstimate(taskId, participantId, "5", null))
+          .isInstanceOf(UnauthorizedException.class)
+          .hasMessageContaining("does not belong to this project");
+    }
+  }
+
+  @Nested
+  @DisplayName("deleteEstimate - cross-project validation")
+  class DeleteEstimateCrossProject {
+
+    @Test
+    void should_reject_delete_from_participant_in_different_project() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+      UUID projectId = UUID.randomUUID();
+
+      ProjectEntity project = ProjectEntity.builder().id(projectId).build();
+      RoomEntity room = RoomEntity.builder().id(UUID.randomUUID()).project(project).build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+
+      given(taskRepository.findById(taskId)).willReturn(Optional.of(task));
+      willThrow(new UnauthorizedException("Participant does not belong to this project"))
+          .given(participantApi)
+          .validateParticipantBelongsToProject(participantId, projectId);
+
+      // Act & Assert
+      assertThatThrownBy(() -> estimateService.deleteEstimate(taskId, participantId))
+          .isInstanceOf(UnauthorizedException.class)
+          .hasMessageContaining("does not belong to this project");
+
+      then(estimateRepository)
+          .should(never())
+          .deleteByTaskIdAndParticipantId(taskId, participantId);
     }
   }
 }

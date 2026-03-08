@@ -34,6 +34,7 @@ export function AddTaskForm({ onAdd, onImport, inputBg = 'bg-efi-well' }: AddTas
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Add a task..."
+            maxLength={255}
             className={`flex-1 rounded-lg ${inputBg} border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void`}
           />
           <button
@@ -58,6 +59,7 @@ export function AddTaskForm({ onAdd, onImport, inputBg = 'bg-efi-well' }: AddTas
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Task description (optional)"
+        maxLength={2000}
         rows={2}
         className={`w-full rounded-lg ${inputBg} border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold resize-none focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void`}
       />

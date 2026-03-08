@@ -5,6 +5,7 @@ properties:
     maxLength: 255
   description:
     type: string
+    maxLength: 2000
   deadline:
     type: string
     format: date-time

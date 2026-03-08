@@ -158,6 +158,17 @@ public class ParticipantService implements ParticipantApi {
   }
 
   @Override
+  public void validateParticipantBelongsToProject(UUID participantId, UUID projectId) {
+    if (!participantRepository.existsByIdAndProjectId(participantId, projectId)) {
+      log.warn(
+          "Participant does not belong to project: participantId={}, projectId={}",
+          participantId,
+          projectId);
+      throw new UnauthorizedException("Participant does not belong to this project");
+    }
+  }
+
+  @Override
   public List<UUID> listParticipatedProjectIds(UUID userId) {
     return participantRepository.findProjectIdsByUserId(userId);
   }

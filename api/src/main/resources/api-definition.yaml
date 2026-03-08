@@ -1276,6 +1276,7 @@ paths:
         required: false
         schema:
           default: 20
+          maximum: 100
           type: integer
       - description: Search by username or email
         in: query
@@ -1630,6 +1631,7 @@ components:
           minLength: 1
           type: string
         description:
+          maxLength: 2000
           type: string
         roomType:
           $ref: "#/components/schemas/RoomType"
@@ -1827,6 +1829,7 @@ components:
           maxLength: 255
           type: string
         description:
+          maxLength: 2000
           type: string
         deadline:
           format: date-time
@@ -2034,6 +2037,7 @@ components:
           minLength: 1
           type: string
         description:
+          maxLength: 2000
           type: string
         sortOrder:
           default: 0
@@ -2080,12 +2084,16 @@ components:
         titles:
         - titles
         - titles
+        - titles
+        - titles
+        - titles
       properties:
         titles:
           items:
             maxLength: 255
             minLength: 1
             type: string
+          maxItems: 200
           minItems: 1
           type: array
       required:
@@ -2216,6 +2224,7 @@ components:
           maxLength: 255
           type: string
         description:
+          maxLength: 2000
           type: string
         sortOrder:
           type: integer
@@ -2306,6 +2315,7 @@ components:
         email:
           description: Optional email address
           format: email
+          maxLength: 254
           type: string
       required:
       - password
@@ -2347,6 +2357,7 @@ components:
           minLength: 3
           type: string
         password:
+          maxLength: 128
           minLength: 8
           type: string
       required:
