@@ -53,6 +53,9 @@ class RateLimitFilterTest extends BaseUnitTest {
       // Assert
       assertThat(response.getStatus()).isEqualTo(429);
       assertThat(response.getContentType()).isEqualTo("application/problem+json");
+      assertThat(response.getHeader("Retry-After")).isEqualTo("10");
+      assertThat(response.getHeader("X-RateLimit-Limit")).isEqualTo("10");
+      assertThat(response.getHeader("X-RateLimit-Remaining")).isEqualTo("0");
     }
 
     @Test
@@ -176,28 +179,53 @@ class RateLimitFilterTest extends BaseUnitTest {
   }
 
   @Nested
-  @DisplayName("X-Forwarded-For support")
-  class ForwardedFor {
+  @DisplayName("IP resolution")
+  class IpResolution {
 
     @Test
-    void should_use_x_forwarded_for_header() throws Exception {
+    void should_use_remote_addr_for_rate_limiting() {
+      // resolveClientIp delegates to remoteAddr (Tomcat RemoteIpValve resolves
+      // X-Forwarded-For from trusted proxies before servlet filters run)
+      MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/boards");
+      request.setRemoteAddr("203.0.113.50");
+
+      String ip = filter.resolveClientIp(request);
+
+      assertThat(ip).isEqualTo("203.0.113.50");
+    }
+
+    @Test
+    void should_rate_limit_by_remote_addr() throws Exception {
       RateLimitFilter tightFilter = new RateLimitFilter(new RateLimitConfig(1, 300, 10));
 
-      // First request with forwarded IP
       MockHttpServletRequest request1 = new MockHttpServletRequest("POST", "/api/v1/boards");
-      request1.setRemoteAddr("127.0.0.1");
-      request1.addHeader("X-Forwarded-For", "203.0.113.50, 70.41.3.18");
+      request1.setRemoteAddr("192.168.1.100");
       MockHttpServletResponse response1 = new MockHttpServletResponse();
       tightFilter.doFilterInternal(request1, response1, new MockFilterChain());
       assertThat(response1.getStatus()).isEqualTo(200);
 
-      // Second request from same forwarded IP - should be blocked
       MockHttpServletRequest request2 = new MockHttpServletRequest("POST", "/api/v1/boards");
-      request2.setRemoteAddr("127.0.0.1");
-      request2.addHeader("X-Forwarded-For", "203.0.113.50, 70.41.3.18");
+      request2.setRemoteAddr("192.168.1.100");
       MockHttpServletResponse response2 = new MockHttpServletResponse();
       tightFilter.doFilterInternal(request2, response2, new MockFilterChain());
       assertThat(response2.getStatus()).isEqualTo(429);
+    }
+
+    @Test
+    void should_not_share_limits_between_different_ips() throws Exception {
+      RateLimitFilter tightFilter = new RateLimitFilter(new RateLimitConfig(1, 300, 10));
+
+      // First IP - use up limit
+      MockHttpServletRequest request1 = new MockHttpServletRequest("POST", "/api/v1/boards");
+      request1.setRemoteAddr("10.0.0.1");
+      tightFilter.doFilterInternal(request1, new MockHttpServletResponse(), new MockFilterChain());
+
+      // Different IP - should still pass
+      MockHttpServletRequest request2 = new MockHttpServletRequest("POST", "/api/v1/boards");
+      request2.setRemoteAddr("10.0.0.2");
+      MockHttpServletResponse response2 = new MockHttpServletResponse();
+      tightFilter.doFilterInternal(request2, response2, new MockFilterChain());
+      assertThat(response2.getStatus()).isEqualTo(200);
     }
   }
 }

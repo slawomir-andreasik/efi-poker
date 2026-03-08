@@ -20,6 +20,7 @@ get:
       schema:
         type: integer
         default: 20
+        maximum: 100
     - name: search
       in: query
       description: Search by username or email

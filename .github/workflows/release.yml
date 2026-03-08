@@ -19,14 +19,18 @@ jobs:
         run: echo "version=$(grep -oP '(?<=version=).+' version.properties)" >> "$GITHUB_OUTPUT"
 
       - name: Skip SNAPSHOT versions
-        if: contains(steps.version.outputs.version, 'SNAPSHOT')
-        run: |
-          echo "Skipping release for SNAPSHOT version: ${{ steps.version.outputs.version }}"
-          echo "skip=true" >> "$GITHUB_OUTPUT"
         id: check
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if [[ "$VERSION" == *-SNAPSHOT* ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Skipping release for SNAPSHOT version: $VERSION"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Create tag and release
-        if: steps.check.outputs.skip != 'true'
+      - name: Create tag and GitHub Release
+        if: steps.check.outputs.skip == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -34,19 +38,19 @@ jobs:
           TAG="v${VERSION}"
 
           # Skip if tag already exists
-          if git rev-parse "$TAG" &>/dev/null; then
+          if git tag -l "$TAG" | grep -q .; then
             echo "Tag $TAG already exists, skipping."
             exit 0
           fi
-
-          git tag "$TAG"
-          git push origin "$TAG"
 
           # Skip if release already exists
           if gh release view "$TAG" &>/dev/null; then
             echo "Release $TAG already exists, skipping."
             exit 0
           fi
+
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
 
           PREV_TAG=$(git tag --sort=-version:refname | grep '^v' | sed -n '2p')
           NOTES_FLAG=""

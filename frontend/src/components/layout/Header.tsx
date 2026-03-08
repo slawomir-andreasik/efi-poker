@@ -166,7 +166,7 @@ export function Header() {
                 participantId={participantId}
                 onNicknameChanged={setDisplayName}
                 onLogout={jwt ? handleLogout : handleGuestLogout}
-                onPasswordClick={jwt ? () => setPasswordModalOpen(true) : undefined}
+                onPasswordClick={jwt && currentUser?.authProvider !== 'LDAP' ? () => setPasswordModalOpen(true) : undefined}
                 isLoggedIn={Boolean(jwt)}
               />
             )}

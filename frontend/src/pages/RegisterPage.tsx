@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useRegister } from '@/api/mutations';
 import { useToast } from '@/components/Toast';
 import { getErrorMessage } from '@/utils/error';
 import { ButtonSpinner } from '@/components/Spinner';
+import { useAuthConfig } from '@/hooks/useAuthConfig';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { TextInput } from '@/components/TextInput';
 
 export function RegisterPage() {
   useDocumentTitle('Register');
+  const { registrationEnabled } = useAuthConfig();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const register = useRegister();
@@ -16,6 +18,10 @@ export function RegisterPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
+
+  if (!registrationEnabled) {
+    return <Navigate to="/login" replace />;
+  }
 
   const passwordTooShort = password.length > 0 && password.length < 8;
 
@@ -79,6 +85,7 @@ export function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Min. 8 characters"
+                maxLength={128}
                 autoComplete="new-password"
                 className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
               />
@@ -97,6 +104,7 @@ export function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="alice@example.com"
+                maxLength={254}
                 autoComplete="email"
                 className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
               />

@@ -3,6 +3,7 @@
 export interface AuthConfigResponse {
   auth0Enabled: boolean;
   registrationEnabled: boolean;
+  ldapEnabled: boolean;
 }
 
 export interface RegisterRequest {

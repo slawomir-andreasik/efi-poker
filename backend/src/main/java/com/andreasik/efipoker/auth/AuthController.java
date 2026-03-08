@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,8 +38,10 @@ public class AuthController implements AuthApi {
   private final JwtService jwtService;
   private final PasswordEncoder passwordEncoder;
   private final Auth0Properties auth0Properties;
+  private final LdapProperties ldapProperties;
   private final AppProperties appProperties;
   private final RegistrationProperties registrationProperties;
+  private final Optional<LdapAuthService> ldapAuthService;
 
   @Override
   public ResponseEntity<AuthConfigResponse> getAuthConfig() {
@@ -46,7 +49,8 @@ public class AuthController implements AuthApi {
     return ResponseEntity.ok(
         new AuthConfigResponse()
             .auth0Enabled(auth0Properties.enabled())
-            .registrationEnabled(registrationProperties.enabled()));
+            .registrationEnabled(registrationProperties.enabled())
+            .ldapEnabled(ldapProperties.enabled()));
   }
 
   @Override
@@ -74,23 +78,50 @@ public class AuthController implements AuthApi {
   @Override
   public ResponseEntity<AuthResponse> login(LoginRequest loginRequest) {
     log.debug("POST /auth/login username={}", loginRequest.getUsername());
-    User user =
-        userService
-            .findByUsername(loginRequest.getUsername())
-            .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
+    String username = loginRequest.getUsername();
+    String password = loginRequest.getPassword();
 
-    if (user.passwordHash() == null
-        || !passwordEncoder.matches(loginRequest.getPassword(), user.passwordHash())) {
+    Optional<User> existingUser = userService.findByUsername(username);
+
+    User user;
+    if (existingUser.isPresent()) {
+      User found = existingUser.get();
+      if (AuthProvider.LDAP.name().equals(found.authProvider())) {
+        // LDAP user - authenticate via LDAP only
+        user = authenticateViaLdap(username, password);
+      } else {
+        // LOCAL/AUTH0 user - bcrypt check
+        if (found.passwordHash() == null
+            || !passwordEncoder.matches(password, found.passwordHash())) {
+          throw new UnauthorizedException("Invalid credentials");
+        }
+        user = found;
+      }
+    } else if (ldapProperties.enabled() && ldapAuthService.isPresent()) {
+      // User not found, LDAP enabled - try LDAP bind + provision
+      user = authenticateViaLdap(username, password);
+    } else {
       throw new UnauthorizedException("Invalid credentials");
     }
 
-    userService.updateLastLogin(loginRequest.getUsername());
+    userService.updateLastLogin(username);
 
     String token = jwtService.generateToken(user);
     Instant expiresAt = jwtService.getTokenExpiresAt();
 
-    log.info("User logged in: {}", loginRequest.getUsername());
+    log.info("User logged in: username={}, authProvider={}", username, user.authProvider());
     return ResponseEntity.ok(new AuthResponse().token(token).expiresAt(expiresAt));
+  }
+
+  private User authenticateViaLdap(String username, String password) {
+    LdapAuthService ldap =
+        ldapAuthService.orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
+
+    LdapAuthService.LdapUserInfo ldapUser =
+        ldap.authenticate(username, password)
+            .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
+
+    return userService.findOrCreateLdapUser(ldapUser.uid(), ldapUser.mail(), ldapUser.isAdmin());
   }
 
   @Override

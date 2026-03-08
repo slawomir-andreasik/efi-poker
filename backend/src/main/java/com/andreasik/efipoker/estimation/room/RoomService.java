@@ -201,7 +201,7 @@ public class RoomService {
 
   @Transactional
   public List<Room> closeExpiredRooms() {
-    log.debug("Checking for expired rooms");
+    log.trace("Checking for expired rooms");
     List<RoomEntity> expired =
         roomRepository.findExpired(RoomStatus.OPEN.name(), "ASYNC", Instant.now());
 

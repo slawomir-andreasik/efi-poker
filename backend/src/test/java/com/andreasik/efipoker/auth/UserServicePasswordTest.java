@@ -125,6 +125,28 @@ class UserServicePasswordTest extends BaseUnitTest {
     }
 
     @Test
+    void should_block_password_change_for_ldap_user() {
+      // Arrange
+      UUID userId = UUID.randomUUID();
+      UserEntity entity =
+          UserEntity.builder()
+              .id(userId)
+              .username("ldapuser")
+              .passwordHash(null)
+              .authProvider("LDAP")
+              .build();
+
+      given(userRepository.findById(userId)).willReturn(Optional.of(entity));
+
+      // Act & Assert
+      assertThatThrownBy(() -> userService.changePassword(userId, null, "newpass123"))
+          .isInstanceOf(UnauthorizedException.class)
+          .hasMessageContaining("LDAP");
+
+      then(userRepository).should(never()).save(entity);
+    }
+
+    @Test
     void should_throw_not_found_for_unknown_user() {
       // Arrange
       UUID userId = UUID.randomUUID();
@@ -162,6 +184,28 @@ class UserServicePasswordTest extends BaseUnitTest {
       ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
       then(userRepository).should().save(captor.capture());
       assertThat(captor.getValue().getPasswordHash()).isEqualTo("$2a$admin_hash");
+    }
+
+    @Test
+    void should_block_admin_reset_for_ldap_user() {
+      // Arrange
+      UUID userId = UUID.randomUUID();
+      UserEntity entity =
+          UserEntity.builder()
+              .id(userId)
+              .username("ldapuser")
+              .passwordHash(null)
+              .authProvider("LDAP")
+              .build();
+
+      given(userRepository.findById(userId)).willReturn(Optional.of(entity));
+
+      // Act & Assert
+      assertThatThrownBy(() -> userService.adminResetPassword(userId, "newpass123"))
+          .isInstanceOf(UnauthorizedException.class)
+          .hasMessageContaining("LDAP");
+
+      then(userRepository).should(never()).save(entity);
     }
 
     @Test

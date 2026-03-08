@@ -83,6 +83,22 @@ class PasswordIntegrationTest extends BaseComponentTest {
                   .content(body))
           .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void should_reject_too_long_new_password_400() throws Exception {
+      String token = loginAsTestAdmin();
+      String longPassword = "a".repeat(129);
+      String body =
+          "{\"currentPassword\":\"testpassword\",\"newPassword\":\"" + longPassword + "\"}";
+
+      mockMvc
+          .perform(
+              put("/api/v1/auth/me/password")
+                  .header("Authorization", "Bearer " + token)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
+          .andExpect(status().isBadRequest());
+    }
   }
 
   @Nested
@@ -137,6 +153,21 @@ class PasswordIntegrationTest extends BaseComponentTest {
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void should_reject_too_long_password_400() throws Exception {
+      String token = loginAsTestAdmin();
+      String longPassword = "a".repeat(129);
+      String body = "{\"newPassword\":\"" + longPassword + "\"}";
+
+      mockMvc
+          .perform(
+              put("/api/v1/admin/users/00000000-0000-0000-0000-000000000000/password")
+                  .header("Authorization", "Bearer " + token)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
+          .andExpect(status().isBadRequest());
     }
   }
 

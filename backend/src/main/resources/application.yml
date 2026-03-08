@@ -1,4 +1,7 @@
 spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
   application:
     name: efi-poker
 
@@ -21,11 +24,6 @@ spring:
     change-log: classpath:/db/changelog/db.changelog-master.yaml
     enabled: true
 
-  docker:
-    compose:
-      file: ${COMPOSE_FILE:docker-compose.yml}
-      lifecycle-management: start_only
-
   jackson2:
     default-property-inclusion: non_null
     serialization:
@@ -33,6 +31,7 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  forward-headers-strategy: NATIVE
 
 app:
   url: ${APP_URL:http://localhost:5173}
@@ -41,6 +40,17 @@ app:
     domain: ${AUTH0_DOMAIN:disabled}
     client-id: ${AUTH0_CLIENT_ID:disabled}
     client-secret: ${AUTH0_CLIENT_SECRET:disabled}
+  ldap:
+    enabled: ${LDAP_ENABLED:false}
+    url: ${LDAP_URL:ldap://localhost:1389}
+    base-dn: ${LDAP_BASE_DN:dc=example,dc=com}
+    users-dn: ${LDAP_USERS_DN:ou=users}
+    bind-dn: ${LDAP_BIND_DN:}
+    bind-password: ${LDAP_BIND_PASSWORD:}
+    user-filter: ${LDAP_USER_FILTER:(&(uid={0})(info=userInternal)(info=active))}
+    uid-attribute: ${LDAP_UID_ATTRIBUTE:uid}
+    mail-attribute: ${LDAP_MAIL_ATTRIBUTE:mail}
+    admin-group: ${LDAP_ADMIN_GROUP:}
   cors:
     origins: ${CORS_ORIGINS:http://localhost:5173}
   jwt:
@@ -56,12 +66,11 @@ app:
     read-max-requests: ${RATE_LIMIT_READ_MAX:300}
     window-seconds: ${RATE_LIMIT_WINDOW:10}
 
-logging:
-  level:
-    com.andreasik.efipoker: DEBUG
-    io.opentelemetry.exporter.internal.http.HttpExporter: "OFF"
-
 management:
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
   endpoints:
     web:
       exposure:
@@ -73,6 +82,10 @@ management:
     tracing:
       export:
         endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  otlp:
+    metrics:
+      export:
+        enabled: ${OTLP_METRICS_ENABLED:false}
   metrics:
     tags:
       application: efi-poker

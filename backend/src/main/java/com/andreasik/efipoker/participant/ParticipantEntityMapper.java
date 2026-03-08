@@ -15,5 +15,6 @@ public interface ParticipantEntityMapper {
 
   List<Participant> toDomainList(List<ParticipantEntity> entities);
 
+  @Mapping(target = "user", ignore = true)
   ParticipantEntity toEntity(Participant domain);
 }

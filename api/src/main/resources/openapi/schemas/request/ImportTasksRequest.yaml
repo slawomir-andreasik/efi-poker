@@ -8,3 +8,4 @@ properties:
       minLength: 1
       maxLength: 255
     minItems: 1
+    maxItems: 200

@@ -3,8 +3,6 @@ info:
   title: EFI Poker API
   description: Sprint Planning Poker for Scrum teams
   version: 1.0.0
-  contact:
-    name: Sandro Andreasik
 servers:
   - url: /api/v1
     description: API base path

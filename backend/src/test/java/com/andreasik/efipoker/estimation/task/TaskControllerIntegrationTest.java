@@ -77,6 +77,35 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
                   .content(body))
           .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void should_reject_too_long_title_400() throws Exception {
+      String longTitle = "a".repeat(256);
+      String body = "{\"title\":\"" + longTitle + "\",\"sortOrder\":0}";
+
+      mockMvc
+          .perform(
+              post("/api/v1/rooms/{id}/tasks", room.getId())
+                  .header("X-Admin-Code", project.getAdminCode())
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void should_reject_too_long_description_400() throws Exception {
+      String longDescription = "a".repeat(2001);
+      String body =
+          "{\"title\":\"Valid title\",\"description\":\"" + longDescription + "\",\"sortOrder\":0}";
+
+      mockMvc
+          .perform(
+              post("/api/v1/rooms/{id}/tasks", room.getId())
+                  .header("X-Admin-Code", project.getAdminCode())
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
+          .andExpect(status().isBadRequest());
+    }
   }
 
   @Nested

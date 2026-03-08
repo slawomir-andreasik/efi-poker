@@ -1,0 +1,18 @@
+# Local development profile - active by default when no profile is set
+
+spring:
+  docker:
+    compose:
+      file: ${COMPOSE_FILE:docker-compose.yml}
+      lifecycle-management: start_only
+
+management:
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+
+logging:
+  level:
+    com.andreasik.efipoker: DEBUG
+    io.opentelemetry.exporter.internal.http.HttpExporter: "OFF"

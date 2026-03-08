@@ -28,6 +28,10 @@ app:
     window-seconds: 1
 
 management:
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
   tracing:
     enabled: false
   otlp:

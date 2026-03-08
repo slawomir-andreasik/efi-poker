@@ -181,6 +181,7 @@ export function AdminUsersPage() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Min. 8 characters"
+                maxLength={128}
                 autoComplete="new-password"
                 className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
               />
@@ -195,6 +196,7 @@ export function AdminUsersPage() {
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 placeholder="user@example.com"
+                maxLength={254}
                 className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
               />
             </div>
@@ -228,6 +230,7 @@ export function AdminUsersPage() {
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Search by username or email..."
+          maxLength={100}
           className="flex-1 rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
         />
         <button
@@ -357,6 +360,7 @@ export function AdminUsersPage() {
                             value={resetPasswordValue}
                             onChange={(e) => setResetPasswordValue(e.target.value)}
                             placeholder="New password"
+                            maxLength={128}
                             autoComplete="new-password"
                             className="rounded bg-efi-well border border-efi-gold-light/20 px-2 py-1 text-efi-text-primary text-base w-28 focus:outline-none focus:border-efi-gold"
                           />
@@ -386,14 +390,16 @@ export function AdminUsersPage() {
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => setResetPasswordId(user.id)}
-                            title="Reset password"
-                            className="p-1.5 rounded text-efi-text-tertiary hover:text-efi-text-primary hover:bg-white/5 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-                          >
-                            <KeyRound className="w-3.5 h-3.5" />
-                          </button>
+                          {user.authProvider !== 'LDAP' && (
+                            <button
+                              type="button"
+                              onClick={() => setResetPasswordId(user.id)}
+                              title="Reset password"
+                              className="p-1.5 rounded text-efi-text-tertiary hover:text-efi-text-primary hover:bg-white/5 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+                            >
+                              <KeyRound className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => setDeletingId(user.id)}
