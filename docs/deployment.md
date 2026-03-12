@@ -44,6 +44,16 @@ PORT=3000 docker compose up -d
 | `AUTH0_DOMAIN` | - | Auth0 tenant domain |
 | `AUTH0_CLIENT_ID` | - | Auth0 client ID |
 | `AUTH0_CLIENT_SECRET` | - | Auth0 client secret |
+| `LDAP_ENABLED` | `false` | Enable corporate LDAP authentication |
+| `LDAP_URL` | - | LDAP server URL (e.g. `ldap://ldap.example.com:389`) |
+| `LDAP_BASE_DN` | - | Base DN (e.g. `dc=example,dc=com`) |
+| `LDAP_USERS_DN` | `ou=users` | Users organizational unit (relative to base DN) |
+| `LDAP_BIND_DN` | - | Service account DN for search operations |
+| `LDAP_BIND_PASSWORD` | - | Service account password |
+| `LDAP_USER_FILTER` | `(&(uid={0})(description=userInternal)(description=active))` | LDAP search filter (`{0}` = username) |
+| `LDAP_UID_ATTRIBUTE` | `uid` | Username attribute name |
+| `LDAP_MAIL_ATTRIBUTE` | `mail` | Email attribute name |
+| `LDAP_ADMIN_GROUP` | - | POSIX group name for admin role detection |
 
 ## Kubernetes
 
@@ -65,6 +75,9 @@ stringData:
   POSTGRES_PASSWORD: "your-strong-password"
   JWT_SECRET: "your-64-char-minimum-random-string-for-hs512-jwt-signing-key"
   ADMIN_PASSWORD: "your-admin-password"
+  # LDAP (optional - remove if not using corporate LDAP)
+  LDAP_BIND_DN: "uid=serviceaccount,ou=accounts,dc=example,dc=com"
+  LDAP_BIND_PASSWORD: "your-ldap-service-password"
 ```
 
 ### ConfigMap
@@ -84,6 +97,15 @@ data:
   APP_URL: "https://poker.example.com"
   CORS_ORIGINS: "https://poker.example.com"
   REGISTRATION_ENABLED: "true"
+  # LDAP (optional - remove if not using corporate LDAP)
+  LDAP_ENABLED: "true"
+  LDAP_URL: "ldap://ldap.example.com:389"
+  LDAP_BASE_DN: "dc=example,dc=com"
+  LDAP_USERS_DN: "ou=users"
+  LDAP_USER_FILTER: "(&(uid={0})(description=userInternal)(description=active))"
+  LDAP_UID_ATTRIBUTE: "uid"
+  LDAP_MAIL_ATTRIBUTE: "mail"
+  LDAP_ADMIN_GROUP: "efipoker-admins"
 ```
 
 ### PostgreSQL StatefulSet
@@ -338,6 +360,16 @@ Update these variables to match your domain:
 1. Create an Auth0 application (Regular Web Application)
 2. Set callback URL to `{APP_URL}/api/v1/auth/oauth2/callback`
 3. Configure environment variables: `AUTH0_ENABLED=true`, `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`
+
+### LDAP integration
+
+1. Set `LDAP_ENABLED=true` and provide LDAP server details
+2. The service account (`LDAP_BIND_DN`) needs search access to the users OU
+3. User authentication flow: search by filter -> bind with user credentials -> check admin group
+4. LDAP users are auto-provisioned on first login (authProvider=LDAP, no local password)
+5. Admin role syncs bidirectionally on each login based on LDAP group membership
+6. LDAP users cannot change their password through the app
+7. LDAP can run alongside password and Auth0 authentication
 
 ### Changing admin password
 

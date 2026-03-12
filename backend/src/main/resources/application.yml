@@ -42,12 +42,12 @@ app:
     client-secret: ${AUTH0_CLIENT_SECRET:disabled}
   ldap:
     enabled: ${LDAP_ENABLED:false}
-    url: ${LDAP_URL:ldap://localhost:1389}
+    url: ${LDAP_URL:ldap://localhost:389}
     base-dn: ${LDAP_BASE_DN:dc=example,dc=com}
     users-dn: ${LDAP_USERS_DN:ou=users}
     bind-dn: ${LDAP_BIND_DN:}
     bind-password: ${LDAP_BIND_PASSWORD:}
-    user-filter: ${LDAP_USER_FILTER:(&(uid={0})(info=userInternal)(info=active))}
+    user-filter: ${LDAP_USER_FILTER:(&(uid={0})(description=userInternal)(description=active))}
     uid-attribute: ${LDAP_UID_ATTRIBUTE:uid}
     mail-attribute: ${LDAP_MAIL_ATTRIBUTE:mail}
     admin-group: ${LDAP_ADMIN_GROUP:}
