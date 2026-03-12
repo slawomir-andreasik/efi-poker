@@ -46,8 +46,8 @@ class LdapLoginIntegrationTest extends BaseComponentTest {
         "cn: LDAP User",
         "sn: User",
         "mail: ldapuser@example.com",
-        "info: userInternal",
-        "info: active",
+        "description: userInternal",
+        "description: active",
         "uidNumber: 10001",
         "gidNumber: 10001",
         "homeDirectory: /home/ldapuser",
@@ -60,8 +60,8 @@ class LdapLoginIntegrationTest extends BaseComponentTest {
         "cn: LDAP Admin",
         "sn: Admin",
         "mail: ldapadmin@example.com",
-        "info: userInternal",
-        "info: active",
+        "description: userInternal",
+        "description: active",
         "uidNumber: 10002",
         "gidNumber: 10002",
         "homeDirectory: /home/ldapadmin",
@@ -89,7 +89,8 @@ class LdapLoginIntegrationTest extends BaseComponentTest {
     registry.add("app.ldap.users-dn", () -> "ou=users");
     registry.add("app.ldap.bind-dn", () -> "cn=admin," + BASE_DN);
     registry.add("app.ldap.bind-password", () -> "adminpass");
-    registry.add("app.ldap.user-filter", () -> "(&(uid={0})(info=userInternal)(info=active))");
+    registry.add(
+        "app.ldap.user-filter", () -> "(&(uid={0})(description=userInternal)(description=active))");
     registry.add("app.ldap.uid-attribute", () -> "uid");
     registry.add("app.ldap.mail-attribute", () -> "mail");
     registry.add("app.ldap.admin-group", () -> "efipoker-admins");
@@ -116,7 +117,11 @@ class LdapLoginIntegrationTest extends BaseComponentTest {
     @Test
     void should_login_ldap_user_and_provision() throws Exception {
       // Act
-      String body = "{\"username\":\"ldapuser\",\"password\":\"ldappassword\"}";
+      // language=JSON
+      String body =
+          """
+          {"username":"ldapuser","password":"ldappassword"}
+          """;
 
       mockMvc
           .perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content(body))
@@ -142,7 +147,11 @@ class LdapLoginIntegrationTest extends BaseComponentTest {
     @Test
     void should_reject_wrong_ldap_password() throws Exception {
       // Act
-      String body = "{\"username\":\"ldapuser\",\"password\":\"wrongpassword\"}";
+      // language=JSON
+      String body =
+          """
+          {"username":"ldapuser","password":"wrongpassword"}
+          """;
 
       mockMvc
           .perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content(body))
@@ -152,7 +161,11 @@ class LdapLoginIntegrationTest extends BaseComponentTest {
     @Test
     void should_still_login_local_user() throws Exception {
       // The bootstrap testadmin (LOCAL auth) should still work
-      String body = "{\"username\":\"testadmin\",\"password\":\"testpassword\"}";
+      // language=JSON
+      String body =
+          """
+          {"username":"testadmin","password":"testpassword"}
+          """;
 
       mockMvc
           .perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content(body))
@@ -212,7 +225,11 @@ class LdapLoginIntegrationTest extends BaseComponentTest {
     @Test
     void should_reject_registration_when_disabled() throws Exception {
       // Act & Assert
-      String body = "{\"username\":\"newuser\",\"password\":\"password123\"}";
+      // language=JSON
+      String body =
+          """
+          {"username":"newuser","password":"password123"}
+          """;
 
       mockMvc
           .perform(
@@ -229,7 +246,11 @@ class LdapLoginIntegrationTest extends BaseComponentTest {
     void should_block_password_change_for_ldap_user() throws Exception {
       // Arrange
       String token = loginLdapUser("ldapuser", "ldappassword");
-      String body = "{\"newPassword\":\"newpass123\"}";
+      // language=JSON
+      String body =
+          """
+          {"newPassword":"newpass123"}
+          """;
 
       // Act & Assert
       mockMvc
