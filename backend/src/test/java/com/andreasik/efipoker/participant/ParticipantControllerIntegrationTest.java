@@ -35,7 +35,11 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_join_project_200() throws Exception {
-      String body = "{\"nickname\":\"Alice\"}";
+      // language=JSON
+      String body =
+          """
+          {"nickname":"Alice"}
+          """;
 
       mockMvc
           .perform(
@@ -49,7 +53,11 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_return_same_participant_for_same_nickname() throws Exception {
-      String body = "{\"nickname\":\"Bob\"}";
+      // language=JSON
+      String body =
+          """
+          {"nickname":"Bob"}
+          """;
 
       String json1 =
           mockMvc
@@ -77,7 +85,11 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_return_404_for_nonexistent_project() throws Exception {
-      String body = "{\"nickname\":\"Alice\"}";
+      // language=JSON
+      String body =
+          """
+          {"nickname":"Alice"}
+          """;
 
       mockMvc
           .perform(
@@ -89,7 +101,11 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_blank_nickname_400() throws Exception {
-      String body = "{\"nickname\":\"\"}";
+      // language=JSON
+      String body =
+          """
+          {"nickname":""}
+          """;
 
       mockMvc
           .perform(
@@ -230,7 +246,11 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
     void should_update_nickname_200() throws Exception {
       ParticipantEntity participant =
           participantRepository.save(Fixtures.participantEntity(project, "Alice"));
-      String body = "{\"nickname\":\"AliceNew\"}";
+      // language=JSON
+      String body =
+          """
+          {"nickname":"AliceNew"}
+          """;
 
       mockMvc
           .perform(
@@ -256,7 +276,11 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
     void should_return_same_when_nickname_unchanged() throws Exception {
       ParticipantEntity participant =
           participantRepository.save(Fixtures.participantEntity(project, "Alice"));
-      String body = "{\"nickname\":\"Alice\"}";
+      // language=JSON
+      String body =
+          """
+          {"nickname":"Alice"}
+          """;
 
       mockMvc
           .perform(
@@ -276,7 +300,11 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
       ParticipantEntity alice =
           participantRepository.save(Fixtures.participantEntity(project, "Alice"));
       participantRepository.save(Fixtures.participantEntity(project, "Bob"));
-      String body = "{\"nickname\":\"Bob\"}";
+      // language=JSON
+      String body =
+          """
+          {"nickname":"Bob"}
+          """;
 
       mockMvc
           .perform(
@@ -294,7 +322,11 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
     void should_reject_without_participant_header_403() throws Exception {
       ParticipantEntity participant =
           participantRepository.save(Fixtures.participantEntity(project, "Alice"));
-      String body = "{\"nickname\":\"AliceNew\"}";
+      // language=JSON
+      String body =
+          """
+          {"nickname":"AliceNew"}
+          """;
 
       mockMvc
           .perform(
@@ -311,7 +343,11 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
     void should_reject_mismatched_participant_id_403() throws Exception {
       ParticipantEntity participant =
           participantRepository.save(Fixtures.participantEntity(project, "Alice"));
-      String body = "{\"nickname\":\"AliceNew\"}";
+      // language=JSON
+      String body =
+          """
+          {"nickname":"AliceNew"}
+          """;
 
       mockMvc
           .perform(
@@ -328,7 +364,11 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_return_404_for_nonexistent_participant() throws Exception {
       UUID fakeId = UUID.randomUUID();
-      String body = "{\"nickname\":\"AliceNew\"}";
+      // language=JSON
+      String body =
+          """
+          {"nickname":"AliceNew"}
+          """;
 
       mockMvc
           .perform(

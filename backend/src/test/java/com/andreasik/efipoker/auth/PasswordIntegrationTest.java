@@ -21,7 +21,11 @@ class PasswordIntegrationTest extends BaseComponentTest {
     @Test
     void should_change_password_204() throws Exception {
       String token = loginAsTestAdmin();
-      String body = "{\"currentPassword\":\"testpassword\",\"newPassword\":\"newpassword123\"}";
+      // language=JSON
+      String body =
+          """
+          {"currentPassword":"testpassword","newPassword":"newpassword123"}
+          """;
 
       mockMvc
           .perform(
@@ -35,7 +39,11 @@ class PasswordIntegrationTest extends BaseComponentTest {
     @Test
     void should_reject_wrong_current_password_403() throws Exception {
       String token = loginAsTestAdmin();
-      String body = "{\"currentPassword\":\"wrongpassword\",\"newPassword\":\"newpassword123\"}";
+      // language=JSON
+      String body =
+          """
+          {"currentPassword":"wrongpassword","newPassword":"newpassword123"}
+          """;
 
       mockMvc
           .perform(
@@ -49,7 +57,11 @@ class PasswordIntegrationTest extends BaseComponentTest {
     @Test
     void should_reject_short_new_password_400() throws Exception {
       String token = loginAsTestAdmin();
-      String body = "{\"currentPassword\":\"testpassword\",\"newPassword\":\"short\"}";
+      // language=JSON
+      String body =
+          """
+          {"currentPassword":"testpassword","newPassword":"short"}
+          """;
 
       mockMvc
           .perform(
@@ -62,7 +74,11 @@ class PasswordIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_without_token_401() throws Exception {
-      String body = "{\"currentPassword\":\"testpassword\",\"newPassword\":\"newpassword123\"}";
+      // language=JSON
+      String body =
+          """
+          {"currentPassword":"testpassword","newPassword":"newpassword123"}
+          """;
 
       mockMvc
           .perform(
@@ -73,7 +89,11 @@ class PasswordIntegrationTest extends BaseComponentTest {
     @Test
     void should_reject_missing_new_password_400() throws Exception {
       String token = loginAsTestAdmin();
-      String body = "{\"currentPassword\":\"testpassword\"}";
+      // language=JSON
+      String body =
+          """
+          {"currentPassword":"testpassword"}
+          """;
 
       mockMvc
           .perform(
@@ -118,7 +138,11 @@ class PasswordIntegrationTest extends BaseComponentTest {
               .getContentAsString();
       String userId = objectMapper.readTree(meJson).get("id").asText();
 
-      String body = "{\"newPassword\":\"adminreset1\"}";
+      // language=JSON
+      String body =
+          """
+          {"newPassword":"adminreset1"}
+          """;
 
       mockMvc
           .perform(
@@ -132,7 +156,11 @@ class PasswordIntegrationTest extends BaseComponentTest {
     @Test
     void should_return_404_for_unknown_user() throws Exception {
       String token = loginAsTestAdmin();
-      String body = "{\"newPassword\":\"adminreset1\"}";
+      // language=JSON
+      String body =
+          """
+          {"newPassword":"adminreset1"}
+          """;
 
       mockMvc
           .perform(
@@ -145,7 +173,11 @@ class PasswordIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_without_token_401() throws Exception {
-      String body = "{\"newPassword\":\"adminreset1\"}";
+      // language=JSON
+      String body =
+          """
+          {"newPassword":"adminreset1"}
+          """;
 
       mockMvc
           .perform(
