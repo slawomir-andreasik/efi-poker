@@ -44,3 +44,25 @@ patch:
         application/problem+json:
           schema:
             $ref: '../../schemas/common/error/ProblemDetail.yaml'
+delete:
+  operationId: deleteRoom
+  tags: [rooms]
+  summary: Delete room and all associated data (admin)
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+  responses:
+    '204':
+      description: Room deleted
+    '403':
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '404':
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

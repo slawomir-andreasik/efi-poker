@@ -21,6 +21,8 @@ properties:
     type: string
   roundNumber:
     type: integer
+  autoRevealOnDeadline:
+    type: boolean
   tasks:
     type: array
     items:

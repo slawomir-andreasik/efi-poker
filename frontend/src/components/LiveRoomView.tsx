@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Check, Copy } from 'lucide-react';
+import { Check, Copy, Trash2, Eye, RotateCw } from 'lucide-react';
+import { InlineConfirmAction } from '@/components/InlineConfirmAction';
 import { getAuth } from '@/api/client';
 import { queryKeys } from '@/api/queryKeys';
 import { roomApi } from '@/api/queries';
-import { useRevealRoom, useNewRound, useSubmitEstimate, useDeleteEstimate, useAdminJoinMutation, useUpdateRoom } from '@/api/mutations';
+import { useRevealRoom, useNewRound, useSubmitEstimate, useDeleteEstimate, useAdminJoinMutation, useUpdateRoom, useDeleteRoom } from '@/api/mutations';
 import { logger } from '@/utils/logger';
 import { useToast } from '@/components/Toast';
 import { Spinner, ButtonSpinner } from '@/components/Spinner';
@@ -28,6 +30,8 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
   const [topicInput, setTopicInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [selectedEstimate, setSelectedEstimate] = useState<StoryPoints | null>(null);
+  const deleteRoomMutation = useDeleteRoom(slug);
+  const navigate = useNavigate();
 
   const { data: liveState, isLoading: loading } = useQuery({
     queryKey: queryKeys.rooms.live(roomId),
@@ -173,6 +177,17 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
     }
   }
 
+  async function handleDeleteRoom() {
+    try {
+      await deleteRoomMutation.mutateAsync(roomId);
+      showToast('Room deleted', 'success');
+      void navigate(`/p/${slug}`);
+    } catch (err) {
+      logger.warn('Failed to delete room:', getErrorMessage(err));
+      showToast(getErrorMessage(err));
+    }
+  }
+
   if (loading && !liveState) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -195,10 +210,10 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-efi-text-primary">{initialRoom.title}</h1>
-              <span className="text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">{initialRoom.slug}</span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-efi-live/20 text-efi-live border border-efi-live/30">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-efi-text-primary truncate min-w-0">{initialRoom.title}</h1>
+              <span className="shrink-0 text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">{initialRoom.slug}</span>
+              <span className="shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-efi-live/20 text-efi-live border border-efi-live/30">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-efi-live opacity-75" />
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-efi-live" />
@@ -214,7 +229,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
               </p>
             )}
           </div>
-          <div className="mt-3 sm:mt-0">
+          <div className="flex items-center gap-2 mt-3 sm:mt-0">
             <button
               type="button"
               onClick={() => void handleCopyRoomLink()}
@@ -224,6 +239,15 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
               <Copy className="w-3 h-3" />
               Share
             </button>
+            {isAdmin && (
+              <InlineConfirmAction
+                label="Delete room?"
+                onConfirm={() => void handleDeleteRoom()}
+                isLoading={deleteRoomMutation.isPending}
+                icon={<Trash2 className="w-4 h-4" />}
+                title="Delete room"
+              />
+            )}
           </div>
         </div>
       </div>
@@ -281,7 +305,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                 disabled={revealRoom.isPending}
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
               >
-                {revealRoom.isPending ? <><ButtonSpinner /> Revealing...</> : 'Reveal Votes'}
+                {revealRoom.isPending ? <><ButtonSpinner /> Revealing...</> : <><Eye className="w-4 h-4" /> Reveal</>}
               </button>
             </div>
           ) : (
@@ -300,7 +324,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                 disabled={newRound.isPending}
                 className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-info/30 text-efi-info hover:bg-efi-info/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
               >
-                {newRound.isPending ? <><ButtonSpinner /> Starting...</> : 'New Round'}
+                {newRound.isPending ? <><ButtonSpinner /> Starting...</> : <><RotateCw className="w-4 h-4" /> New Round</>}
               </button>
             </div>
           )}

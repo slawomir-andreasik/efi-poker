@@ -70,6 +70,10 @@ public class RoomEntity {
   @Builder.Default
   private int roundNumber = 1;
 
+  @Column(name = "auto_reveal_on_deadline", nullable = false)
+  @Builder.Default
+  private boolean autoRevealOnDeadline = true;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 

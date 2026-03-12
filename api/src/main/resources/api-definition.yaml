@@ -463,6 +463,38 @@ paths:
       tags:
       - rooms
   /rooms/{roomId}:
+    delete:
+      operationId: deleteRoom
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Room deleted
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Resource not found
+      summary: Delete room and all associated data (admin)
+      tags:
+      - rooms
     get:
       operationId: getRoom
       parameters:
@@ -1581,6 +1613,7 @@ components:
       example:
         createdAt: 2000-01-23T04:56:07.000+00:00
         roundNumber: 0
+        autoRevealOnDeadline: true
         description: description
         topic: topic
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -1615,12 +1648,15 @@ components:
           type: string
         roundNumber:
           type: integer
+        autoRevealOnDeadline:
+          type: boolean
         createdAt:
           format: date-time
           type: string
       type: object
     CreateRoomRequest:
       example:
+        autoRevealOnDeadline: true
         description: description
         title: title
         deadline: 2000-01-23T04:56:07.000+00:00
@@ -1638,6 +1674,9 @@ components:
         deadline:
           format: date-time
           type: string
+        autoRevealOnDeadline:
+          default: true
+          type: boolean
       required:
       - roomType
       - title
@@ -1718,6 +1757,7 @@ components:
     RoomDetailResponse:
       example:
         roundNumber: 0
+        autoRevealOnDeadline: true
         description: description
         topic: topic
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -1813,6 +1853,8 @@ components:
           type: string
         roundNumber:
           type: integer
+        autoRevealOnDeadline:
+          type: boolean
         tasks:
           items:
             $ref: "#/components/schemas/TaskWithEstimateResponse"
@@ -1841,6 +1883,7 @@ components:
     RoomAdminResponse:
       example:
         roundNumber: 0
+        autoRevealOnDeadline: true
         description: description
         topic: topic
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -1925,6 +1968,8 @@ components:
           type: string
         roundNumber:
           type: integer
+        autoRevealOnDeadline:
+          type: boolean
         tasks:
           items:
             $ref: "#/components/schemas/TaskWithAllEstimatesResponse"

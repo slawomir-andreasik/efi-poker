@@ -91,7 +91,7 @@ export function Header() {
   return (
     <>
       <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} onLogout={jwt ? handleLogout : undefined} />
-      <header className="border-b border-white/6 glass-whisper sticky top-0 z-50">
+      <header className="border-b border-white/6 bg-efi-void/80 glass-whisper sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2">
           {/* Left: hamburger + logo */}
           <div className="flex items-center gap-2 min-w-0">

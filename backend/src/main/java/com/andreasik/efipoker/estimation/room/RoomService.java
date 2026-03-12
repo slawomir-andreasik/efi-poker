@@ -49,7 +49,12 @@ public class RoomService {
 
   @Transactional
   public Room createRoom(
-      UUID projectId, String title, String description, String roomType, Instant deadline) {
+      UUID projectId,
+      String title,
+      String description,
+      String roomType,
+      Instant deadline,
+      boolean autoRevealOnDeadline) {
     projectApi.validateProjectExists(projectId);
     ProjectEntity project = entityManager.getReference(ProjectEntity.class, projectId);
 
@@ -69,6 +74,7 @@ public class RoomService {
               .description(description)
               .roomType(roomType)
               .deadline(deadline)
+              .autoRevealOnDeadline(autoRevealOnDeadline)
               .build();
       try {
         saved = roomRepository.save(entity);
@@ -211,6 +217,13 @@ public class RoomService {
 
     expired.forEach(r -> r.setStatus(RoomStatus.CLOSED.name()));
     return roomEntityMapper.toDomainList(roomRepository.saveAll(expired));
+  }
+
+  @Transactional
+  public void deleteRoom(Room room) {
+    RoomEntity ref = entityManager.getReference(RoomEntity.class, room.id());
+    roomRepository.delete(ref);
+    log.info("Room deleted: id={}, slug={}", room.id(), room.slug());
   }
 
   public long countOpenRooms() {
