@@ -109,6 +109,7 @@ export interface RoomResponse {
   deadline: string;
   topic?: string;
   roundNumber: number;
+  autoRevealOnDeadline: boolean;
   roomType: RoomType;
   status: RoomStatus;
   createdAt: string;
@@ -122,6 +123,7 @@ export interface RoomDetailResponse {
   deadline: string;
   topic?: string;
   roundNumber: number;
+  autoRevealOnDeadline: boolean;
   roomType: RoomType;
   status: RoomStatus;
   tasks: TaskWithEstimateResponse[];
@@ -135,6 +137,7 @@ export interface RoomAdminResponse {
   deadline: string;
   topic?: string;
   roundNumber: number;
+  autoRevealOnDeadline: boolean;
   roomType: RoomType;
   status: RoomStatus;
   tasks: TaskWithAllEstimatesResponse[];
@@ -283,6 +286,7 @@ export interface CreateRoomRequest {
   description?: string;
   deadline?: string;
   roomType: RoomType;
+  autoRevealOnDeadline?: boolean;
 }
 
 export interface CreateTaskRequest {

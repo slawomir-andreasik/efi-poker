@@ -45,7 +45,8 @@ class EstimationModuleTest extends BaseModuleTest {
     Participant alice = participantService.joinProject(project.id(), "Alice", null, null);
     Instant deadline = Instant.now().plus(7, ChronoUnit.DAYS);
     Room room =
-        roomService.createRoom(project.id(), "Sprint 1", "Sprint planning", "ASYNC", deadline);
+        roomService.createRoom(
+            project.id(), "Sprint 1", "Sprint planning", "ASYNC", deadline, true);
     Task task = taskService.createTask(room.id(), "Login Page", "Implement login", 0);
 
     // Act
@@ -73,7 +74,7 @@ class EstimationModuleTest extends BaseModuleTest {
     Project project = projectService.createProject("Update Test");
     Participant alice = participantService.joinProject(project.id(), "Alice", null, null);
     Instant deadline = Instant.now().plus(7, ChronoUnit.DAYS);
-    Room room = roomService.createRoom(project.id(), "Room", null, "ASYNC", deadline);
+    Room room = roomService.createRoom(project.id(), "Room", null, "ASYNC", deadline, true);
     Task task = taskService.createTask(room.id(), "Task 1", null, 0);
     estimateService.submitEstimate(task.id(), alice.id(), "3", null);
 

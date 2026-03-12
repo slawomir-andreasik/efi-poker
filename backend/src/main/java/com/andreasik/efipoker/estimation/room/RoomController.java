@@ -65,13 +65,17 @@ public class RoomController implements RoomsApi {
     Project project = projectService.validateAdminCode(slug, xAdminCode);
 
     String roomType = createRoomRequest.getRoomType().getValue();
+    boolean autoReveal =
+        createRoomRequest.getAutoRevealOnDeadline() == null
+            || createRoomRequest.getAutoRevealOnDeadline();
     Room room =
         roomService.createRoom(
             project.id(),
             createRoomRequest.getTitle(),
             createRoomRequest.getDescription(),
             roomType,
-            createRoomRequest.getDeadline());
+            createRoomRequest.getDeadline(),
+            autoReveal);
     return ResponseEntity.status(HttpStatus.CREATED).body(roomMapper.toResponse(room));
   }
 
@@ -144,6 +148,7 @@ public class RoomController implements RoomsApi {
             .status(roomMapper.mapStatus(room.status()))
             .topic(room.topic())
             .roundNumber(room.roundNumber())
+            .autoRevealOnDeadline(room.autoRevealOnDeadline())
             .tasks(taskResponses)
             .participants(participantMapper.toResponseList(participants));
 
@@ -165,6 +170,15 @@ public class RoomController implements RoomsApi {
             updateRoomRequest.getDeadline(),
             updateRoomRequest.getTopic());
     return ResponseEntity.ok(roomMapper.toResponse(updated));
+  }
+
+  @Override
+  public ResponseEntity<Void> deleteRoom(UUID roomId, String xAdminCode) {
+    log.debug("DELETE /rooms/{}", roomId);
+    Room room = roomService.getRoom(roomId);
+    projectService.validateAdminCodeForProject(room.project().id(), xAdminCode);
+    roomService.deleteRoom(room);
+    return ResponseEntity.noContent().build();
   }
 
   @Override
@@ -293,14 +307,11 @@ public class RoomController implements RoomsApi {
     for (Task task : tasks) {
       csv.append(escapeCsv(task.title()));
       List<Estimate> estimates = estimatesByTask.getOrDefault(task.id(), List.of());
+      Map<UUID, String> spByParticipant =
+          estimates.stream()
+              .collect(Collectors.toMap(e -> e.participant().id(), Estimate::storyPoints));
       for (Participant p : participants) {
-        String sp =
-            estimates.stream()
-                .filter(e -> e.participant().id().equals(p.id()))
-                .findFirst()
-                .map(Estimate::storyPoints)
-                .orElse("");
-        csv.append(",").append(sp);
+        csv.append(",").append(spByParticipant.getOrDefault(p.id(), ""));
       }
       csv.append(",").append(task.finalEstimate() != null ? task.finalEstimate() : "");
       csv.append("\n");
@@ -460,6 +471,7 @@ public class RoomController implements RoomsApi {
         .status(roomMapper.mapStatus(room.status()))
         .topic(room.topic())
         .roundNumber(room.roundNumber())
+        .autoRevealOnDeadline(room.autoRevealOnDeadline())
         .tasks(taskResponses);
   }
 

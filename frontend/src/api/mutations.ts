@@ -81,7 +81,7 @@ export function useDeleteProject(slug: string) {
 export function useCreateRoom(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { title: string; description?: string; deadline?: string; roomType: string }) =>
+    mutationFn: (body: { title: string; description?: string; deadline?: string; roomType: string; autoRevealOnDeadline?: boolean }) =>
       api<RoomResponse>(`/projects/${slug}/rooms`, { method: 'POST', body }, slug),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.projects.rooms(slug) });
@@ -123,6 +123,17 @@ export function useNewRound(slug: string, roomId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.rooms.live(roomId) });
       void qc.invalidateQueries({ queryKey: queryKeys.rooms.history(roomId) });
+    },
+  });
+}
+
+export function useDeleteRoom(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (roomId: string) =>
+      api<void>(`/rooms/${roomId}`, { method: 'DELETE' }, slug),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.rooms(slug) });
     },
   });
 }

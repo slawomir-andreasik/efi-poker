@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Copy } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Copy, Trash2 } from 'lucide-react';
+import { InlineConfirmAction } from '@/components/InlineConfirmAction';
 import { useQuery } from '@tanstack/react-query';
 import { getAuth, getJwt, saveAuth, ApiError } from '@/api/client';
 import { queryKeys } from '@/api/queryKeys';
 import { roomApi, projectApi } from '@/api/queries';
-import { useSubmitEstimate, useDeleteEstimate, useSetFinalEstimate, useUpdateTask, useAdminJoinMutation } from '@/api/mutations';
+import { useSubmitEstimate, useDeleteEstimate, useSetFinalEstimate, useUpdateTask, useAdminJoinMutation, useDeleteRoom } from '@/api/mutations';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/utils/error';
 import { useSortedTasks } from '@/hooks/useSortedTasks';
@@ -29,6 +30,8 @@ export function RoomPage() {
   const projectName = auth.projectName ?? slug;
 
   const [votes, setVotes] = useState<Record<string, StoryPoints>>({});
+  const deleteRoomMutation = useDeleteRoom(slug ?? '');
+  const navigate = useNavigate();
 
   const { data: room, isLoading: loading, error } = useQuery({
     queryKey: queryKeys.rooms.detail(roomId!),
@@ -80,6 +83,18 @@ export function RoomPage() {
       setAuth(getAuth(slug!));
     } catch (err) {
       logger.warn('Failed to join as voter:', getErrorMessage(err));
+      showToast(getErrorMessage(err));
+    }
+  }
+
+  async function handleDeleteRoom() {
+    if (!roomId) return;
+    try {
+      await deleteRoomMutation.mutateAsync(roomId);
+      showToast('Room deleted', 'success');
+      void navigate(`/p/${slug}`);
+    } catch (err) {
+      logger.warn('Failed to delete room:', getErrorMessage(err));
       showToast(getErrorMessage(err));
     }
   }
@@ -217,8 +232,8 @@ export function RoomPage() {
       <div className="mb-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-efi-text-primary">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-efi-text-primary truncate min-w-0">
                 <span className="text-sm font-normal text-efi-text-secondary mr-1">Room:</span>
                 {room?.title}
               </h1>
@@ -239,7 +254,7 @@ export function RoomPage() {
               <p className="text-efi-text-secondary mt-2">{room.description}</p>
             )}
           </div>
-          <div className="flex gap-2 mt-3 sm:mt-0">
+          <div className="flex items-center gap-2 mt-3 sm:mt-0">
             {isRevealed && slug && (
               <Link
                 to={`/p/${slug}/r/${roomId}/results`}
@@ -247,6 +262,15 @@ export function RoomPage() {
               >
                 View Results
               </Link>
+            )}
+            {isAdmin && (
+              <InlineConfirmAction
+                label="Delete room?"
+                onConfirm={() => void handleDeleteRoom()}
+                isLoading={deleteRoomMutation.isPending}
+                icon={<Trash2 className="w-4 h-4" />}
+                title="Delete room"
+              />
             )}
           </div>
         </div>
@@ -257,6 +281,9 @@ export function RoomPage() {
               <span className="text-sm text-efi-text-secondary">Deadline:</span>
               <CountdownTimer deadline={room.deadline} />
             </div>
+            {isAdmin && room.autoRevealOnDeadline === false && (
+              <span className="text-xs text-efi-text-tertiary">Manual reveal required</span>
+            )}
           </div>
         )}
       </div>

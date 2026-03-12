@@ -13,3 +13,6 @@ properties:
   deadline:
     type: string
     format: date-time
+  autoRevealOnDeadline:
+    type: boolean
+    default: true

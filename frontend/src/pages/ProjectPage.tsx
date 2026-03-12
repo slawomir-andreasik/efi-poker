@@ -26,7 +26,8 @@ import { CountdownTimer } from '@/components/CountdownTimer';
 import { DeadlineInput, getDefaultDeadline, formatPreview } from '@/components/DeadlineInput';
 import { ImportModal } from '@/components/ImportModal';
 import { AddTaskForm } from '@/components/AddTaskForm';
-import { Copy, Trash2, Plus, X } from 'lucide-react';
+import { Copy, Trash2, Plus, X, Eye, RotateCcw, Upload, Download } from 'lucide-react';
+import { InlineConfirmAction } from '@/components/InlineConfirmAction';
 import { RandomNameButton } from '@/components/RandomNameButton';
 import { generateRoomName } from '@/utils/nameGenerator';
 import { Linkify } from '@/lib/linkify';
@@ -50,7 +51,6 @@ export function ProjectPage() {
   const [editingTask, setEditingTask] = useState<{ id: string; title: string; description: string } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{ type: 'task' | 'participant'; id: string; name: string } | null>(null);
   const [editingName, setEditingName] = useState<string | null>(null);
-  const [pendingDeleteProject, setPendingDeleteProject] = useState(false);
 
   // Shared create room state
   const [showForm, setShowForm] = useState(false);
@@ -58,6 +58,7 @@ export function ProjectPage() {
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState(getDefaultDeadline(3));
   const [roomType, setRoomType] = useState<RoomType>('LIVE');
+  const [autoRevealOnDeadline, setAutoRevealOnDeadline] = useState(true);
 
   // Queries
   const { data: project, isLoading: loading, error } = useQuery({
@@ -175,11 +176,13 @@ export function ProjectPage() {
         description: description.trim() || undefined,
         deadline: roomType === 'ASYNC' ? new Date(deadline).toISOString() : undefined,
         roomType,
+        autoRevealOnDeadline: roomType === 'ASYNC' ? autoRevealOnDeadline : undefined,
       });
       setTitle('');
       setDescription('');
       setDeadline(getDefaultDeadline(3));
       setRoomType('LIVE');
+      setAutoRevealOnDeadline(true);
       setShowForm(false);
     } catch (err) {
       logger.warn('Failed to create room:', getErrorMessage(err));
@@ -350,7 +353,6 @@ export function ProjectPage() {
       logger.warn('Failed to delete project:', getErrorMessage(err));
       showToast(getErrorMessage(err));
     }
-    setPendingDeleteProject(false);
   }
 
   // --- Admin view ---
@@ -427,35 +429,13 @@ export function ProjectPage() {
               <Copy className="w-3 h-3" />
               Share
             </button>
-            {pendingDeleteProject ? (
-              <span className="flex items-center gap-2 text-sm">
-                <span className="text-efi-text-tertiary">Delete project?</span>
-                <button
-                  type="button"
-                  onClick={() => void handleDeleteProject()}
-                  disabled={deleteProjectMutation.isPending}
-                  className="text-efi-error hover:text-red-400 font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none rounded"
-                >
-                  {deleteProjectMutation.isPending ? <ButtonSpinner /> : 'Yes'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPendingDeleteProject(false)}
-                  className="text-efi-text-secondary hover:text-efi-text-primary cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none rounded"
-                >
-                  No
-                </button>
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setPendingDeleteProject(true)}
-                title="Delete project"
-                className="p-2 rounded-lg text-efi-text-tertiary hover:text-red-400 transition-colors cursor-pointer hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
+            <InlineConfirmAction
+              label="Delete project?"
+              onConfirm={() => void handleDeleteProject()}
+              isLoading={deleteProjectMutation.isPending}
+              icon={<Trash2 className="w-4 h-4" />}
+              title="Delete project"
+            />
           </div>
         </div>
 
@@ -516,16 +496,16 @@ export function ProjectPage() {
                         disabled={revealRoom.isPending}
                         className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                       >
-                        {revealRoom.isPending ? <><ButtonSpinner /> Revealing...</> : 'Reveal All'}
+                        {revealRoom.isPending ? <><ButtonSpinner /> Revealing...</> : <><Eye className="w-4 h-4" /> Reveal</>}
                       </button>
                     )}
                     {(room.status === 'REVEALED' || room.status === 'CLOSED') && (
                       <button
                         onClick={() => void handleReopen(room.id)}
                         disabled={reopenRoom.isPending}
-                        className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+                        className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-info/30 text-efi-info hover:bg-efi-info/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                       >
-                        {reopenRoom.isPending ? <><ButtonSpinner /> Reopening...</> : 'Reopen'}
+                        {reopenRoom.isPending ? <><ButtonSpinner /> Reopening...</> : <><RotateCcw className="w-4 h-4" /> Reopen Voting</>}
                       </button>
                     )}
                     {!isRoomLive && room.status !== 'REVEALED' && room.status !== 'CLOSED' && (
@@ -533,7 +513,7 @@ export function ProjectPage() {
                         onClick={() => setShowImport(true)}
                         className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold hover:text-efi-text-primary transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                       >
-                        Import
+                        <Upload className="w-4 h-4" /> Import Tasks
                       </button>
                     )}
                     {!isRoomLive && (
@@ -542,7 +522,7 @@ export function ProjectPage() {
                         disabled={exporting}
                         className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold hover:text-efi-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                       >
-                        {exporting ? <><ButtonSpinner /> Exporting...</> : 'Export CSV'}
+                        {exporting ? <><ButtonSpinner /> Exporting...</> : <><Download className="w-4 h-4" /> Export CSV</>}
                       </button>
                     )}
                     <Link
@@ -868,7 +848,20 @@ export function ProjectPage() {
                   </div>
                 </div>
                 {roomType === 'ASYNC' && (
-                  <DeadlineInput value={deadline} onChange={setDeadline} />
+                  <>
+                    <DeadlineInput value={deadline} onChange={setDeadline} />
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={autoRevealOnDeadline}
+                        onChange={(e) => setAutoRevealOnDeadline(e.target.checked)}
+                        className="w-4 h-4 accent-efi-gold cursor-pointer text-base"
+                      />
+                      <span className="text-sm text-efi-text-secondary">
+                        Auto-reveal when deadline passes
+                      </span>
+                    </label>
+                  </>
                 )}
                 <div className="flex justify-end gap-3 pt-1">
                   <button
