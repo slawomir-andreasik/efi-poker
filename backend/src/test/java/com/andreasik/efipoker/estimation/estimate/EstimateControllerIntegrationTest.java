@@ -40,7 +40,11 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_submit_estimate_200() throws Exception {
-      String body = "{\"storyPoints\":\"5\"}";
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"5"}
+          """;
 
       mockMvc
           .perform(
@@ -54,8 +58,16 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_update_estimate_on_resubmit() throws Exception {
-      String body1 = "{\"storyPoints\":\"5\"}";
-      String body2 = "{\"storyPoints\":\"8\"}";
+      // language=JSON
+      String body1 =
+          """
+          {"storyPoints":"5"}
+          """;
+      // language=JSON
+      String body2 =
+          """
+          {"storyPoints":"8"}
+          """;
 
       mockMvc
           .perform(
@@ -77,7 +89,11 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_invalid_participant_403() throws Exception {
-      String body = "{\"storyPoints\":\"5\"}";
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"5"}
+          """;
 
       mockMvc
           .perform(
@@ -90,7 +106,11 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_invalid_story_points_400() throws Exception {
-      String body = "{\"storyPoints\":\"99\"}";
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"99"}
+          """;
 
       mockMvc
           .perform(
@@ -103,7 +123,11 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_accept_zero_story_points() throws Exception {
-      String body = "{\"storyPoints\":\"0\"}";
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"0"}
+          """;
 
       mockMvc
           .perform(
@@ -117,7 +141,11 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_accept_half_story_points() throws Exception {
-      String body = "{\"storyPoints\":\"0.5\"}";
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"0.5"}
+          """;
 
       mockMvc
           .perform(
@@ -131,7 +159,11 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_accept_question_mark() throws Exception {
-      String body = "{\"storyPoints\":\"?\"}";
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"?"}
+          """;
 
       mockMvc
           .perform(
@@ -151,7 +183,11 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_delete_estimate_204() throws Exception {
       // Arrange - submit estimate first
-      String body = "{\"storyPoints\":\"5\"}";
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"5"}
+          """;
       mockMvc
           .perform(
               post("/api/v1/tasks/{id}/estimates", task.getId())

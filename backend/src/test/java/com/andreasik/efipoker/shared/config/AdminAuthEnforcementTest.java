@@ -74,7 +74,11 @@ class AdminAuthEnforcementTest extends BaseComponentTest {
 
     @Test
     void should_reject_patch_room() throws Exception {
-      String body = "{\"title\":\"Updated\"}";
+      // language=JSON
+      String body =
+          """
+          {"title":"Updated"}
+          """;
 
       mockMvc
           .perform(
