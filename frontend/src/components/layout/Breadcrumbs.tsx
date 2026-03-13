@@ -30,7 +30,7 @@ export function Breadcrumbs() {
   return (
     <nav
       aria-label="Breadcrumb"
-      className="hidden sm:block border-b border-white/4 bg-efi-void/80 backdrop-blur-sm sm:sticky top-[var(--header-height)] z-40"
+      className="hidden sm:block border-b border-white/4 bg-efi-graphite sm:sticky top-[var(--header-height)] z-40"
     >
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-1.5 flex items-center gap-1.5 text-sm min-w-0">
         {isHome ? (

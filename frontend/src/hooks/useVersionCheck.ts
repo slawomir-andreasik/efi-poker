@@ -27,9 +27,10 @@ export function useVersionCheck({ showToast }: UseVersionCheckOptions) {
         const data = (await res.json()) as { version?: string };
         if (!data.version) return;
 
-        // Strip -SNAPSHOT suffix for comparison (backend dev builds include it)
+        // Strip -SNAPSHOT suffix from both sides for comparison
         const serverVersion = data.version.replace(/-SNAPSHOT$/, '');
-        if (serverVersion !== APP_VERSION) {
+        const clientVersion = APP_VERSION.replace(/-SNAPSHOT$/, '');
+        if (serverVersion !== clientVersion) {
           mismatchCountRef.current += 1;
           logger.debug(
             `Version mismatch: client=${APP_VERSION}, server=${serverVersion} (count=${mismatchCountRef.current})`,
