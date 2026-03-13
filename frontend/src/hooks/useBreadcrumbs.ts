@@ -59,7 +59,9 @@ export function useBreadcrumbs(): UseBreadcrumbsResult {
   } else {
     const isJoinPage = path === `/p/${slug}/join`;
     const isResultsPage = slug && roomId ? path === `/p/${slug}/r/${roomId}/results` : false;
-    const isRoomPage = slug && roomId ? path.startsWith(`/p/${slug}/r/${roomId}`) && !isResultsPage : false;
+    const isRoomAnalyticsPage = slug && roomId ? path === `/p/${slug}/r/${roomId}/analytics` : false;
+    const isProjectAnalyticsPage = path === `/p/${slug}/analytics`;
+    const isRoomPage = slug && roomId ? path.startsWith(`/p/${slug}/r/${roomId}`) && !isResultsPage && !isRoomAnalyticsPage : false;
     const isProjectPage = path === `/p/${slug}`;
 
     if (isProjectPage) {
@@ -69,6 +71,20 @@ export function useBreadcrumbs(): UseBreadcrumbsResult {
       // Join page: project (dropdown) + Join current
       segments.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
       segments.push({ label: 'Join', path: null });
+    } else if (isProjectAnalyticsPage) {
+      // Project analytics page: project (link) + Analytics current
+      segments.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
+      segments.push({ label: 'Analytics', path: null });
+    } else if (isRoomAnalyticsPage && currentRoom) {
+      // Room analytics page: project (dropdown) + room (link) + Analytics current
+      segments.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
+      segments.push({
+        label: currentRoom.title,
+        path: `/p/${slug}/r/${roomId}`,
+        dropdownType: 'room',
+        badges: { status: currentRoom.status, roomType: currentRoom.roomType },
+      });
+      segments.push({ label: 'Analytics', path: null });
     } else if (isRoomPage && currentRoom) {
       // Room page: project (dropdown) + room title (dropdown)
       segments.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
