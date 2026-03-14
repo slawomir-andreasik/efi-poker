@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep"
+    ]
+  },
+  "ignorePatterns": [
+    "api/build/**",
+    "backend/build/**",
+    "backend/.gradle/**",
+    ".gradle/**",
+    "frontend/dist/**",
+    "node_modules/**"
+  ]
+}
