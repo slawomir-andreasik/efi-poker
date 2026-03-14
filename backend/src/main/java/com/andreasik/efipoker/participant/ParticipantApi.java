@@ -13,4 +13,6 @@ public interface ParticipantApi {
   void validateParticipantBelongsToProject(UUID participantId, UUID projectId);
 
   List<UUID> listParticipatedProjectIds(UUID userId);
+
+  UUID findParticipantIdByProjectAndUser(UUID projectId, UUID userId);
 }

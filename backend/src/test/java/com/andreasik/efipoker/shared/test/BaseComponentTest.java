@@ -53,7 +53,11 @@ public abstract class BaseComponentTest {
   }
 
   protected String loginAsTestAdmin() throws Exception {
-    String body = "{\"username\":\"testadmin\",\"password\":\"testpassword\"}";
+    // language=JSON
+    String body =
+        """
+        {"username":"testadmin","password":"testpassword"}
+        """;
     MvcResult result =
         mockMvc
             .perform(

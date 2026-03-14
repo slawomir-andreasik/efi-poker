@@ -11,12 +11,15 @@ import com.andreasik.efipoker.shared.exception.UnauthorizedException;
 import com.andreasik.efipoker.shared.test.BaseUnitTest;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @DisplayName("ProjectService")
 class ProjectServiceTest extends BaseUnitTest {
@@ -25,6 +28,16 @@ class ProjectServiceTest extends BaseUnitTest {
   @Mock private ProjectEntityMapper projectEntityMapper;
   @Mock private ApplicationEventPublisher eventPublisher;
   @InjectMocks private ProjectService projectService;
+
+  @AfterEach
+  void clearSecurityContext() {
+    SecurityContextHolder.clearContext();
+  }
+
+  private void setSiteAdmin() {
+    SecurityContextHolder.getContext()
+        .setAuthentication(new TestingAuthenticationToken("admin", null, "ROLE_ADMIN"));
+  }
 
   @Nested
   @DisplayName("validateAdminCode")
@@ -87,6 +100,34 @@ class ProjectServiceTest extends BaseUnitTest {
       // Act & Assert
       assertThatThrownBy(() -> projectService.validateAdminCode(slug, adminCode))
           .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void should_return_project_when_site_admin_without_admin_code() {
+      // Arrange
+      setSiteAdmin();
+      ProjectEntity entity =
+          ProjectEntity.builder()
+              .id(UUID.randomUUID())
+              .adminCode(adminCode)
+              .slug(slug)
+              .name("Test Project")
+              .build();
+      Project expectedProject =
+          Project.builder()
+              .id(entity.getId())
+              .name("Test Project")
+              .slug(slug)
+              .adminCode(adminCode)
+              .build();
+      given(projectRepository.findBySlug(slug)).willReturn(Optional.of(entity));
+      given(projectEntityMapper.toDomain(entity)).willReturn(expectedProject);
+
+      // Act
+      Project result = projectService.validateAdminCode(slug, "wrong-code");
+
+      // Assert
+      assertThat(result).isEqualTo(expectedProject);
     }
   }
 
@@ -200,6 +241,24 @@ class ProjectServiceTest extends BaseUnitTest {
       // Act & Assert
       assertThatThrownBy(() -> projectService.validateAdminCodeForProject(projectId, adminCode))
           .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void should_pass_when_site_admin_without_admin_code() {
+      // Arrange
+      setSiteAdmin();
+      ProjectEntity entity =
+          ProjectEntity.builder()
+              .id(projectId)
+              .adminCode(adminCode)
+              .slug("test")
+              .name("Test")
+              .build();
+      given(projectRepository.findById(projectId)).willReturn(Optional.of(entity));
+
+      // Act & Assert
+      assertThatCode(() -> projectService.validateAdminCodeForProject(projectId, "wrong-code"))
+          .doesNotThrowAnyException();
     }
   }
 

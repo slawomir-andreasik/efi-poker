@@ -168,6 +168,124 @@ class EstimateServiceTest extends BaseUnitTest {
   }
 
   @Nested
+  @DisplayName("submitEstimate - comment required")
+  class SubmitEstimateCommentRequired {
+
+    @Test
+    void should_reject_new_estimate_without_comment_when_required() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+      UUID projectId = UUID.randomUUID();
+
+      ProjectEntity project = ProjectEntity.builder().id(projectId).build();
+      RoomEntity room =
+          RoomEntity.builder().id(UUID.randomUUID()).project(project).commentRequired(true).build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.empty());
+      given(taskRepository.findById(taskId)).willReturn(Optional.of(task));
+
+      // Act & Assert
+      assertThatThrownBy(() -> estimateService.submitEstimate(taskId, participantId, "5", null))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("Comment is required");
+    }
+
+    @Test
+    void should_reject_new_estimate_with_blank_comment_when_required() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+      UUID projectId = UUID.randomUUID();
+
+      ProjectEntity project = ProjectEntity.builder().id(projectId).build();
+      RoomEntity room =
+          RoomEntity.builder().id(UUID.randomUUID()).project(project).commentRequired(true).build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.empty());
+      given(taskRepository.findById(taskId)).willReturn(Optional.of(task));
+
+      // Act & Assert
+      assertThatThrownBy(() -> estimateService.submitEstimate(taskId, participantId, "5", "  "))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("Comment is required");
+    }
+
+    @Test
+    void should_reject_existing_estimate_update_without_comment_when_required() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+
+      RoomEntity room = RoomEntity.builder().id(UUID.randomUUID()).commentRequired(true).build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+      EstimateEntity existing =
+          EstimateEntity.builder()
+              .id(UUID.randomUUID())
+              .task(task)
+              .storyPoints("3")
+              .comment("old comment")
+              .build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.of(existing));
+
+      // Act & Assert
+      assertThatThrownBy(() -> estimateService.submitEstimate(taskId, participantId, "5", null))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("Comment is required");
+
+      then(estimateRepository).should(never()).save(ArgumentMatchers.any());
+    }
+
+    @Test
+    void should_allow_estimate_without_comment_when_not_required() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+      UUID projectId = UUID.randomUUID();
+
+      ProjectEntity project = ProjectEntity.builder().id(projectId).build();
+      RoomEntity room =
+          RoomEntity.builder()
+              .id(UUID.randomUUID())
+              .project(project)
+              .commentRequired(false)
+              .build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+      ParticipantEntity participant =
+          ParticipantEntity.builder().id(participantId).nickname("Bob").build();
+
+      EstimateEntity saved =
+          EstimateEntity.builder()
+              .id(UUID.randomUUID())
+              .task(task)
+              .participant(participant)
+              .storyPoints("5")
+              .build();
+      Estimate domain = Estimate.builder().id(saved.getId()).storyPoints("5").build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.empty());
+      given(taskRepository.findById(taskId)).willReturn(Optional.of(task));
+      given(entityManager.getReference(ParticipantEntity.class, participantId))
+          .willReturn(participant);
+      given(estimateRepository.save(ArgumentMatchers.any())).willReturn(saved);
+      given(estimateEntityMapper.toDomain(saved)).willReturn(domain);
+
+      // Act
+      Estimate result = estimateService.submitEstimate(taskId, participantId, "5", null);
+
+      // Assert
+      assertThat(result.storyPoints()).isEqualTo("5");
+    }
+  }
+
+  @Nested
   @DisplayName("deleteEstimate - cross-project validation")
   class DeleteEstimateCrossProject {
 

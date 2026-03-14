@@ -130,6 +130,11 @@ public class TaskService {
     log.info("Task deleted: id={}", taskId);
   }
 
+  public List<Task> listByProjectExcludingPhantom(UUID projectId) {
+    log.debug("listByProjectExcludingPhantom: projectId={}", projectId);
+    return taskEntityMapper.toDomainList(taskRepository.findByProjectIdExcludingPhantom(projectId));
+  }
+
   public Task getPhantomTask(UUID roomId) {
     return taskRepository
         .findByRoomIdAndTitle(roomId, RoomService.PHANTOM_TASK_TITLE)

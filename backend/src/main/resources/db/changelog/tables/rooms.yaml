@@ -65,3 +65,31 @@ databaseChangeLog:
             sql: |
               DROP INDEX IF EXISTS idx_rooms_slug;
               ALTER TABLE rooms DROP COLUMN slug;
+
+  - changeSet:
+      id: "rooms-006-auto-reveal-on-deadline"
+      author: "sandreasik"
+      comment: "Add flag to control auto-reveal when deadline passes"
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE rooms ADD COLUMN auto_reveal_on_deadline BOOLEAN NOT NULL DEFAULT true;
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE rooms DROP COLUMN auto_reveal_on_deadline;
+
+  - changeSet:
+      id: "rooms-007-comment-config"
+      author: "sandreasik"
+      comment: "Add comment template and required flag for voting comments"
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE rooms ADD COLUMN comment_template TEXT;
+              ALTER TABLE rooms ADD COLUMN comment_required BOOLEAN NOT NULL DEFAULT false;
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE rooms DROP COLUMN comment_required;
+              ALTER TABLE rooms DROP COLUMN comment_template;

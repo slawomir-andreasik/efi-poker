@@ -17,4 +17,7 @@ public record Room(
     String status,
     String topic,
     int roundNumber,
+    boolean autoRevealOnDeadline,
+    String commentTemplate,
+    boolean commentRequired,
     Instant createdAt) {}

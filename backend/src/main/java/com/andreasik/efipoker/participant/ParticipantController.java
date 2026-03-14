@@ -75,6 +75,19 @@ public class ParticipantController implements ParticipantsApi {
   }
 
   @Override
+  public ResponseEntity<ParticipantResponse> getMyParticipant(String slug) {
+    log.debug("GET /projects/{}/participants/me", slug);
+    UUID userId = getCurrentUserId();
+    if (userId == null) {
+      throw new UnauthorizedException("Authentication required");
+    }
+    Project project = projectService.getProjectBySlug(slug);
+    Participant participant =
+        participantService.getParticipantByProjectAndUser(project.id(), userId);
+    return ResponseEntity.ok(participantMapper.toResponse(participant));
+  }
+
+  @Override
   public ResponseEntity<Void> deleteParticipant(
       String slug, UUID participantId, String xAdminCode) {
     log.debug("DELETE /projects/{}/participants/{}", slug, participantId);

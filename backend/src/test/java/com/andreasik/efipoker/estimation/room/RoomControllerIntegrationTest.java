@@ -2,6 +2,7 @@ package com.andreasik.efipoker.estimation.room;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -36,9 +37,11 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_create_async_room_201() throws Exception {
+      // language=JSON
       String body =
-          "{\"title\":\"Sprint 1\",\"roomType\":\"ASYNC\","
-              + "\"deadline\":\"2030-01-01T00:00:00Z\"}";
+          """
+          {"title":"Sprint 1","roomType":"ASYNC","deadline":"2030-01-01T00:00:00Z"}
+          """;
 
       mockMvc
           .perform(
@@ -55,7 +58,11 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_create_live_room_201() throws Exception {
-      String body = "{\"title\":\"Live Planning\",\"roomType\":\"LIVE\"}";
+      // language=JSON
+      String body =
+          """
+          {"title":"Live Planning","roomType":"LIVE"}
+          """;
 
       mockMvc
           .perform(
@@ -71,9 +78,11 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_wrong_admin_code_403() throws Exception {
+      // language=JSON
       String body =
-          "{\"title\":\"Sprint 1\",\"roomType\":\"ASYNC\","
-              + "\"deadline\":\"2030-01-01T00:00:00Z\"}";
+          """
+          {"title":"Sprint 1","roomType":"ASYNC","deadline":"2030-01-01T00:00:00Z"}
+          """;
 
       mockMvc
           .perform(
@@ -82,6 +91,42 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void should_create_room_with_auto_reveal_false() throws Exception {
+      // language=JSON
+      String body =
+          """
+          {"title":"Sprint 1","roomType":"ASYNC","deadline":"2030-01-01T00:00:00Z","autoRevealOnDeadline":false}
+          """;
+
+      mockMvc
+          .perform(
+              post("/api/v1/projects/{slug}/rooms", project.getSlug())
+                  .header("X-Admin-Code", project.getAdminCode())
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
+          .andExpect(status().isCreated())
+          .andExpect(jsonPath("$.autoRevealOnDeadline").value(false));
+    }
+
+    @Test
+    void should_default_auto_reveal_to_true() throws Exception {
+      // language=JSON
+      String body =
+          """
+          {"title":"Sprint 2","roomType":"ASYNC","deadline":"2030-01-01T00:00:00Z"}
+          """;
+
+      mockMvc
+          .perform(
+              post("/api/v1/projects/{slug}/rooms", project.getSlug())
+                  .header("X-Admin-Code", project.getAdminCode())
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
+          .andExpect(status().isCreated())
+          .andExpect(jsonPath("$.autoRevealOnDeadline").value(true));
     }
 
     @Test
@@ -200,7 +245,11 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_update_room_200() throws Exception {
       RoomEntity room = roomRepository.save(Fixtures.roomEntity(project));
-      String body = "{\"title\":\"Updated Title\"}";
+      // language=JSON
+      String body =
+          """
+          {"title":"Updated Title"}
+          """;
 
       mockMvc
           .perform(
@@ -215,7 +264,11 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_reject_wrong_admin_code_403() throws Exception {
       RoomEntity room = roomRepository.save(Fixtures.roomEntity(project));
-      String body = "{\"title\":\"Updated\"}";
+      // language=JSON
+      String body =
+          """
+          {"title":"Updated"}
+          """;
 
       mockMvc
           .perform(
@@ -361,7 +414,11 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_create_live_room_with_phantom_task() throws Exception {
-      String body = "{\"title\":\"Live Planning\",\"roomType\":\"LIVE\"}";
+      // language=JSON
+      String body =
+          """
+          {"title":"Live Planning","roomType":"LIVE"}
+          """;
 
       String response =
           mockMvc
@@ -389,7 +446,11 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_return_live_state_200() throws Exception {
       // Arrange - create LIVE room via API so phantom task is auto-created
-      String body = "{\"title\":\"Live Planning\",\"roomType\":\"LIVE\"}";
+      // language=JSON
+      String body =
+          """
+          {"title":"Live Planning","roomType":"LIVE"}
+          """;
       String createResponse =
           mockMvc
               .perform(
@@ -451,13 +512,56 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
   }
 
   @Nested
+  @DisplayName("DELETE /api/v1/rooms/{roomId}")
+  class DeleteRoom {
+
+    @Test
+    void should_delete_room_204() throws Exception {
+      RoomEntity room = roomRepository.save(Fixtures.roomEntity(project));
+
+      mockMvc
+          .perform(
+              delete("/api/v1/rooms/{roomId}", room.getId())
+                  .header("X-Admin-Code", project.getAdminCode()))
+          .andExpect(status().isNoContent());
+
+      assertThat(roomRepository.findById(room.getId())).isEmpty();
+    }
+
+    @Test
+    void should_reject_wrong_admin_code_403() throws Exception {
+      RoomEntity room = roomRepository.save(Fixtures.roomEntity(project));
+
+      mockMvc
+          .perform(
+              delete("/api/v1/rooms/{roomId}", room.getId()).header("X-Admin-Code", "wrong-code"))
+          .andExpect(status().isForbidden());
+
+      assertThat(roomRepository.findById(room.getId())).isPresent();
+    }
+
+    @Test
+    void should_return_404_for_unknown_room() throws Exception {
+      mockMvc
+          .perform(
+              delete("/api/v1/rooms/{roomId}", UUID.randomUUID())
+                  .header("X-Admin-Code", project.getAdminCode()))
+          .andExpect(status().isNotFound());
+    }
+  }
+
+  @Nested
   @DisplayName("POST /api/v1/rooms/{roomId}/new-round")
   class NewRound {
 
     @Test
     void should_start_new_round_200() throws Exception {
       // Arrange - create LIVE room via API so phantom task is auto-created
-      String body = "{\"title\":\"Live Planning\",\"roomType\":\"LIVE\"}";
+      // language=JSON
+      String body =
+          """
+          {"title":"Live Planning","roomType":"LIVE"}
+          """;
       String createResponse =
           mockMvc
               .perform(
@@ -472,7 +576,11 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
 
       String roomId = objectMapper.readTree(createResponse).get("id").asText();
 
-      String newRoundBody = "{\"topic\":\"Story EP-42\"}";
+      // language=JSON
+      String newRoundBody =
+          """
+          {"topic":"Story EP-42"}
+          """;
 
       mockMvc
           .perform(

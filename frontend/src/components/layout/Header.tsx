@@ -8,6 +8,7 @@ import { useAuthConfig } from '@/hooks/useAuthConfig';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Copy, Menu } from 'lucide-react';
 import { useToast } from '@/components/Toast';
+import { copyRoomLink } from '@/utils/clipboard';
 import { NicknameDropdown } from './NicknameDropdown';
 import { MobileSidebar } from './MobileSidebar';
 import { ChangePasswordModal } from '@/components/ChangePasswordModal';
@@ -79,19 +80,13 @@ export function Header() {
 
   async function handleCopyRoomLink() {
     if (!currentRoom?.slug) return;
-    const link = `${window.location.origin}/r/${currentRoom.slug}`;
-    try {
-      await navigator.clipboard.writeText(link);
-      showToast('Room link copied!');
-    } catch {
-      showToast('Failed to copy link');
-    }
+    await copyRoomLink(currentRoom.slug, showToast);
   }
 
   return (
     <>
       <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} onLogout={jwt ? handleLogout : undefined} />
-      <header className="border-b border-white/6 glass-whisper sticky top-0 z-50">
+      <header className="border-b border-white/6 bg-efi-graphite glass-whisper sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2">
           {/* Left: hamburger + logo */}
           <div className="flex items-center gap-2 min-w-0">

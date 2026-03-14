@@ -49,6 +49,7 @@ public interface RoomRepository extends JpaRepository<RoomEntity, UUID> {
       WHERE r.status = :status
         AND r.roomType = :roomType
         AND r.deadline < :deadline
+        AND r.autoRevealOnDeadline = true
       """)
   List<RoomEntity> findExpired(
       @Param("status") String status,

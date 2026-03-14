@@ -4,6 +4,8 @@ import { ProgressBar } from './ProgressBar';
 import { Linkify } from '@/lib/linkify';
 import { SP_VALUES } from '@/api/types';
 import { TextArea } from '@/components/TextInput';
+import { CommentInput } from '@/components/CommentInput';
+import { useSaveIndicator } from '@/hooks/useSaveIndicator';
 import type { StoryPoints, EstimateResponse } from '@/api/types';
 
 interface TaskCardProps {
@@ -14,7 +16,7 @@ interface TaskCardProps {
   questionVotesCount?: number;
   totalParticipants: number;
   selectedSp: StoryPoints | null;
-  onEstimate: (taskId: string, value: StoryPoints | null) => void;
+  onEstimate: (taskId: string, value: StoryPoints | null, comment?: string) => void;
   disabled?: boolean;
   revealed?: boolean;
   allEstimates?: EstimateResponse[] | null;
@@ -24,6 +26,9 @@ interface TaskCardProps {
   isAdmin?: boolean;
   onSetFinalEstimate?: (taskId: string, value: StoryPoints) => void;
   onUpdateDescription?: (taskId: string, description: string) => void;
+  commentTemplate?: string;
+  commentRequired?: boolean;
+  myComment?: string;
 }
 
 export function TaskCard({
@@ -44,8 +49,14 @@ export function TaskCard({
   isAdmin = false,
   onSetFinalEstimate,
   onUpdateDescription,
+  commentTemplate,
+  commentRequired = false,
+  myComment,
 }: TaskCardProps) {
   const hasVoted = selectedSp !== null;
+  const showCommentBox = !revealed && !disabled && (commentTemplate || commentRequired);
+  const [comment, setComment] = useState(myComment ?? commentTemplate ?? '');
+  const { saving, showSaveIndicator } = useSaveIndicator();
 
   return (
     <div
@@ -80,11 +91,32 @@ export function TaskCard({
         </div>
       </div>
 
-      <EstimateButtons
-        selectedValue={selectedSp}
-        onSelect={(value) => onEstimate(id, value)}
-        disabled={disabled}
-      />
+      {!revealed && (
+        <EstimateButtons
+          selectedValue={selectedSp}
+          onSelect={(value) => {
+            onEstimate(id, value, value !== null ? (comment.trim() || undefined) : undefined);
+            if (value !== null) showSaveIndicator();
+          }}
+          disabled={disabled}
+        />
+      )}
+
+      {/* Comment textarea */}
+      {showCommentBox && (
+        <CommentInput
+          comment={comment}
+          onCommentChange={setComment}
+          hasTemplate={Boolean(commentTemplate)}
+          selectedSp={selectedSp}
+          onCommentSave={(newComment) => {
+            if (selectedSp === null) return;
+            onEstimate(id, selectedSp, newComment || undefined);
+            showSaveIndicator();
+          }}
+          saving={saving}
+        />
+      )}
 
       {/* Stats + individual votes after reveal */}
       {revealed && allEstimates && allEstimates.length > 0 && (
@@ -109,23 +141,48 @@ export function TaskCard({
           </div>
 
           {/* Individual estimates */}
-          <div className="flex flex-wrap gap-2 mb-3">
-            {allEstimates.map((est) => {
-              const isQuestion = est.storyPoints === '?';
-              return (
-                <span
-                  key={est.id}
-                  className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs ${isQuestion
-                      ? 'bg-efi-warning/20 border border-efi-warning/30 text-efi-warning'
-                      : 'bg-white/6 text-efi-text-primary'
-                    }`}
-                >
-                  <span className={isQuestion ? 'text-efi-warning/70' : 'text-efi-text-secondary'}>{est.participantNickname}</span>
-                  <span className="font-bold">{est.storyPoints}</span>
-                </span>
-              );
-            })}
-          </div>
+          {allEstimates.some((e) => e.comment) ? (
+            <div className="space-y-2 mb-3">
+              {allEstimates.map((est) => {
+                const isQuestion = est.storyPoints === '?';
+                return (
+                  <div
+                    key={est.id}
+                    className={`px-2.5 py-1.5 rounded-md text-xs ${isQuestion
+                        ? 'bg-efi-warning/20 border border-efi-warning/30'
+                        : 'bg-white/6'
+                      }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className={isQuestion ? 'text-efi-warning/70' : 'text-efi-text-secondary'}>{est.participantNickname}</span>
+                      <span className={`font-bold ${isQuestion ? 'text-efi-warning' : 'text-efi-text-primary'}`}>{est.storyPoints}</span>
+                    </div>
+                    {est.comment && (
+                      <p className="text-efi-text-tertiary mt-1 whitespace-pre-line break-words">{est.comment}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {allEstimates.map((est) => {
+                const isQuestion = est.storyPoints === '?';
+                return (
+                  <span
+                    key={est.id}
+                    className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs ${isQuestion
+                        ? 'bg-efi-warning/20 border border-efi-warning/30 text-efi-warning'
+                        : 'bg-white/6 text-efi-text-primary'
+                      }`}
+                  >
+                    <span className={isQuestion ? 'text-efi-warning/70' : 'text-efi-text-secondary'}>{est.participantNickname}</span>
+                    <span className="font-bold">{est.storyPoints}</span>
+                  </span>
+                );
+              })}
+            </div>
+          )}
 
           {/* Admin: final SP selector */}
           {isAdmin && onSetFinalEstimate && (

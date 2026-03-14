@@ -1,18 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Check, Copy } from 'lucide-react';
+import { Check, Copy, Trash2, Eye, RotateCw } from 'lucide-react';
+import { InlineConfirmAction } from '@/components/InlineConfirmAction';
 import { getAuth } from '@/api/client';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { queryKeys } from '@/api/queryKeys';
 import { roomApi } from '@/api/queries';
-import { useRevealRoom, useNewRound, useSubmitEstimate, useDeleteEstimate, useAdminJoinMutation, useUpdateRoom } from '@/api/mutations';
+import { useRevealRoom, useNewRound, useSubmitEstimate, useDeleteEstimate, useUpdateRoom } from '@/api/mutations';
 import { logger } from '@/utils/logger';
 import { useToast } from '@/components/Toast';
 import { Spinner, ButtonSpinner } from '@/components/Spinner';
 import { RoundHistoryPanel } from '@/components/RoundHistoryPanel';
 import { EstimateButtons } from '@/components/EstimateButtons';
+import { AdminJoinBanner } from '@/components/AdminJoinBanner';
 import type { StoryPoints, RoomDetailResponse } from '@/api/types';
 import { getErrorMessage } from '@/utils/error';
+import { copyRoomLink } from '@/utils/clipboard';
+import { useSaveIndicator } from '@/hooks/useSaveIndicator';
+import { useDeleteRoomAction } from '@/hooks/useDeleteRoomAction';
 import { TextInput } from '@/components/TextInput';
+import { CommentInput } from '@/components/CommentInput';
+import { RoomSettings } from '@/components/RoomSettings';
 
 interface LiveRoomViewProps {
   slug: string;
@@ -22,12 +30,16 @@ interface LiveRoomViewProps {
 }
 
 export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoomViewProps) {
-  const isAdmin = Boolean(auth.adminCode);
+  const { isAdmin: isSiteAdmin } = useCurrentUser();
+  const isAdmin = Boolean(auth.adminCode) || isSiteAdmin;
   const { showToast } = useToast();
 
   const [topicInput, setTopicInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [selectedEstimate, setSelectedEstimate] = useState<StoryPoints | null>(null);
+  const [comment, setComment] = useState('');
+  const { saving, showSaveIndicator, resetSaving } = useSaveIndicator();
+  const { handleDeleteRoom, isPending: deleteRoomPending } = useDeleteRoomAction(slug, roomId);
 
   const { data: liveState, isLoading: loading } = useQuery({
     queryKey: queryKeys.rooms.live(roomId),
@@ -68,22 +80,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
 
   // Admin join state
   const [currentAuth, setCurrentAuth] = useState(auth);
-  const [joinNickname, setJoinNickname] = useState('');
-  const adminJoin = useAdminJoinMutation(slug);
   const hasParticipant = Boolean(currentAuth.participantId);
-
-  async function handleAdminJoin(e: React.FormEvent) {
-    e.preventDefault();
-    if (!joinNickname.trim()) return;
-    logger.info('Admin joining as voter');
-    try {
-      await adminJoin.mutateAsync(joinNickname.trim());
-      setCurrentAuth(getAuth(slug));
-    } catch (err) {
-      logger.warn('Failed to join as voter:', getErrorMessage(err));
-      showToast(getErrorMessage(err));
-    }
-  }
 
   // Sync selected estimate from live state
   useEffect(() => {
@@ -94,7 +91,20 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
     }
   }, [liveState?.myEstimate]);
 
-  async function handleEstimate(value: StoryPoints) {
+  // Initialize comment from server or template (once)
+  const commentInitializedRef = useRef(false);
+  useEffect(() => {
+    if (commentInitializedRef.current) return;
+    if (liveState?.myEstimate?.comment) {
+      setComment(liveState.myEstimate.comment);
+      commentInitializedRef.current = true;
+    } else if (liveState?.commentTemplate) {
+      setComment(liveState.commentTemplate);
+      commentInitializedRef.current = true;
+    }
+  }, [liveState?.myEstimate?.comment, liveState?.commentTemplate]);
+
+  async function handleEstimateSubmit(value: StoryPoints) {
     if (!liveState?.taskId) return;
     logger.debug(`Live estimate: task=${liveState.taskId} sp=${value}`);
 
@@ -107,7 +117,8 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
       if (isUnvote) {
         await deleteEstimate.mutateAsync(liveState.taskId);
       } else {
-        await submitEstimate.mutateAsync({ taskId: liveState.taskId, storyPoints: value });
+        await submitEstimate.mutateAsync({ taskId: liveState.taskId, storyPoints: value, comment: comment.trim() || undefined });
+        showSaveIndicator();
       }
     } catch (err) {
       setSelectedEstimate(prev);
@@ -135,7 +146,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
         }
       }
     } else {
-      await handleEstimate(value);
+      await handleEstimateSubmit(value);
     }
   }
 
@@ -156,20 +167,12 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
       await newRound.mutateAsync(body);
       setTopicInput('');
       setSelectedEstimate(null);
+      setComment(liveState?.commentTemplate ?? '');
+      resetSaving();
+      commentInitializedRef.current = false;
     } catch (err) {
       logger.warn('Failed to start new round:', getErrorMessage(err));
       showToast(getErrorMessage(err));
-    }
-  }
-
-  async function handleCopyRoomLink() {
-    if (!initialRoom.slug) return;
-    const link = `${window.location.origin}/r/${initialRoom.slug}`;
-    try {
-      await navigator.clipboard.writeText(link);
-      showToast('Room link copied!');
-    } catch {
-      showToast('Failed to copy link');
     }
   }
 
@@ -183,6 +186,8 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
 
   const status = liveState?.status ?? initialRoom.status;
   const isRevealed = status === 'REVEALED' || status === 'CLOSED';
+  const commentRequired = liveState?.commentRequired ?? false;
+  const showCommentBox = !isRevealed && (liveState?.commentTemplate || commentRequired);
   const topic = liveState?.topic ?? initialRoom.topic;
   const roundNumber = liveState?.roundNumber ?? initialRoom.roundNumber;
   const participants = liveState?.participants ?? [];
@@ -195,10 +200,10 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-efi-text-primary">{initialRoom.title}</h1>
-              <span className="text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">{initialRoom.slug}</span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-efi-live/20 text-efi-live border border-efi-live/30">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-efi-text-primary truncate min-w-0">{initialRoom.title}</h1>
+              <span className="shrink-0 text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">{initialRoom.slug}</span>
+              <span className="shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-efi-live/20 text-efi-live border border-efi-live/30">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-efi-live opacity-75" />
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-efi-live" />
@@ -214,43 +219,32 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
               </p>
             )}
           </div>
-          <div className="mt-3 sm:mt-0">
+          <div className="flex items-center gap-2 mt-3 sm:mt-0">
             <button
               type="button"
-              onClick={() => void handleCopyRoomLink()}
+              onClick={() => void copyRoomLink(initialRoom.slug, showToast)}
               title="Copy room join link"
               className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-efi-text-secondary border border-white/10 rounded-lg hover:text-efi-text-primary hover:border-white/20 transition-colors cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
             >
               <Copy className="w-3 h-3" />
               Share
             </button>
+            {isAdmin && (
+              <InlineConfirmAction
+                label="Delete room?"
+                onConfirm={() => void handleDeleteRoom()}
+                isLoading={deleteRoomPending}
+                icon={<Trash2 className="w-4 h-4" />}
+                title="Delete room"
+              />
+            )}
           </div>
         </div>
       </div>
 
       {/* Admin join banner */}
       {isAdmin && !hasParticipant && !isRevealed && (
-        <form
-          onSubmit={(e) => void handleAdminJoin(e)}
-          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 glass-gold rounded-xl p-4 mb-6"
-        >
-          <p className="text-sm text-efi-gold-light font-medium sm:mr-2">Join as voter to estimate</p>
-          <TextInput
-            type="text"
-            value={joinNickname}
-            onChange={(e) => setJoinNickname(e.target.value)}
-            placeholder="Your nickname"
-            maxLength={100}
-            className="flex-1 rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
-          />
-          <button
-            type="submit"
-            disabled={adminJoin.isPending || !joinNickname.trim()}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-          >
-            {adminJoin.isPending ? <><ButtonSpinner /> Joining...</> : 'Join & Vote'}
-          </button>
-        </form>
+        <AdminJoinBanner slug={slug} onJoined={() => setCurrentAuth(getAuth(slug))} />
       )}
 
       {/* Admin controls */}
@@ -281,7 +275,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                 disabled={revealRoom.isPending}
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
               >
-                {revealRoom.isPending ? <><ButtonSpinner /> Revealing...</> : 'Reveal Votes'}
+                {revealRoom.isPending ? <><ButtonSpinner /> Revealing...</> : <><Eye className="w-4 h-4" /> Reveal</>}
               </button>
             </div>
           ) : (
@@ -300,10 +294,17 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                 disabled={newRound.isPending}
                 className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-info/30 text-efi-info hover:bg-efi-info/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
               >
-                {newRound.isPending ? <><ButtonSpinner /> Starting...</> : 'New Round'}
+                {newRound.isPending ? <><ButtonSpinner /> Starting...</> : <><RotateCw className="w-4 h-4" /> New Round</>}
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Room settings (admin only) */}
+      {isAdmin && (
+        <div className="mb-6">
+          <RoomSettings slug={slug} room={initialRoom} />
         </div>
       )}
 
@@ -334,6 +335,28 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                 onSelect={(value) => void handleEstimateFromButtons(value)}
                 disabled={submitting || !hasParticipant}
               />
+              {showCommentBox && hasParticipant && (
+                <CommentInput
+                  comment={comment}
+                  onCommentChange={setComment}
+                  hasTemplate={Boolean(liveState?.commentTemplate)}
+                  selectedSp={selectedEstimate}
+                  onCommentSave={(newComment) => {
+                    if (selectedEstimate && liveState?.taskId) {
+                      void submitEstimate.mutateAsync({
+                        taskId: liveState.taskId,
+                        storyPoints: selectedEstimate,
+                        comment: newComment || undefined,
+                      }).then(() => {
+                        showSaveIndicator();
+                      }).catch((err) => {
+                        showToast(getErrorMessage(err));
+                      });
+                    }
+                  }}
+                  saving={saving}
+                />
+              )}
               {!hasParticipant && (
                 <p className="text-xs text-efi-text-tertiary mt-2">Join as a voter above to submit estimates.</p>
               )}
@@ -342,7 +365,6 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
 
           {/* Results */}
           {isRevealed && results && (
-            <div>
               <div className="glass-frost rounded-xl p-4 space-y-4">
                 <div className="flex gap-6">
                   {results.averagePoints != null && (
@@ -364,21 +386,23 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                     {results.estimates.map((est) => {
                       const isQuestion = est.storyPoints === '?';
                       return (
-                        <div key={est.id} className="flex flex-col items-center gap-1">
-                          <span className={`text-xs ${isQuestion ? 'text-efi-warning/70' : 'text-efi-text-tertiary'}`}>{est.participantNickname}</span>
+                        <div key={est.id} className="flex flex-col items-center gap-1 max-w-[140px]">
+                          <span className={`text-xs truncate max-w-full ${isQuestion ? 'text-efi-warning/70' : 'text-efi-text-tertiary'}`}>{est.participantNickname}</span>
                           <span className={`text-lg font-bold rounded-lg w-12 h-12 flex items-center justify-center ${isQuestion
                               ? 'text-efi-warning bg-efi-warning/20 border border-efi-warning/40'
                               : 'text-efi-gold bg-efi-gold/10 border border-efi-gold/30'
                             }`}>
                             {est.storyPoints}
                           </span>
+                          {est.comment && (
+                            <p className="text-xs text-efi-text-tertiary mt-1 text-center max-w-[140px] break-words line-clamp-3">{est.comment}</p>
+                          )}
                         </div>
                       );
                     })}
                   </div>
                 )}
               </div>
-            </div>
           )}
 
           {isRevealed && !results && (

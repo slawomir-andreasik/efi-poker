@@ -49,7 +49,14 @@ public class RoomService {
 
   @Transactional
   public Room createRoom(
-      UUID projectId, String title, String description, String roomType, Instant deadline) {
+      UUID projectId,
+      String title,
+      String description,
+      String roomType,
+      Instant deadline,
+      boolean autoRevealOnDeadline,
+      String commentTemplate,
+      boolean commentRequired) {
     projectApi.validateProjectExists(projectId);
     ProjectEntity project = entityManager.getReference(ProjectEntity.class, projectId);
 
@@ -69,6 +76,9 @@ public class RoomService {
               .description(description)
               .roomType(roomType)
               .deadline(deadline)
+              .autoRevealOnDeadline(autoRevealOnDeadline)
+              .commentTemplate(commentTemplate)
+              .commentRequired(commentRequired)
               .build();
       try {
         saved = roomRepository.save(entity);
@@ -122,7 +132,14 @@ public class RoomService {
 
   @Transactional
   public Room updateRoom(
-      UUID id, String title, String description, Instant deadline, String topic) {
+      UUID id,
+      String title,
+      String description,
+      Instant deadline,
+      String topic,
+      String commentTemplate,
+      Boolean commentRequired,
+      Boolean autoRevealOnDeadline) {
     RoomEntity entity =
         roomRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Room", id));
 
@@ -137,6 +154,15 @@ public class RoomService {
     }
     if (topic != null) {
       entity.setTopic(topic.isBlank() ? null : topic);
+    }
+    if (commentTemplate != null) {
+      entity.setCommentTemplate(commentTemplate.isBlank() ? null : commentTemplate);
+    }
+    if (commentRequired != null) {
+      entity.setCommentRequired(commentRequired);
+    }
+    if (autoRevealOnDeadline != null) {
+      entity.setAutoRevealOnDeadline(autoRevealOnDeadline);
     }
 
     RoomEntity saved = roomRepository.save(entity);
@@ -211,6 +237,13 @@ public class RoomService {
 
     expired.forEach(r -> r.setStatus(RoomStatus.CLOSED.name()));
     return roomEntityMapper.toDomainList(roomRepository.saveAll(expired));
+  }
+
+  @Transactional
+  public void deleteRoom(Room room) {
+    RoomEntity ref = entityManager.getReference(RoomEntity.class, room.id());
+    roomRepository.delete(ref);
+    log.info("Room deleted: id={}, slug={}", room.id(), room.slug());
   }
 
   public long countOpenRooms() {

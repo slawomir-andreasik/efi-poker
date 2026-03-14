@@ -203,7 +203,8 @@ class RoomServiceTest extends BaseUnitTest {
       given(roomEntityMapper.toDomain(saved)).willReturn(domain);
 
       // Act
-      Room result = roomService.updateRoom(roomId, null, null, null, "Sprint Goal");
+      Room result =
+          roomService.updateRoom(roomId, null, null, null, "Sprint Goal", null, null, null);
 
       // Assert
       assertThat(entity.getTopic()).isEqualTo("Sprint Goal");
@@ -230,7 +231,7 @@ class RoomServiceTest extends BaseUnitTest {
       given(roomEntityMapper.toDomain(saved)).willReturn(domain);
 
       // Act
-      Room result = roomService.updateRoom(roomId, null, null, null, "  ");
+      Room result = roomService.updateRoom(roomId, null, null, null, "  ", null, null, null);
 
       // Assert
       assertThat(entity.getTopic()).isNull();
@@ -257,10 +258,30 @@ class RoomServiceTest extends BaseUnitTest {
       given(roomEntityMapper.toDomain(saved)).willReturn(domain);
 
       // Act
-      roomService.updateRoom(roomId, null, null, null, null);
+      roomService.updateRoom(roomId, null, null, null, null, null, null, null);
 
       // Assert
       assertThat(entity.getTopic()).isEqualTo("Existing topic");
+    }
+  }
+
+  @Nested
+  @DisplayName("deleteRoom")
+  class DeleteRoom {
+
+    @Test
+    void should_delete_via_reference() {
+      // Arrange
+      UUID roomId = UUID.randomUUID();
+      Room room = Room.builder().id(roomId).slug("A3X-K7B").roomType("ASYNC").build();
+      RoomEntity ref = new RoomEntity();
+      given(entityManager.getReference(RoomEntity.class, roomId)).willReturn(ref);
+
+      // Act
+      roomService.deleteRoom(room);
+
+      // Assert
+      then(roomRepository).should().delete(ref);
     }
   }
 
@@ -319,7 +340,7 @@ class RoomServiceTest extends BaseUnitTest {
       given(roomEntityMapper.toDomain(savedRoom)).willReturn(domain);
 
       // Act
-      roomService.createRoom(projectId, "Room", null, "LIVE", null);
+      roomService.createRoom(projectId, "Room", null, "LIVE", null, true, null, false);
 
       // Assert
       String slug = captor.getValue().getSlug();
@@ -346,7 +367,7 @@ class RoomServiceTest extends BaseUnitTest {
       given(roomEntityMapper.toDomain(savedRoom)).willReturn(domain);
 
       // Act
-      roomService.createRoom(projectId, "Live Room", null, "LIVE", null);
+      roomService.createRoom(projectId, "Live Room", null, "LIVE", null, true, null, false);
 
       // Assert
       then(taskRepository).should().save(any(TaskEntity.class));
@@ -371,7 +392,8 @@ class RoomServiceTest extends BaseUnitTest {
       given(roomEntityMapper.toDomain(savedRoom)).willReturn(domain);
 
       // Act
-      roomService.createRoom(projectId, "Async Room", null, "ASYNC", java.time.Instant.now());
+      roomService.createRoom(
+          projectId, "Async Room", null, "ASYNC", java.time.Instant.now(), true, null, false);
 
       // Assert
       then(taskRepository).should(never()).save(any(TaskEntity.class));

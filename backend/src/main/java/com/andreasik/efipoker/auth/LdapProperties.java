@@ -11,7 +11,7 @@ public record LdapProperties(
     @DefaultValue("ou=users") String usersDn,
     @DefaultValue("") String bindDn,
     @DefaultValue("") String bindPassword,
-    @DefaultValue("(&(uid={0})(info=userInternal)(info=active))") String userFilter,
+    @DefaultValue("(&(uid={0})(description=userInternal)(description=active))") String userFilter,
     @DefaultValue("uid") String uidAttribute,
     @DefaultValue("mail") String mailAttribute,
     @DefaultValue("") String adminGroup) {}

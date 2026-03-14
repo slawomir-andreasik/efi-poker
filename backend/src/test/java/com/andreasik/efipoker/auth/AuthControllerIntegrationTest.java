@@ -35,7 +35,11 @@ class AuthControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_login_with_valid_credentials_200() throws Exception {
-      String body = "{\"username\":\"testadmin\",\"password\":\"testpassword\"}";
+      // language=JSON
+      String body =
+          """
+          {"username":"testadmin","password":"testpassword"}
+          """;
 
       mockMvc
           .perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content(body))
@@ -46,7 +50,11 @@ class AuthControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_wrong_password_403() throws Exception {
-      String body = "{\"username\":\"testadmin\",\"password\":\"wrongpassword\"}";
+      // language=JSON
+      String body =
+          """
+          {"username":"testadmin","password":"wrongpassword"}
+          """;
 
       mockMvc
           .perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content(body))
@@ -55,7 +63,11 @@ class AuthControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_nonexistent_user_403() throws Exception {
-      String body = "{\"username\":\"nobody\",\"password\":\"somepassword\"}";
+      // language=JSON
+      String body =
+          """
+          {"username":"nobody","password":"somepassword"}
+          """;
 
       mockMvc
           .perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content(body))

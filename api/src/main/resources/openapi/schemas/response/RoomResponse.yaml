@@ -24,6 +24,12 @@ properties:
     type: string
   roundNumber:
     type: integer
+  autoRevealOnDeadline:
+    type: boolean
+  commentTemplate:
+    type: string
+  commentRequired:
+    type: boolean
   createdAt:
     type: string
     format: date-time

@@ -1,0 +1,15 @@
+get:
+  operationId: getRoomAnalytics
+  tags: [analytics]
+  summary: Get analytics for a revealed/closed room
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+  responses:
+    '200':
+      description: Room analytics
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/RoomAnalyticsResponse.yaml'
+    '403':
+      description: Room not yet revealed

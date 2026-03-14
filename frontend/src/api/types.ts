@@ -109,6 +109,9 @@ export interface RoomResponse {
   deadline: string;
   topic?: string;
   roundNumber: number;
+  autoRevealOnDeadline: boolean;
+  commentTemplate?: string;
+  commentRequired?: boolean;
   roomType: RoomType;
   status: RoomStatus;
   createdAt: string;
@@ -122,6 +125,9 @@ export interface RoomDetailResponse {
   deadline: string;
   topic?: string;
   roundNumber: number;
+  autoRevealOnDeadline: boolean;
+  commentTemplate?: string;
+  commentRequired?: boolean;
   roomType: RoomType;
   status: RoomStatus;
   tasks: TaskWithEstimateResponse[];
@@ -135,6 +141,9 @@ export interface RoomAdminResponse {
   deadline: string;
   topic?: string;
   roundNumber: number;
+  autoRevealOnDeadline: boolean;
+  commentTemplate?: string;
+  commentRequired?: boolean;
   roomType: RoomType;
   status: RoomStatus;
   tasks: TaskWithAllEstimatesResponse[];
@@ -247,6 +256,8 @@ export interface LiveRoomStateResponse {
   topic: string | null;
   status: RoomStatus;
   roundNumber: number;
+  commentTemplate?: string;
+  commentRequired?: boolean;
   taskId: string;
   myEstimate: EstimateResponse | null;
   questionVotesCount?: number;
@@ -283,6 +294,9 @@ export interface CreateRoomRequest {
   description?: string;
   deadline?: string;
   roomType: RoomType;
+  autoRevealOnDeadline?: boolean;
+  commentTemplate?: string;
+  commentRequired?: boolean;
 }
 
 export interface CreateTaskRequest {
@@ -307,6 +321,83 @@ export interface JoinProjectRequest {
 
 export interface SetFinalEstimateRequest {
   storyPoints: StoryPoints;
+}
+
+// Analytics
+
+export interface RoomAnalyticsResponse {
+  roomId: string;
+  title: string;
+  slug: string;
+  summary: RoomAnalyticsSummary;
+  taskAnalytics: TaskAnalyticsEntry[];
+  participationMatrix: ParticipationMatrixEntry[];
+}
+
+export interface RoomAnalyticsSummary {
+  totalTasks: number;
+  totalStoryPoints: number;
+  consensusCount: number;
+  participationRate: number;
+  totalParticipants: number;
+}
+
+export interface TaskAnalyticsEntry {
+  taskId: string;
+  title: string;
+  averagePoints: number | null;
+  medianPoints: number | null;
+  finalEstimate: string | null;
+  spread: number | null;
+  voteDistribution: Record<string, number>;
+}
+
+export interface ParticipationMatrixEntry {
+  participantId: string;
+  nickname: string;
+  taskVotes: Record<string, string>;
+}
+
+export interface ProjectAnalyticsResponse {
+  projectId: string;
+  projectName: string;
+  slug: string;
+  summary: ProjectAnalyticsSummary;
+  roomStats: RoomStatsEntry[];
+  topContentiousTasks: ContentiousTaskEntry[];
+  participantLeaderboard: ParticipantLeaderboardEntry[];
+}
+
+export interface ProjectAnalyticsSummary {
+  totalRooms: number;
+  totalTasks: number;
+  totalStoryPoints: number;
+  averageConsensusRate: number;
+}
+
+export interface RoomStatsEntry {
+  roomId: string;
+  title: string;
+  totalStoryPoints: number;
+  taskCount: number;
+  consensusRate: number;
+  createdAt: string;
+}
+
+export interface ContentiousTaskEntry {
+  taskId: string;
+  taskTitle: string;
+  roomTitle: string;
+  spread: number;
+  voteCount: number;
+}
+
+export interface ParticipantLeaderboardEntry {
+  participantId: string;
+  nickname: string;
+  tasksVoted: number;
+  totalTasks: number;
+  participationRate: number;
 }
 
 // Round history

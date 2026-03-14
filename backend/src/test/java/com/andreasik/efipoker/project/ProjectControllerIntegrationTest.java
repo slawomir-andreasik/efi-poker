@@ -26,7 +26,11 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_create_project_201() throws Exception {
-      String body = "{\"name\":\"My Project\"}";
+      // language=JSON
+      String body =
+          """
+          {"name":"My Project"}
+          """;
 
       String json =
           mockMvc
@@ -46,7 +50,11 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_blank_name_400() throws Exception {
-      String body = "{\"name\":\"\"}";
+      // language=JSON
+      String body =
+          """
+          {"name":""}
+          """;
 
       mockMvc
           .perform(post("/api/v1/projects").contentType(MediaType.APPLICATION_JSON).content(body))
@@ -127,7 +135,11 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_update_project_200() throws Exception {
       ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
-      String body = "{\"name\":\"Updated Name\"}";
+      // language=JSON
+      String body =
+          """
+          {"name":"Updated Name"}
+          """;
 
       String json =
           mockMvc
@@ -151,7 +163,11 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_reject_without_admin_code_403() throws Exception {
       ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
-      String body = "{\"name\":\"Updated\"}";
+      // language=JSON
+      String body =
+          """
+          {"name":"Updated"}
+          """;
 
       mockMvc
           .perform(
@@ -164,7 +180,11 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_reject_wrong_admin_code_403() throws Exception {
       ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
-      String body = "{\"name\":\"Updated\"}";
+      // language=JSON
+      String body =
+          """
+          {"name":"Updated"}
+          """;
 
       mockMvc
           .perform(
@@ -177,7 +197,11 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_return_404_for_unknown_slug() throws Exception {
-      String body = "{\"name\":\"Updated\"}";
+      // language=JSON
+      String body =
+          """
+          {"name":"Updated"}
+          """;
 
       mockMvc
           .perform(
@@ -191,7 +215,11 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_support_partial_update() throws Exception {
       ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
-      String body = "{\"name\":\"Only Name Changed\"}";
+      // language=JSON
+      String body =
+          """
+          {"name":"Only Name Changed"}
+          """;
 
       String json =
           mockMvc
@@ -260,12 +288,17 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_cascade_delete_rooms_and_tasks() throws Exception {
       // Create project with room via API
+      // language=JSON
+      String projectBody =
+          """
+          {"name":"Cascade Test"}
+          """;
       String createJson =
           mockMvc
               .perform(
                   post("/api/v1/projects")
                       .contentType(MediaType.APPLICATION_JSON)
-                      .content("{\"name\":\"Cascade Test\"}"))
+                      .content(projectBody))
               .andExpect(status().isCreated())
               .andReturn()
               .getResponse()
@@ -274,12 +307,17 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
       String cascadeSlug = JsonPath.read(createJson, "$.slug");
       String cascadeAdmin = JsonPath.read(createJson, "$.adminCode");
 
+      // language=JSON
+      String roomBody =
+          """
+          {"title":"Room","roomType":"LIVE"}
+          """;
       mockMvc
           .perform(
               post("/api/v1/projects/{slug}/rooms", cascadeSlug)
                   .contentType(MediaType.APPLICATION_JSON)
                   .header("X-Admin-Code", cascadeAdmin)
-                  .content("{\"title\":\"Room\",\"roomType\":\"LIVE\"}"))
+                  .content(roomBody))
           .andExpect(status().isCreated());
 
       // Delete project - 204 proves ON DELETE CASCADE works

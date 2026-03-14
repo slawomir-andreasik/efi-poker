@@ -1,0 +1,14 @@
+type: object
+properties:
+  taskId:
+    type: string
+    format: uuid
+  taskTitle:
+    type: string
+  roomTitle:
+    type: string
+  spread:
+    type: number
+    format: double
+  voteCount:
+    type: integer

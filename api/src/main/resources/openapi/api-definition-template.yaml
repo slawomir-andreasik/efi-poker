@@ -24,6 +24,8 @@ tags:
     description: Authentication
   - name: admin
     description: Admin user management
+  - name: analytics
+    description: Estimation analytics and statistics
 
 paths:
   /health:
@@ -38,6 +40,8 @@ paths:
     $ref: './paths/rooms/project-rooms.yaml'
   /projects/{slug}/participants:
     $ref: './paths/participants/join.yaml'
+  /projects/{slug}/participants/me:
+    $ref: './paths/participants/me.yaml'
   /projects/{slug}/participants/{participantId}:
     $ref: './paths/participants/get-by-id.yaml'
   /rooms/by-slug/{roomSlug}:
@@ -98,6 +102,10 @@ paths:
     $ref: './paths/admin/users-id.yaml'
   /admin/users/{id}/password:
     $ref: './paths/admin/user-password.yaml'
+  /rooms/{roomId}/analytics:
+    $ref: './paths/analytics/room-analytics.yaml'
+  /projects/{slug}/analytics:
+    $ref: './paths/analytics/project-analytics.yaml'
 
 components:
   securitySchemes:

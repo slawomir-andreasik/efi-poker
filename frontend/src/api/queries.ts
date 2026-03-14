@@ -14,6 +14,8 @@ import type {
   UserResponse,
   PagedUsersResponse,
   AdminUserResponse,
+  RoomAnalyticsResponse,
+  ProjectAnalyticsResponse,
 } from './types';
 
 export const projectApi = {
@@ -21,6 +23,7 @@ export const projectApi = {
   rooms: (slug: string) => api<RoomResponse[]>(`/projects/${slug}/rooms`, {}, slug),
   participants: (slug: string) => api<ParticipantResponse[]>(`/projects/${slug}/participants`, {}, slug),
   admin: (slug: string) => api<ProjectAdminResponse>(`/projects/${slug}/admin`, {}, slug),
+  myParticipant: (slug: string) => api<ParticipantResponse>(`/projects/${slug}/participants/me`),
 };
 
 export const roomApi = {
@@ -47,4 +50,11 @@ export const adminApi = {
     return api<PagedUsersResponse>(`/admin/users?${params}`);
   },
   user: (id: string) => api<AdminUserResponse>(`/admin/users/${id}`),
+};
+
+export const analyticsApi = {
+  room: (roomId: string, slug: string) =>
+    api<RoomAnalyticsResponse>(`/rooms/${roomId}/analytics`, {}, slug),
+  project: (slug: string) =>
+    api<ProjectAnalyticsResponse>(`/projects/${slug}/analytics`, {}, slug),
 };

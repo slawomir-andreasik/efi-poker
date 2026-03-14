@@ -8,3 +8,18 @@ GHSA-72hv-8253-57qq
 
 # DoS via excessive JSON nesting (jackson-core 3.0.4)
 CVE-2026-29062
+
+# Go stdlib CVEs in Paketo lifecycle launcher binary (buildpacksio/lifecycle 0.21.5, Go 1.26.0)
+# Not in our app code - lifecycle launcher is build-time infrastructure embedded in image layers.
+# Cannot upgrade independently - managed by Paketo builder. Fixed in Go 1.26.1.
+# Revisit when paketobuildpacks/ubuntu-noble-builder ships lifecycle built with Go 1.26.1+
+# Last reviewed: 2026-03-11
+
+# url.Parse host/authority validation bypass (Go stdlib 1.26.0)
+CVE-2026-25679
+
+# Certificate chain verification issue (Go stdlib 1.26.0)
+CVE-2026-27137
+
+# HTML meta tag URL injection (Go stdlib 1.26.0)
+CVE-2026-27142

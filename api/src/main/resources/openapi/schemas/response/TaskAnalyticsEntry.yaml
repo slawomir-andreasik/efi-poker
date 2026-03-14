@@ -1,0 +1,24 @@
+type: object
+properties:
+  taskId:
+    type: string
+    format: uuid
+  title:
+    type: string
+  averagePoints:
+    type: number
+    format: double
+  medianPoints:
+    type: number
+    format: double
+  finalEstimate:
+    type: string
+  spread:
+    type: number
+    format: double
+    description: Standard deviation of numeric votes
+  voteDistribution:
+    type: object
+    additionalProperties:
+      type: integer
+    description: Map of story point value to vote count

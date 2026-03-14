@@ -13,3 +13,12 @@ properties:
   deadline:
     type: string
     format: date-time
+  autoRevealOnDeadline:
+    type: boolean
+    default: true
+  commentTemplate:
+    type: string
+    maxLength: 2000
+  commentRequired:
+    type: boolean
+    default: false

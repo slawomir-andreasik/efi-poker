@@ -39,7 +39,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_create_task_201() throws Exception {
-      String body = "{\"title\":\"Implement login\",\"sortOrder\":0}";
+      // language=JSON
+      String body =
+          """
+          {"title":"Implement login","sortOrder":0}
+          """;
 
       mockMvc
           .perform(
@@ -54,7 +58,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_wrong_admin_code_403() throws Exception {
-      String body = "{\"title\":\"Some task\",\"sortOrder\":0}";
+      // language=JSON
+      String body =
+          """
+          {"title":"Some task","sortOrder":0}
+          """;
 
       mockMvc
           .perform(
@@ -67,7 +75,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_blank_title_400() throws Exception {
-      String body = "{\"title\":\"\",\"sortOrder\":0}";
+      // language=JSON
+      String body =
+          """
+          {"title":"","sortOrder":0}
+          """;
 
       mockMvc
           .perform(
@@ -114,7 +126,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_import_tasks_201() throws Exception {
-      String body = "{\"titles\":[\"Task A\",\"Task B\",\"Task C\"]}";
+      // language=JSON
+      String body =
+          """
+          {"titles":["Task A","Task B","Task C"]}
+          """;
 
       String json =
           mockMvc
@@ -138,7 +154,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_wrong_admin_code_403() throws Exception {
-      String body = "{\"titles\":[\"Task A\"]}";
+      // language=JSON
+      String body =
+          """
+          {"titles":["Task A"]}
+          """;
 
       mockMvc
           .perform(
@@ -163,7 +183,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_update_title_200() throws Exception {
-      String body = "{\"title\":\"Updated title\"}";
+      // language=JSON
+      String body =
+          """
+          {"title":"Updated title"}
+          """;
 
       mockMvc
           .perform(
@@ -177,7 +201,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_wrong_admin_code_403() throws Exception {
-      String body = "{\"title\":\"Updated\"}";
+      // language=JSON
+      String body =
+          """
+          {"title":"Updated"}
+          """;
 
       mockMvc
           .perform(
@@ -190,7 +218,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_return_404_for_nonexistent_task() throws Exception {
-      String body = "{\"title\":\"Updated\"}";
+      // language=JSON
+      String body =
+          """
+          {"title":"Updated"}
+          """;
 
       mockMvc
           .perform(
@@ -204,7 +236,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_not_expose_internal_id_in_404_response() throws Exception {
       UUID randomId = UUID.randomUUID();
-      String body = "{\"title\":\"Updated\"}";
+      // language=JSON
+      String body =
+          """
+          {"title":"Updated"}
+          """;
 
       String response =
           mockMvc
@@ -238,7 +274,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_set_final_estimate_200() throws Exception {
-      String body = "{\"storyPoints\":\"8\"}";
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"8"}
+          """;
 
       mockMvc
           .perform(
@@ -260,7 +300,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       taskRepository.save(task);
 
       // Act
-      String body = "{\"storyPoints\":\"13\"}";
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"13"}
+          """;
       mockMvc
           .perform(
               put("/api/v1/tasks/{id}/final-estimate", task.getId())
@@ -277,7 +321,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       TaskEntity openTask = taskRepository.save(Fixtures.taskEntity(room));
 
       // Act
-      String body = "{\"storyPoints\":\"5\"}";
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"5"}
+          """;
       mockMvc
           .perform(
               put("/api/v1/tasks/{id}/final-estimate", openTask.getId())
@@ -289,7 +337,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_wrong_admin_code_403() throws Exception {
-      String body = "{\"storyPoints\":\"5\"}";
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"5"}
+          """;
 
       mockMvc
           .perform(
@@ -302,7 +354,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_reject_invalid_story_points_400() throws Exception {
-      String body = "{\"storyPoints\":\"99\"}";
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"99"}
+          """;
 
       mockMvc
           .perform(
@@ -315,7 +371,11 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
 
     @Test
     void should_return_404_for_nonexistent_task() throws Exception {
-      String body = "{\"storyPoints\":\"5\"}";
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"5"}
+          """;
 
       mockMvc
           .perform(
