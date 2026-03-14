@@ -1,0 +1,19 @@
+type: object
+properties:
+  roomId:
+    type: string
+    format: uuid
+  title:
+    type: string
+  totalStoryPoints:
+    type: number
+    format: double
+  taskCount:
+    type: integer
+  consensusRate:
+    type: number
+    format: double
+    description: Percentage 0-100
+  createdAt:
+    type: string
+    format: date-time

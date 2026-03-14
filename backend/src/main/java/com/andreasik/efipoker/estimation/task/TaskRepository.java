@@ -34,6 +34,18 @@ public interface TaskRepository extends JpaRepository<TaskEntity, UUID> {
   Optional<TaskEntity> findByRoomIdAndTitle(
       @Param("roomId") UUID roomId, @Param("title") String title);
 
+  @Query(
+      """
+      SELECT t FROM TaskEntity t
+      JOIN FETCH t.room r
+      JOIN FETCH r.project p
+      LEFT JOIN FETCH p.createdBy
+      WHERE p.id = :projectId
+        AND t.title != '__live__'
+      ORDER BY r.createdAt DESC, t.sortOrder ASC
+      """)
+  List<TaskEntity> findByProjectIdExcludingPhantom(@Param("projectId") UUID projectId);
+
   @Override
   @Query(
       """

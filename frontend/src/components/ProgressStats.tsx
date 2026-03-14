@@ -24,14 +24,16 @@ export function ProgressStats({ tasks, isRevealed }: ProgressStatsProps) {
           <span className="text-efi-text-primary font-medium">{totalTasks}</span>
         </div>
 
-        {/* My votes */}
-        <div>
-          <div className="flex items-center justify-between text-sm mb-1">
-            <span className="text-efi-text-secondary">My votes</span>
-            <span className="text-efi-text-primary font-medium">{myVotes} / {totalTasks}</span>
+        {/* My votes - hidden on revealed rooms if user didn't participate */}
+        {(!isRevealed || myVotes > 0) && (
+          <div>
+            <div className="flex items-center justify-between text-sm mb-1">
+              <span className="text-efi-text-secondary">My votes</span>
+              <span className="text-efi-text-primary font-medium">{myVotes} / {totalTasks}</span>
+            </div>
+            <MiniBar value={myVotes} total={totalTasks} />
           </div>
-          <MiniBar value={myVotes} total={totalTasks} />
-        </div>
+        )}
 
         {/* Team progress */}
         <div>

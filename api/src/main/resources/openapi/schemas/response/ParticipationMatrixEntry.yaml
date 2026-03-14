@@ -1,0 +1,12 @@
+type: object
+properties:
+  participantId:
+    type: string
+    format: uuid
+  nickname:
+    type: string
+  taskVotes:
+    type: object
+    additionalProperties:
+      type: string
+    description: Map of task ID to story points value

@@ -1,0 +1,23 @@
+type: object
+properties:
+  projectId:
+    type: string
+    format: uuid
+  projectName:
+    type: string
+  slug:
+    type: string
+  summary:
+    $ref: './ProjectAnalyticsSummary.yaml'
+  roomStats:
+    type: array
+    items:
+      $ref: './RoomStatsEntry.yaml'
+  topContentiousTasks:
+    type: array
+    items:
+      $ref: './ContentiousTaskEntry.yaml'
+  participantLeaderboard:
+    type: array
+    items:
+      $ref: './ParticipantLeaderboardEntry.yaml'

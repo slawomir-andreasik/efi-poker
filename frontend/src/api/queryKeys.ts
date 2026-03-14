@@ -4,6 +4,7 @@ export const queryKeys = {
     rooms: (slug: string) => ['projects', slug, 'rooms'] as const,
     participants: (slug: string) => ['projects', slug, 'participants'] as const,
     admin: (slug: string) => ['projects', slug, 'admin'] as const,
+    myParticipant: (slug: string) => ['projects', slug, 'my-participant'] as const,
   },
   rooms: {
     detail: (id: string) => ['rooms', id] as const,
@@ -23,5 +24,9 @@ export const queryKeys = {
     users: (page: number, size: number, search?: string) =>
       ['admin', 'users', { page, size, search }] as const,
     user: (id: string) => ['admin', 'users', id] as const,
+  },
+  analytics: {
+    room: (roomId: string) => ['analytics', 'room', roomId] as const,
+    project: (slug: string) => ['analytics', 'project', slug] as const,
   },
 };
