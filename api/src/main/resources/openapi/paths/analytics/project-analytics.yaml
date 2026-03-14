@@ -1,0 +1,15 @@
+get:
+  operationId: getProjectAnalytics
+  tags: [analytics]
+  summary: Get analytics across all revealed/closed rooms in a project
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+  responses:
+    '200':
+      description: Project analytics
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/ProjectAnalyticsResponse.yaml'
+    '404':
+      description: Project not found

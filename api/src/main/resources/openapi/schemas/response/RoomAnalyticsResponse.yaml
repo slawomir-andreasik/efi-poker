@@ -1,0 +1,19 @@
+type: object
+properties:
+  roomId:
+    type: string
+    format: uuid
+  title:
+    type: string
+  slug:
+    type: string
+  summary:
+    $ref: './RoomAnalyticsSummary.yaml'
+  taskAnalytics:
+    type: array
+    items:
+      $ref: './TaskAnalyticsEntry.yaml'
+  participationMatrix:
+    type: array
+    items:
+      $ref: './ParticipationMatrixEntry.yaml'

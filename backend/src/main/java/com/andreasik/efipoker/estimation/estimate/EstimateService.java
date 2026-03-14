@@ -1,5 +1,6 @@
 package com.andreasik.efipoker.estimation.estimate;
 
+import com.andreasik.efipoker.estimation.room.RoomEntity;
 import com.andreasik.efipoker.estimation.task.TaskEntity;
 import com.andreasik.efipoker.estimation.task.TaskRepository;
 import com.andreasik.efipoker.participant.ParticipantApi;
@@ -44,6 +45,7 @@ public class EstimateService {
 
     if (existing.isPresent()) {
       EstimateEntity entity = existing.get();
+      validateCommentIfRequired(entity.getTask().getRoom(), comment, taskId, participantId);
       entity.setStoryPoints(storyPoints);
       entity.setComment(comment);
       EstimateEntity saved = estimateRepository.save(entity);
@@ -60,6 +62,7 @@ public class EstimateService {
         taskRepository
             .findById(taskId)
             .orElseThrow(() -> new ResourceNotFoundException("Task", taskId));
+    validateCommentIfRequired(task.getRoom(), comment, taskId, participantId);
     participantApi.validateParticipantExists(participantId);
     participantApi.validateParticipantBelongsToProject(
         participantId, task.getRoom().getProject().getId());
@@ -107,5 +110,13 @@ public class EstimateService {
         participantId, task.getRoom().getProject().getId());
     estimateRepository.deleteByTaskIdAndParticipantId(taskId, participantId);
     log.info("Estimate deleted: taskId={}, participantId={}", taskId, participantId);
+  }
+
+  private void validateCommentIfRequired(
+      RoomEntity room, String comment, UUID taskId, UUID participantId) {
+    if (room.isCommentRequired() && (comment == null || comment.isBlank())) {
+      log.warn("Comment required but missing: taskId={}, participantId={}", taskId, participantId);
+      throw new IllegalArgumentException("Comment is required for this room");
+    }
   }
 }

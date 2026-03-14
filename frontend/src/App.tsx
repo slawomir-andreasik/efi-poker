@@ -22,6 +22,8 @@ const AuthCallbackPage = lazy(() => import('@/pages/AuthCallbackPage').then(m =>
 const LoginPage = lazy(() => import('@/pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('@/pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const AdminUsersPage = lazy(() => import('@/pages/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })));
+const RoomAnalyticsPage = lazy(() => import('@/pages/RoomAnalyticsPage').then(m => ({ default: m.RoomAnalyticsPage })));
+const ProjectAnalyticsPage = lazy(() => import('@/pages/ProjectAnalyticsPage').then(m => ({ default: m.ProjectAnalyticsPage })));
 
 export function App() {
   const location = useLocation();
@@ -70,6 +72,8 @@ export function App() {
                 <Route path="/p/:slug" element={<ProjectPage />} />
                 <Route path="/p/:slug/join" element={<JoinPage />} />
                 <Route path="/r/:roomSlug" element={<RoomJoinRedirectPage />} />
+                <Route path="/p/:slug/r/:roomId/analytics" element={<RoomAnalyticsPage />} />
+                <Route path="/p/:slug/analytics" element={<ProjectAnalyticsPage />} />
                 <Route path="/p/:slug/r/:roomId" element={<RoomPage />} />
                 <Route path="/p/:slug/r/:roomId/results" element={<ResultsPage />} />
                 <Route path="/auth/callback" element={<AuthCallbackPage />} />

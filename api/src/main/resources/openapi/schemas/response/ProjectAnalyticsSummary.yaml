@@ -1,0 +1,13 @@
+type: object
+properties:
+  totalRooms:
+    type: integer
+  totalTasks:
+    type: integer
+  totalStoryPoints:
+    type: number
+    format: double
+  averageConsensusRate:
+    type: number
+    format: double
+    description: Average consensus rate across rooms (0-100)
