@@ -54,6 +54,18 @@ public interface ParticipantRepository extends JpaRepository<ParticipantEntity, 
       """)
   List<UUID> findProjectIdsByUserId(@Param("userId") UUID userId);
 
+  @Query(
+      """
+      SELECT pt FROM ParticipantEntity pt
+      JOIN FETCH pt.project p
+      LEFT JOIN FETCH p.createdBy
+      LEFT JOIN FETCH pt.user
+      WHERE pt.project.id = :projectId
+        AND pt.user.id = :userId
+      """)
+  Optional<ParticipantEntity> findByProjectIdAndUserId(
+      @Param("projectId") UUID projectId, @Param("userId") UUID userId);
+
   boolean existsByIdAndProjectId(UUID id, UUID projectId);
 
   long countByProjectId(UUID projectId);

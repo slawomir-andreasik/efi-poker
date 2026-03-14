@@ -6,7 +6,7 @@ import { roomApi } from '@/api/queries';
 import { getErrorMessage } from '@/utils/error';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { Spinner } from '@/components/Spinner';
-import { ResultsTable, type TaskEstimate } from '@/components/ResultsTable';
+import { ResultsTable, getConsensusLevel, type TaskEstimate } from '@/components/ResultsTable';
 
 function getTaskSp(task: TaskEstimate): number {
   if (task.finalEstimate) {
@@ -78,14 +78,19 @@ export function ResultsPage() {
   // Transform API data to ResultsTable format
   const tableData: TaskEstimate[] = (results?.tasks ?? []).map((task) => {
     const estimates: Record<string, number | string> = {};
+    const comments: Record<string, string> = {};
     for (const est of task.estimates) {
       const numeric = Number(est.storyPoints);
       estimates[est.participantNickname] = isNaN(numeric) ? est.storyPoints : numeric;
+      if (est.comment) {
+        comments[est.participantNickname] = est.comment;
+      }
     }
     return {
       taskId: task.taskId,
       taskTitle: task.title,
       estimates,
+      comments,
       average: task.averagePoints,
       median: task.medianPoints,
       finalEstimate: task.finalEstimate,
@@ -102,12 +107,20 @@ export function ResultsPage() {
             {results?.slug && <span className="text-xs font-mono text-efi-text-tertiary bg-white/5 px-1.5 py-0.5 rounded">{results.slug}</span>}
           </div>
         </div>
-        <Link
-          to={`/p/${slug}/r/${roomId}`}
-          className="mt-3 sm:mt-0 px-4 py-2 rounded-lg text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold hover:text-efi-text-primary transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-        >
-          Back to Room
-        </Link>
+        <div className="mt-3 sm:mt-0 flex gap-2">
+          <Link
+            to={`/p/${slug}/r/${roomId}/analytics`}
+            className="px-3 py-1.5 text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold rounded-lg transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none cursor-pointer"
+          >
+            Analytics
+          </Link>
+          <Link
+            to={`/p/${slug}/r/${roomId}`}
+            className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold hover:text-efi-text-primary transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none cursor-pointer"
+          >
+            Back to Room
+          </Link>
+        </div>
       </div>
 
       <div className="glass-frost rounded-xl sm:rounded-2xl p-3 sm:p-6">
@@ -133,10 +146,7 @@ export function ResultsPage() {
           <div className="glass-whisper rounded-xl p-4 text-center">
             <p className="text-sm text-efi-text-secondary">Consensus</p>
             <p className="text-2xl font-bold text-efi-success mt-1">
-              {tableData.filter((t) => {
-                const vals = Object.values(t.estimates).filter((v): v is number => typeof v === 'number');
-                return vals.length > 0 && new Set(vals).size === 1;
-              }).length}/{tableData.length}
+              {tableData.filter((t) => getConsensusLevel(t.estimates) === 'consensus').length}/{tableData.length}
             </p>
           </div>
         </div>

@@ -2,6 +2,7 @@ interface TaskEstimate {
   taskId: string;
   taskTitle: string;
   estimates: Record<string, number | string>;
+  comments: Record<string, string>;
   average: number | null;
   median: number | null;
   finalEstimate?: string | null;
@@ -12,7 +13,7 @@ interface ResultsTableProps {
   participants: string[];
 }
 
-function getConsensusLevel(estimates: Record<string, number | string>): 'consensus' | 'close' | 'divergent' {
+export function getConsensusLevel(estimates: Record<string, number | string>): 'consensus' | 'close' | 'divergent' {
   const numericValues = Object.values(estimates).filter((v): v is number => typeof v === 'number');
   if (numericValues.length === 0) return 'divergent';
 
@@ -72,13 +73,16 @@ export function ResultsTable({ tasks, participants }: ResultsTableProps) {
                 <td className="py-2 px-2 text-efi-text-primary font-medium">{task.taskTitle}</td>
                 {participants.map((name) => {
                   const value = task.estimates[name];
+                  const taskComment = task.comments[name];
                   const isQuestion = value === '?';
                   return (
                     <td
                       key={name}
-                      className={`text-center py-2 px-2 font-medium ${isQuestion ? 'text-efi-warning bg-efi-warning/10 rounded' : 'text-efi-text-secondary'}`}
+                      title={taskComment || undefined}
+                      className={`text-center py-2 px-2 font-medium ${isQuestion ? 'text-efi-warning bg-efi-warning/10 rounded' : 'text-efi-text-secondary'} ${taskComment ? 'cursor-help underline decoration-dotted decoration-efi-text-secondary/60' : ''}`}
                     >
                       {value ?? '-'}
+                      {taskComment && <span className="text-[10px] text-efi-text-tertiary align-super ml-0.5" aria-label="Has comment">*</span>}
                     </td>
                   );
                 })}

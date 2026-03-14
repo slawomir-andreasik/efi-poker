@@ -173,6 +173,25 @@ public class ParticipantService implements ParticipantApi {
     return participantRepository.findProjectIdsByUserId(userId);
   }
 
+  @Override
+  public UUID findParticipantIdByProjectAndUser(UUID projectId, UUID userId) {
+    if (userId == null) {
+      return null;
+    }
+    return participantRepository
+        .findByProjectIdAndUserId(projectId, userId)
+        .map(ParticipantEntity::getId)
+        .orElse(null);
+  }
+
+  public Participant getParticipantByProjectAndUser(UUID projectId, UUID userId) {
+    ParticipantEntity entity =
+        participantRepository
+            .findByProjectIdAndUserId(projectId, userId)
+            .orElseThrow(() -> new ResourceNotFoundException("Participant", projectId));
+    return enrichWithRoomAccess(participantEntityMapper.toDomain(entity));
+  }
+
   private Participant enrichWithRoomAccess(Participant participant) {
     Set<UUID> roomIds = participantRepository.findInvitedRoomIds(participant.id());
     return participant.toBuilder().invitedRoomIds(roomIds).build();

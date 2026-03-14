@@ -1,37 +1,41 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Copy, Trash2 } from 'lucide-react';
 import { InlineConfirmAction } from '@/components/InlineConfirmAction';
 import { useQuery } from '@tanstack/react-query';
 import { getAuth, getJwt, saveAuth, ApiError } from '@/api/client';
 import { queryKeys } from '@/api/queryKeys';
 import { roomApi, projectApi } from '@/api/queries';
-import { useSubmitEstimate, useDeleteEstimate, useSetFinalEstimate, useUpdateTask, useAdminJoinMutation, useDeleteRoom } from '@/api/mutations';
+import { useSubmitEstimate, useDeleteEstimate, useSetFinalEstimate, useUpdateTask } from '@/api/mutations';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/utils/error';
+import { copyRoomLink } from '@/utils/clipboard';
 import { useSortedTasks } from '@/hooks/useSortedTasks';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useDeleteRoomAction } from '@/hooks/useDeleteRoomAction';
 import { useToast } from '@/components/Toast';
-import { Spinner, ButtonSpinner } from '@/components/Spinner';
+import { Spinner } from '@/components/Spinner';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { TaskCard } from '@/components/TaskCard';
 import { SortControls } from '@/components/SortControls';
 import { RoomSidebar } from '@/components/RoomSidebar';
 import { LiveRoomView } from '@/components/LiveRoomView';
-import { TextInput } from '@/components/TextInput';
+import { RoomSettings } from '@/components/RoomSettings';
+import { AdminJoinBanner } from '@/components/AdminJoinBanner';
 import type { StoryPoints } from '@/api/types';
 
 export function RoomPage() {
   const { slug, roomId } = useParams<{ slug: string; roomId: string }>();
   const [auth, setAuth] = useState(() => (slug ? getAuth(slug) : {}));
-  const isAdmin = Boolean(auth.adminCode);
+  const { isAdmin: isSiteAdmin } = useCurrentUser();
+  const isAdmin = Boolean(auth.adminCode) || isSiteAdmin;
   const hasParticipant = Boolean(auth.participantId);
   const { showToast } = useToast();
   const projectName = auth.projectName ?? slug;
 
   const [votes, setVotes] = useState<Record<string, StoryPoints>>({});
-  const deleteRoomMutation = useDeleteRoom(slug ?? '');
-  const navigate = useNavigate();
+  const { handleDeleteRoom, isPending: deleteRoomPending } = useDeleteRoomAction(slug ?? '', roomId ?? '');
 
   const { data: room, isLoading: loading, error } = useQuery({
     queryKey: queryKeys.rooms.detail(roomId!),
@@ -57,47 +61,22 @@ export function RoomPage() {
     }
   }, [adminProject, slug]);
 
+  // Fallback: logged-in user without participantId in localStorage
+  const { data: myParticipant } = useQuery({
+    queryKey: queryKeys.projects.myParticipant(slug!),
+    queryFn: () => projectApi.myParticipant(slug!),
+    enabled: Boolean(slug && jwt && !auth.participantId),
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (myParticipant?.id && slug) {
+      saveAuth(slug, { participantId: myParticipant.id, nickname: myParticipant.nickname });
+      setAuth(getAuth(slug));
+    }
+  }, [myParticipant, slug]);
+
   useDocumentTitle(room?.title, projectName);
-
-  // Admin join
-  const [joinNickname, setJoinNickname] = useState('');
-  const adminJoin = useAdminJoinMutation(slug ?? '');
-
-  async function handleCopyRoomLink() {
-    if (!room?.slug) return;
-    const link = `${window.location.origin}/r/${room.slug}`;
-    try {
-      await navigator.clipboard.writeText(link);
-      showToast('Room link copied!');
-    } catch {
-      showToast('Failed to copy link');
-    }
-  }
-
-  async function handleAdminJoin(e: React.FormEvent) {
-    e.preventDefault();
-    if (!joinNickname.trim()) return;
-    logger.info('Admin joining as voter');
-    try {
-      await adminJoin.mutateAsync(joinNickname.trim());
-      setAuth(getAuth(slug!));
-    } catch (err) {
-      logger.warn('Failed to join as voter:', getErrorMessage(err));
-      showToast(getErrorMessage(err));
-    }
-  }
-
-  async function handleDeleteRoom() {
-    if (!roomId) return;
-    try {
-      await deleteRoomMutation.mutateAsync(roomId);
-      showToast('Room deleted', 'success');
-      void navigate(`/p/${slug}`);
-    } catch (err) {
-      logger.warn('Failed to delete room:', getErrorMessage(err));
-      showToast(getErrorMessage(err));
-    }
-  }
 
   const {
     sortedTasks,
@@ -115,7 +94,7 @@ export function RoomPage() {
   const setFinalEstimate = useSetFinalEstimate(slug ?? '');
   const updateTask = useUpdateTask(slug ?? '');
 
-  async function handleEstimate(taskId: string, value: StoryPoints | null) {
+  async function handleEstimate(taskId: string, value: StoryPoints | null, comment?: string) {
     if (!slug || !roomId) return;
     logger.debug(`Estimate: task=${taskId} sp=${value}`);
 
@@ -135,7 +114,7 @@ export function RoomPage() {
       if (value === null) {
         await deleteEstimate.mutateAsync(taskId);
       } else {
-        await submitEstimate.mutateAsync({ taskId, storyPoints: value });
+        await submitEstimate.mutateAsync({ taskId, storyPoints: value, comment });
       }
     } catch (err) {
       if (previousValue) {
@@ -241,7 +220,7 @@ export function RoomPage() {
               {room?.slug && (
                 <button
                   type="button"
-                  onClick={() => void handleCopyRoomLink()}
+                  onClick={() => void copyRoomLink(room.slug, showToast)}
                   title="Copy room join link"
                   className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-efi-text-secondary border border-white/10 rounded-lg hover:text-efi-text-primary hover:border-white/20 transition-colors cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                 >
@@ -267,7 +246,7 @@ export function RoomPage() {
               <InlineConfirmAction
                 label="Delete room?"
                 onConfirm={() => void handleDeleteRoom()}
-                isLoading={deleteRoomMutation.isPending}
+                isLoading={deleteRoomPending}
                 icon={<Trash2 className="w-4 h-4" />}
                 title="Delete room"
               />
@@ -290,29 +269,14 @@ export function RoomPage() {
 
       {/* Admin join banner */}
       {isAdmin && !hasParticipant && !isRevealed && (
-        <form
-          onSubmit={(e) => void handleAdminJoin(e)}
-          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 glass-gold rounded-xl p-4 mb-6"
-        >
-          <p className="text-sm text-efi-gold-light font-medium sm:mr-2">
-            Join as voter to estimate tasks
-          </p>
-          <TextInput
-            type="text"
-            value={joinNickname}
-            onChange={(e) => setJoinNickname(e.target.value)}
-            placeholder="Your nickname"
-            maxLength={100}
-            className="flex-1 rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
-          />
-          <button
-            type="submit"
-            disabled={adminJoin.isPending || !joinNickname.trim()}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-          >
-            {adminJoin.isPending ? <><ButtonSpinner /> Joining...</> : 'Join & Vote'}
-          </button>
-        </form>
+        <AdminJoinBanner slug={slug!} onJoined={() => setAuth(getAuth(slug!))} />
+      )}
+
+      {/* Room settings (admin only) */}
+      {isAdmin && room && (
+        <div className="mb-6">
+          <RoomSettings slug={slug!} room={room} />
+        </div>
       )}
 
       {/* Two-column layout: tasks + sidebar */}
@@ -341,7 +305,7 @@ export function RoomPage() {
                 questionVotesCount={task.questionVotesCount}
                 totalParticipants={task.totalParticipants}
                 selectedSp={votes[task.id] ?? (task.myEstimate?.storyPoints as StoryPoints) ?? null}
-                onEstimate={(taskId, value) => void handleEstimate(taskId, value)}
+                onEstimate={(taskId, value, comment) => void handleEstimate(taskId, value, comment)}
                 disabled={isRevealed}
                 revealed={isRevealed}
                 allEstimates={task.allEstimates}
@@ -350,7 +314,10 @@ export function RoomPage() {
                 finalEstimate={task.finalEstimate}
                 isAdmin={isAdmin}
                 onSetFinalEstimate={(taskId, value) => void handleSetFinalEstimate(taskId, value)}
-                onUpdateDescription={isAdmin && !isRevealed ? (taskId, desc) => void handleUpdateDescription(taskId, desc) : undefined}
+                onUpdateDescription={isAdmin ? (taskId, desc) => void handleUpdateDescription(taskId, desc) : undefined}
+                commentTemplate={room?.commentTemplate}
+                commentRequired={room?.commentRequired}
+                myComment={task.myEstimate?.comment}
               />
             ))}
 
