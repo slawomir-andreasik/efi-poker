@@ -14,6 +14,10 @@ properties:
     $ref: '../enums/RoomStatus.yaml'
   roundNumber:
     type: integer
+  commentTemplate:
+    type: string
+  commentRequired:
+    type: boolean
   questionVotesCount:
     type: integer
   taskId:

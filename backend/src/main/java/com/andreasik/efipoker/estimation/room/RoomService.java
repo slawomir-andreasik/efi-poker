@@ -54,7 +54,9 @@ public class RoomService {
       String description,
       String roomType,
       Instant deadline,
-      boolean autoRevealOnDeadline) {
+      boolean autoRevealOnDeadline,
+      String commentTemplate,
+      boolean commentRequired) {
     projectApi.validateProjectExists(projectId);
     ProjectEntity project = entityManager.getReference(ProjectEntity.class, projectId);
 
@@ -75,6 +77,8 @@ public class RoomService {
               .roomType(roomType)
               .deadline(deadline)
               .autoRevealOnDeadline(autoRevealOnDeadline)
+              .commentTemplate(commentTemplate)
+              .commentRequired(commentRequired)
               .build();
       try {
         saved = roomRepository.save(entity);
@@ -128,7 +132,14 @@ public class RoomService {
 
   @Transactional
   public Room updateRoom(
-      UUID id, String title, String description, Instant deadline, String topic) {
+      UUID id,
+      String title,
+      String description,
+      Instant deadline,
+      String topic,
+      String commentTemplate,
+      Boolean commentRequired,
+      Boolean autoRevealOnDeadline) {
     RoomEntity entity =
         roomRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Room", id));
 
@@ -143,6 +154,15 @@ public class RoomService {
     }
     if (topic != null) {
       entity.setTopic(topic.isBlank() ? null : topic);
+    }
+    if (commentTemplate != null) {
+      entity.setCommentTemplate(commentTemplate.isBlank() ? null : commentTemplate);
+    }
+    if (commentRequired != null) {
+      entity.setCommentRequired(commentRequired);
+    }
+    if (autoRevealOnDeadline != null) {
+      entity.setAutoRevealOnDeadline(autoRevealOnDeadline);
     }
 
     RoomEntity saved = roomRepository.save(entity);
