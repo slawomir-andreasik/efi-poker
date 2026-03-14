@@ -13,6 +13,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,7 +88,9 @@ public class ProjectService implements ProjectApi {
         projectRepository
             .findBySlug(slug)
             .orElseThrow(() -> new ResourceNotFoundException("Project", slug));
-    if (isOwner(entity, currentUserId) || adminCodeMatches(entity.getAdminCode(), adminCode)) {
+    if (isSiteAdmin()
+        || isOwner(entity, currentUserId)
+        || adminCodeMatches(entity.getAdminCode(), adminCode)) {
       return projectEntityMapper.toDomain(entity);
     }
     log.warn("Invalid admin access for project: slug={}", slug);
@@ -102,11 +106,19 @@ public class ProjectService implements ProjectApi {
         projectRepository
             .findById(projectId)
             .orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
-    if (isOwner(entity, currentUserId) || adminCodeMatches(entity.getAdminCode(), adminCode)) {
+    if (isSiteAdmin()
+        || isOwner(entity, currentUserId)
+        || adminCodeMatches(entity.getAdminCode(), adminCode)) {
       return;
     }
     log.warn("Invalid admin code for project: id={}", projectId);
     throw new UnauthorizedException("Invalid admin code");
+  }
+
+  private boolean isSiteAdmin() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    return auth != null
+        && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
   }
 
   private boolean isOwner(ProjectEntity entity, UUID userId) {
