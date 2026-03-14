@@ -23,6 +23,8 @@ tags:
   name: auth
 - description: Admin user management
   name: admin
+- description: Estimation analytics and statistics
+  name: analytics
 paths:
   /health:
     get:
@@ -312,6 +314,35 @@ paths:
                 $ref: "#/components/schemas/ParticipantResponse"
           description: Participant info
       summary: Join project (create/get participant by nickname)
+      tags:
+      - participants
+  /projects/{slug}/participants/me:
+    get:
+      description: Returns the participant record for the authenticated user in the
+        given project. Requires JWT authentication.
+      operationId: getMyParticipant
+      parameters:
+      - in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParticipantResponse"
+          description: Participant info
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: User is not a participant in this project
+      security:
+      - bearerAuth: []
+      summary: Get current user's participant in a project
       tags:
       - participants
   /projects/{slug}/participants/{participantId}:
@@ -1479,6 +1510,49 @@ paths:
       summary: Reset user password
       tags:
       - admin
+  /rooms/{roomId}/analytics:
+    get:
+      operationId: getRoomAnalytics
+      parameters:
+      - in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomAnalyticsResponse"
+          description: Room analytics
+        "403":
+          description: Room not yet revealed
+      summary: Get analytics for a revealed/closed room
+      tags:
+      - analytics
+  /projects/{slug}/analytics:
+    get:
+      operationId: getProjectAnalytics
+      parameters:
+      - in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectAnalyticsResponse"
+          description: Project analytics
+        "404":
+          description: Project not found
+      summary: Get analytics across all revealed/closed rooms in a project
+      tags:
+      - analytics
 components:
   parameters:
     SlugPath:
@@ -1611,13 +1685,15 @@ components:
       type: object
     RoomResponse:
       example:
+        description: description
+        commentTemplate: commentTemplate
+        title: title
         createdAt: 2000-01-23T04:56:07.000+00:00
         roundNumber: 0
         autoRevealOnDeadline: true
-        description: description
+        commentRequired: true
         topic: topic
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        title: title
         deadline: 2000-01-23T04:56:07.000+00:00
         projectId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         slug: slug
@@ -1650,6 +1726,10 @@ components:
           type: integer
         autoRevealOnDeadline:
           type: boolean
+        commentTemplate:
+          type: string
+        commentRequired:
+          type: boolean
         createdAt:
           format: date-time
           type: string
@@ -1657,7 +1737,9 @@ components:
     CreateRoomRequest:
       example:
         autoRevealOnDeadline: true
+        commentRequired: false
         description: description
+        commentTemplate: commentTemplate
         title: title
         deadline: 2000-01-23T04:56:07.000+00:00
         roomType: ASYNC
@@ -1676,6 +1758,12 @@ components:
           type: string
         autoRevealOnDeadline:
           default: true
+          type: boolean
+        commentTemplate:
+          maxLength: 2000
+          type: string
+        commentRequired:
+          default: false
           type: boolean
       required:
       - roomType
@@ -1756,12 +1844,14 @@ components:
       type: object
     RoomDetailResponse:
       example:
+        description: description
+        commentTemplate: commentTemplate
+        title: title
         roundNumber: 0
         autoRevealOnDeadline: true
-        description: description
+        commentRequired: true
         topic: topic
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        title: title
         deadline: 2000-01-23T04:56:07.000+00:00
         slug: slug
         roomType: ASYNC
@@ -1855,6 +1945,10 @@ components:
           type: integer
         autoRevealOnDeadline:
           type: boolean
+        commentTemplate:
+          type: string
+        commentRequired:
+          type: boolean
         tasks:
           items:
             $ref: "#/components/schemas/TaskWithEstimateResponse"
@@ -1862,8 +1956,11 @@ components:
       type: object
     UpdateRoomRequest:
       example:
+        commentRequired: true
+        autoRevealOnDeadline: true
         description: description
         topic: topic
+        commentTemplate: commentTemplate
         title: title
         deadline: 2000-01-23T04:56:07.000+00:00
       properties:
@@ -1879,15 +1976,24 @@ components:
         topic:
           maxLength: 500
           type: string
+        commentTemplate:
+          maxLength: 2000
+          type: string
+        commentRequired:
+          type: boolean
+        autoRevealOnDeadline:
+          type: boolean
       type: object
     RoomAdminResponse:
       example:
+        description: description
+        commentTemplate: commentTemplate
+        title: title
         roundNumber: 0
         autoRevealOnDeadline: true
-        description: description
+        commentRequired: true
         topic: topic
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        title: title
         deadline: 2000-01-23T04:56:07.000+00:00
         slug: slug
         roomType: ASYNC
@@ -1969,6 +2075,10 @@ components:
         roundNumber:
           type: integer
         autoRevealOnDeadline:
+          type: boolean
+        commentTemplate:
+          type: string
+        commentRequired:
           type: boolean
         tasks:
           items:
@@ -2146,10 +2256,13 @@ components:
       type: object
     LiveRoomStateResponse:
       example:
-        roundNumber: 0
         questionVotesCount: 6
-        topic: topic
+        commentTemplate: commentTemplate
         title: title
+        roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        roundNumber: 0
+        commentRequired: true
+        topic: topic
         myEstimate:
           participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           storyPoints: storyPoints
@@ -2173,7 +2286,6 @@ components:
             participantNickname: participantNickname
             comment: comment
             id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         slug: slug
         taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         status: OPEN
@@ -2199,6 +2311,10 @@ components:
           $ref: "#/components/schemas/RoomStatus"
         roundNumber:
           type: integer
+        commentTemplate:
+          type: string
+        commentRequired:
+          type: boolean
         questionVotesCount:
           type: integer
         taskId:
@@ -2575,6 +2691,130 @@ components:
       required:
       - newPassword
       type: object
+    RoomAnalyticsResponse:
+      example:
+        summary:
+          totalStoryPoints: 6.027456183070403
+          consensusCount: 1
+          totalTasks: 0
+          totalParticipants: 5
+          participationRate: 5.962133916683182
+        taskAnalytics:
+        - averagePoints: 2.3021358869347655
+          title: title
+          medianPoints: 7.061401241503109
+          finalEstimate: finalEstimate
+          voteDistribution:
+            key: 3
+          taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          spread: 9.301444243932576
+        - averagePoints: 2.3021358869347655
+          title: title
+          medianPoints: 7.061401241503109
+          finalEstimate: finalEstimate
+          voteDistribution:
+            key: 3
+          taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          spread: 9.301444243932576
+        participationMatrix:
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          taskVotes:
+            key: taskVotes
+          nickname: nickname
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          taskVotes:
+            key: taskVotes
+          nickname: nickname
+        title: title
+        roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        slug: slug
+      properties:
+        roomId:
+          format: uuid
+          type: string
+        title:
+          type: string
+        slug:
+          type: string
+        summary:
+          $ref: "#/components/schemas/RoomAnalyticsSummary"
+        taskAnalytics:
+          items:
+            $ref: "#/components/schemas/TaskAnalyticsEntry"
+          type: array
+        participationMatrix:
+          items:
+            $ref: "#/components/schemas/ParticipationMatrixEntry"
+          type: array
+      type: object
+    ProjectAnalyticsResponse:
+      example:
+        summary:
+          totalStoryPoints: 1.4658129805029452
+          averageConsensusRate: 5.962133916683182
+          totalTasks: 6
+          totalRooms: 0
+        roomStats:
+        - totalStoryPoints: 5.637376656633329
+          taskCount: 2
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          consensusRate: 7.061401241503109
+          title: title
+          roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - totalStoryPoints: 5.637376656633329
+          taskCount: 2
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          consensusRate: 7.061401241503109
+          title: title
+          roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        participantLeaderboard:
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          nickname: nickname
+          tasksVoted: 2
+          totalTasks: 4
+          participationRate: 7.386281948385884
+        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          nickname: nickname
+          tasksVoted: 2
+          totalTasks: 4
+          participationRate: 7.386281948385884
+        topContentiousTasks:
+        - taskTitle: taskTitle
+          voteCount: 3
+          roomTitle: roomTitle
+          taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          spread: 9.301444243932576
+        - taskTitle: taskTitle
+          voteCount: 3
+          roomTitle: roomTitle
+          taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          spread: 9.301444243932576
+        projectName: projectName
+        projectId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        slug: slug
+      properties:
+        projectId:
+          format: uuid
+          type: string
+        projectName:
+          type: string
+        slug:
+          type: string
+        summary:
+          $ref: "#/components/schemas/ProjectAnalyticsSummary"
+        roomStats:
+          items:
+            $ref: "#/components/schemas/RoomStatsEntry"
+          type: array
+        topContentiousTasks:
+          items:
+            $ref: "#/components/schemas/ContentiousTaskEntry"
+          type: array
+        participantLeaderboard:
+          items:
+            $ref: "#/components/schemas/ParticipantLeaderboardEntry"
+          type: array
+      type: object
     RoomType:
       enum:
       - ASYNC
@@ -2823,6 +3063,169 @@ components:
       - "21"
       - '?'
       type: string
+    RoomAnalyticsSummary:
+      example:
+        totalStoryPoints: 6.027456183070403
+        consensusCount: 1
+        totalTasks: 0
+        totalParticipants: 5
+        participationRate: 5.962133916683182
+      properties:
+        totalTasks:
+          type: integer
+        totalStoryPoints:
+          format: double
+          type: number
+        consensusCount:
+          type: integer
+        participationRate:
+          description: Percentage 0-100
+          format: double
+          type: number
+        totalParticipants:
+          type: integer
+      type: object
+    TaskAnalyticsEntry:
+      example:
+        averagePoints: 2.3021358869347655
+        title: title
+        medianPoints: 7.061401241503109
+        finalEstimate: finalEstimate
+        voteDistribution:
+          key: 3
+        taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        spread: 9.301444243932576
+      properties:
+        taskId:
+          format: uuid
+          type: string
+        title:
+          type: string
+        averagePoints:
+          format: double
+          type: number
+        medianPoints:
+          format: double
+          type: number
+        finalEstimate:
+          type: string
+        spread:
+          description: Standard deviation of numeric votes
+          format: double
+          type: number
+        voteDistribution:
+          additionalProperties:
+            type: integer
+          description: Map of story point value to vote count
+          type: object
+      type: object
+    ParticipationMatrixEntry:
+      example:
+        participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        taskVotes:
+          key: taskVotes
+        nickname: nickname
+      properties:
+        participantId:
+          format: uuid
+          type: string
+        nickname:
+          type: string
+        taskVotes:
+          additionalProperties:
+            type: string
+          description: Map of task ID to story points value
+          type: object
+      type: object
+    ProjectAnalyticsSummary:
+      example:
+        totalStoryPoints: 1.4658129805029452
+        averageConsensusRate: 5.962133916683182
+        totalTasks: 6
+        totalRooms: 0
+      properties:
+        totalRooms:
+          type: integer
+        totalTasks:
+          type: integer
+        totalStoryPoints:
+          format: double
+          type: number
+        averageConsensusRate:
+          description: Average consensus rate across rooms (0-100)
+          format: double
+          type: number
+      type: object
+    RoomStatsEntry:
+      example:
+        totalStoryPoints: 5.637376656633329
+        taskCount: 2
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        consensusRate: 7.061401241503109
+        title: title
+        roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        roomId:
+          format: uuid
+          type: string
+        title:
+          type: string
+        totalStoryPoints:
+          format: double
+          type: number
+        taskCount:
+          type: integer
+        consensusRate:
+          description: Percentage 0-100
+          format: double
+          type: number
+        createdAt:
+          format: date-time
+          type: string
+      type: object
+    ContentiousTaskEntry:
+      example:
+        taskTitle: taskTitle
+        voteCount: 3
+        roomTitle: roomTitle
+        taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        spread: 9.301444243932576
+      properties:
+        taskId:
+          format: uuid
+          type: string
+        taskTitle:
+          type: string
+        roomTitle:
+          type: string
+        spread:
+          format: double
+          type: number
+        voteCount:
+          type: integer
+      type: object
+    ParticipantLeaderboardEntry:
+      example:
+        participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        nickname: nickname
+        tasksVoted: 2
+        totalTasks: 4
+        participationRate: 7.386281948385884
+      properties:
+        participantId:
+          format: uuid
+          type: string
+        nickname:
+          type: string
+        tasksVoted:
+          type: integer
+        totalTasks:
+          type: integer
+        participationRate:
+          description: Percentage 0-100
+          format: double
+          type: number
+      type: object
     ValidationErrorResponse_violations_inner:
       properties:
         field:
