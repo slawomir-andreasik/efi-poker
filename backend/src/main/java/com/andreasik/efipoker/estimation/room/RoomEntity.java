@@ -74,6 +74,13 @@ public class RoomEntity {
   @Builder.Default
   private boolean autoRevealOnDeadline = true;
 
+  @Column(name = "comment_template", columnDefinition = "TEXT")
+  private String commentTemplate;
+
+  @Column(name = "comment_required", nullable = false)
+  @Builder.Default
+  private boolean commentRequired = false;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 

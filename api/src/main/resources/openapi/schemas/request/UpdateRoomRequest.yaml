@@ -12,3 +12,10 @@ properties:
   topic:
     type: string
     maxLength: 500
+  commentTemplate:
+    type: string
+    maxLength: 2000
+  commentRequired:
+    type: boolean
+  autoRevealOnDeadline:
+    type: boolean
