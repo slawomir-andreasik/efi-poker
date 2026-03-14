@@ -1,0 +1,22 @@
+get:
+  operationId: getMyParticipant
+  tags: [participants]
+  summary: Get current user's participant in a project
+  description: Returns the participant record for the authenticated user in the given project. Requires JWT authentication.
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+  security:
+    - bearerAuth: []
+  responses:
+    '200':
+      description: Participant info
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/ParticipantResponse.yaml'
+    '404':
+      description: User is not a participant in this project
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

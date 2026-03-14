@@ -5,11 +5,11 @@ import { getAuth, getJwt, saveAuth, removeProject, ApiError } from '@/api/client
 import { queryKeys } from '@/api/queryKeys';
 import { projectApi, roomApi } from '@/api/queries';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import {
   useCreateRoom,
   useRevealRoom,
   useReopenRoom,
-  useUpdateRoom,
   useUpdateProject,
   useDeleteProject,
   useAddTask,
@@ -20,6 +20,7 @@ import {
 } from '@/api/mutations';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/utils/error';
+import { copyRoomLink } from '@/utils/clipboard';
 import { useToast } from '@/components/Toast';
 import { Spinner, ButtonSpinner } from '@/components/Spinner';
 import { CountdownTimer } from '@/components/CountdownTimer';
@@ -28,6 +29,7 @@ import { ImportModal } from '@/components/ImportModal';
 import { AddTaskForm } from '@/components/AddTaskForm';
 import { Copy, Trash2, Plus, X, Eye, RotateCcw, Upload, Download } from 'lucide-react';
 import { InlineConfirmAction } from '@/components/InlineConfirmAction';
+import { RoomSettings } from '@/components/RoomSettings';
 import { RandomNameButton } from '@/components/RandomNameButton';
 import { generateRoomName } from '@/utils/nameGenerator';
 import { Linkify } from '@/lib/linkify';
@@ -38,7 +40,9 @@ import type { RoomType } from '@/api/types';
 export function ProjectPage() {
   const { slug } = useParams<{ slug: string }>();
   const auth = slug ? getAuth(slug) : {};
-  const [isAdmin, setIsAdmin] = useState(Boolean(auth.adminCode));
+  const { isAdmin: isSiteAdmin } = useCurrentUser();
+  const [hasAdminCode, setHasAdminCode] = useState(Boolean(auth.adminCode));
+  const isAdmin = hasAdminCode || isSiteAdmin;
   const jwt = getJwt();
   const { showToast } = useToast();
   useDocumentTitle(auth.projectName ?? slug);
@@ -47,7 +51,6 @@ export function ProjectPage() {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [editingDeadline, setEditingDeadline] = useState<string | null>(null);
   const [editingTask, setEditingTask] = useState<{ id: string; title: string; description: string } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{ type: 'task' | 'participant'; id: string; name: string } | null>(null);
   const [editingName, setEditingName] = useState<string | null>(null);
@@ -59,6 +62,8 @@ export function ProjectPage() {
   const [deadline, setDeadline] = useState(getDefaultDeadline(3));
   const [roomType, setRoomType] = useState<RoomType>('LIVE');
   const [autoRevealOnDeadline, setAutoRevealOnDeadline] = useState(true);
+  const [commentTemplate, setCommentTemplate] = useState('');
+  const [commentRequired, setCommentRequired] = useState(false);
 
   // Queries
   const { data: project, isLoading: loading, error } = useQuery({
@@ -100,15 +105,28 @@ export function ProjectPage() {
   useEffect(() => {
     if (adminProject?.adminCode && slug) {
       saveAuth(slug, { adminCode: adminProject.adminCode, projectName: adminProject.name });
-      setIsAdmin(true);
+      setHasAdminCode(true);
     }
   }, [adminProject, slug]);
+
+  // Fallback: logged-in user without participantId in localStorage
+  const { data: myParticipant } = useQuery({
+    queryKey: queryKeys.projects.myParticipant(slug!),
+    queryFn: () => projectApi.myParticipant(slug!),
+    enabled: Boolean(slug && jwt && !auth.participantId) && !error,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (myParticipant?.id && slug) {
+      saveAuth(slug, { participantId: myParticipant.id, nickname: myParticipant.nickname });
+    }
+  }, [myParticipant, slug]);
 
   // Mutations
   const createRoom = useCreateRoom(slug ?? '');
   const revealRoom = useRevealRoom(slug ?? '');
   const reopenRoom = useReopenRoom(slug ?? '');
-  const updateRoom = useUpdateRoom(slug ?? '');
   const addTask = useAddTask(slug ?? '');
   const importTasks = useImportTasks(slug ?? '');
   const updateTask = useUpdateTask(slug ?? '');
@@ -177,12 +195,16 @@ export function ProjectPage() {
         deadline: roomType === 'ASYNC' ? new Date(deadline).toISOString() : undefined,
         roomType,
         autoRevealOnDeadline: roomType === 'ASYNC' ? autoRevealOnDeadline : undefined,
+        commentTemplate: commentTemplate.trim() || undefined,
+        commentRequired: commentRequired || undefined,
       });
       setTitle('');
       setDescription('');
       setDeadline(getDefaultDeadline(3));
       setRoomType('LIVE');
       setAutoRevealOnDeadline(true);
+      setCommentTemplate('');
+      setCommentRequired(false);
       setShowForm(false);
     } catch (err) {
       logger.warn('Failed to create room:', getErrorMessage(err));
@@ -252,16 +274,6 @@ export function ProjectPage() {
     }
   }
 
-  async function handleSaveDeadline() {
-    if (!editingDeadline || !selectedRoomId) return;
-    try {
-      await updateRoom.mutateAsync({ roomId: selectedRoomId, body: { deadline: new Date(editingDeadline).toISOString() } });
-      setEditingDeadline(null);
-    } catch (err) {
-      logger.warn('Failed to update deadline:', getErrorMessage(err));
-      showToast(getErrorMessage(err));
-    }
-  }
 
   async function handleSaveTask() {
     if (!editingTask) return;
@@ -304,13 +316,7 @@ export function ProjectPage() {
   }
 
   async function handleCopyRoomLink(roomSlug: string) {
-    const link = `${window.location.origin}/r/${roomSlug}`;
-    try {
-      await navigator.clipboard.writeText(link);
-      showToast('Room link copied!');
-    } catch {
-      showToast('Failed to copy link');
-    }
+    await copyRoomLink(roomSlug, showToast);
   }
 
   async function handleDeleteParticipant(participantId: string) {
@@ -429,6 +435,14 @@ export function ProjectPage() {
               <Copy className="w-3 h-3" />
               Share
             </button>
+            {(roomList ?? []).some((r) => r.status === 'REVEALED' || r.status === 'CLOSED') && (
+              <Link
+                to={`/p/${slug}/analytics`}
+                className="px-3 py-1.5 text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold rounded-lg transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none cursor-pointer"
+              >
+                Analytics
+              </Link>
+            )}
             <InlineConfirmAction
               label="Delete project?"
               onConfirm={() => void handleDeleteProject()}
@@ -452,7 +466,7 @@ export function ProjectPage() {
                   {roomList.map((r) => (
                     <div key={r.id} className="flex items-center gap-1">
                       <button
-                        onClick={() => { setSelectedRoomId(r.id); setEditingDeadline(null); setPendingDelete(null); }}
+                        onClick={() => { setSelectedRoomId(r.id); setPendingDelete(null); }}
                         className={`flex-1 text-left px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none flex items-center justify-between gap-2 ${selectedRoomId === r.id
                           ? 'bg-efi-gold/15 border border-efi-gold/30 text-efi-text-primary'
                           : 'bg-white/[0.03] border border-white/6 text-efi-text-primary hover:bg-white/6 hover:border-white/10'
@@ -481,15 +495,15 @@ export function ProjectPage() {
             {/* Selected room detail */}
             {room ? (
               <div className="glass-frost rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-efi-gold-light/10">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-                  <div className="flex items-center gap-2">
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-lg font-semibold text-efi-text-primary">{room.title}</h2>
                     <span className="text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">{room.slug}</span>
                     <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${roomTypeBadge(room.roomType)}`}>
                       {isRoomLive ? 'Live' : 'Async'}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
+                  <div className="flex flex-wrap gap-2 mt-3">
                     {room.status !== 'REVEALED' && room.status !== 'CLOSED' && !isRoomLive && (
                       <button
                         onClick={() => void handleReveal(room.id)}
@@ -542,6 +556,11 @@ export function ProjectPage() {
                   </div>
                 </div>
 
+                {/* Room settings (admin) */}
+                <div className="mb-6">
+                  <RoomSettings key={room.id} slug={slug!} room={room} />
+                </div>
+
                 {/* Share link */}
                 <div className="mb-4">
                   <button
@@ -555,48 +574,12 @@ export function ProjectPage() {
                   </button>
                 </div>
 
-                {/* Deadline for Async rooms */}
-                {!isRoomLive && (
-                  <div className="mb-6">
-                    {editingDeadline != null ? (
-                      <div className="space-y-2">
-                        <DeadlineInput value={editingDeadline} onChange={setEditingDeadline} />
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => void handleSaveDeadline()}
-                            disabled={updateRoom.isPending || !editingDeadline}
-                            className="px-3 py-1 rounded-lg text-xs font-medium bg-efi-gold text-efi-void hover:bg-efi-gold/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-                          >
-                            {updateRoom.isPending ? <><ButtonSpinner /> Saving...</> : 'Save'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setEditingDeadline(null)}
-                            className="px-3 py-1 rounded-lg text-xs font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-efi-text-secondary">Deadline:</span>
-                        <span className="text-efi-text-primary">{formatPreview(room.deadline)}</span>
-                        <CountdownTimer deadline={room.deadline} />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const d = new Date(room.deadline);
-                            const pad = (n: number) => String(n).padStart(2, '0');
-                            setEditingDeadline(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`);
-                          }}
-                          className="text-xs text-efi-gold-light hover:text-efi-text-primary transition-colors cursor-pointer"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    )}
+                {/* Deadline display for Async rooms */}
+                {!isRoomLive && room.deadline && (
+                  <div className="mb-6 flex items-center gap-2 text-sm">
+                    <span className="text-efi-text-secondary">Deadline:</span>
+                    <span className="text-efi-text-primary">{formatPreview(room.deadline)}</span>
+                    <CountdownTimer deadline={room.deadline} />
                   </div>
                 )}
 
@@ -665,16 +648,12 @@ export function ProjectPage() {
                               ) : (
                                 <div className="flex items-start gap-1">
                                   <div className="flex-1 min-w-0">
-                                    {room.status !== 'REVEALED' && room.status !== 'CLOSED' ? (
-                                      <span
-                                        className="text-efi-text-primary cursor-pointer hover:text-efi-gold-light transition-colors"
-                                        onClick={() => setEditingTask({ id: task.id, title: task.title, description: task.description ?? '' })}
-                                      >
-                                        {task.title}
-                                      </span>
-                                    ) : (
-                                      <span className="text-efi-text-primary">{task.title}</span>
-                                    )}
+                                    <span
+                                      className="text-efi-text-primary cursor-pointer hover:text-efi-gold-light transition-colors"
+                                      onClick={() => setEditingTask({ id: task.id, title: task.title, description: task.description ?? '' })}
+                                    >
+                                      {task.title}
+                                    </span>
                                     {task.description && (
                                       <p className="text-xs text-efi-text-secondary mt-0.5 line-clamp-2">
                                         <Linkify text={task.description} />
@@ -863,6 +842,28 @@ export function ProjectPage() {
                     </label>
                   </>
                 )}
+                <div>
+                  <label className="block text-xs text-efi-text-secondary mb-1.5">Comment Template (optional)</label>
+                  <TextArea
+                    value={commentTemplate}
+                    onChange={(e) => setCommentTemplate(e.target.value)}
+                    placeholder="Paste your team's comment template..."
+                    maxLength={2000}
+                    rows={3}
+                    className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold resize-y max-h-48 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
+                  />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={commentRequired}
+                    onChange={(e) => setCommentRequired(e.target.checked)}
+                    className="w-4 h-4 accent-efi-gold cursor-pointer text-base"
+                  />
+                  <span className="text-sm text-efi-text-secondary">
+                    Require comments when voting
+                  </span>
+                </label>
                 <div className="flex justify-end gap-3 pt-1">
                   <button
                     type="button"
@@ -907,7 +908,7 @@ export function ProjectPage() {
           </p>
         </div>
 
-        <div className="flex gap-3 mt-3 sm:mt-0">
+        <div className="flex gap-3 mt-3 sm:mt-0 items-center flex-wrap">
           {slug && (
             <button
               type="button"
@@ -918,6 +919,14 @@ export function ProjectPage() {
               <Copy className="w-3 h-3" />
               Share
             </button>
+          )}
+          {slug && roomList.some((r) => r.status === 'REVEALED' || r.status === 'CLOSED') && (
+            <Link
+              to={`/p/${slug}/analytics`}
+              className="px-3 py-1.5 text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold rounded-lg transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none cursor-pointer"
+            >
+              Analytics
+            </Link>
           )}
           {!auth.participantId && slug && (
             <Link
