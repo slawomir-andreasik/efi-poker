@@ -24,12 +24,15 @@
 - Load all data BEFORE loops: `findByXxxIn(Collection<UUID>)` -> `Map<UUID, List<Y>>` -> loop uses map
 - Validation methods return the fetched entity so callers reuse it (e.g. `validateAdminCode()` returns `Project`)
 - Filter in memory when collection is already loaded (`stream().filter()` over extra DB query)
+- Combine fetch + validate into one method when controllers always do both (e.g. `validateAdminAndGetRoom(id, code)` replaces `getRoom()` + `validateAdmin()` - single DB fetch instead of two)
+- Delete: `findById()` + `delete(entity)`, never `existsById()` + `deleteById()` (TOCTOU race + double query)
 
 ## MapStruct Gotchas
 
 - `EfiMapperConfig` as shared `@MapperConfig` - all project mappers reference it via `config = EfiMapperConfig.class`
 - Boolean `is*` fields (e.g. `isPublic`): MapStruct strips "is" prefix -> add explicit `@Mapping(target = "isPublic", expression = "java(entity.isPublic())")`
-- String-to-generated-enum: add null-guarded `default` method per enum type (generated enums throw on null). See also [api-contract.md](api-contract.md) Schema Rules for enum file structure
+- String-to-generated-enum: add null-guarded `default` method per enum type using `EnumType.fromValue(value)` (not `valueOf()` - numeric enum constants like StoryPoints use prefixed names `_0`, `_5`). See also [api-contract.md](api-contract.md) Schema Rules for enum file structure
+- When a single enum is shared by multiple DTOs (e.g. `UserRole` used in both `UserResponse` and `AdminUserResponse`), use one `default` mapping method for the standalone enum - not separate methods per DTO inner class
 
 ## Testing
 
