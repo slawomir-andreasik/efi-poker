@@ -69,7 +69,7 @@ jobs:
           path: |
             /tmp/bbi-cache
             /tmp/bbi-cache-launch
-          key: bbi-${{ runner.os }}-${{ hashFiles('backend/build.gradle.kts') }}
+          key: bbi-${{ runner.os }}-${{ hashFiles('backend/build.gradle.kts', 'gradle/libs.versions.toml') }}
           restore-keys: bbi-${{ runner.os }}-
       - name: Prepare buildpack cache dirs
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
