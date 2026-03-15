@@ -16,6 +16,7 @@ import com.andreasik.efipoker.participant.ParticipantApi;
 import com.andreasik.efipoker.participant.ParticipantEntity;
 import com.andreasik.efipoker.project.Project;
 import com.andreasik.efipoker.project.ProjectEntity;
+import com.andreasik.efipoker.shared.event.EstimateSubmittedEvent;
 import com.andreasik.efipoker.shared.exception.UnauthorizedException;
 import com.andreasik.efipoker.shared.test.BaseUnitTest;
 import jakarta.persistence.EntityManager;
@@ -282,6 +283,182 @@ class EstimateServiceTest extends BaseUnitTest {
 
       // Assert
       assertThat(result.storyPoints()).isEqualTo("5");
+      then(participantApi).should().validateParticipantExists(participantId);
+      then(eventPublisher).should().publishEvent(new EstimateSubmittedEvent(taskId, participantId));
+    }
+  }
+
+  @Nested
+  @DisplayName("submitEstimate - event publishing")
+  class SubmitEstimateEventPublishing {
+
+    @Test
+    void should_publish_event_when_creating_new_estimate() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+
+      ProjectEntity project = ProjectEntity.builder().id(UUID.randomUUID()).build();
+      RoomEntity room =
+          RoomEntity.builder()
+              .id(UUID.randomUUID())
+              .project(project)
+              .commentRequired(false)
+              .build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+      ParticipantEntity participant =
+          ParticipantEntity.builder().id(participantId).nickname("Alice").build();
+      EstimateEntity saved =
+          EstimateEntity.builder()
+              .id(UUID.randomUUID())
+              .task(task)
+              .participant(participant)
+              .storyPoints("8")
+              .build();
+      Estimate domain = Estimate.builder().id(saved.getId()).storyPoints("8").build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.empty());
+      given(taskRepository.findById(taskId)).willReturn(Optional.of(task));
+      given(entityManager.getReference(ParticipantEntity.class, participantId))
+          .willReturn(participant);
+      given(estimateRepository.save(ArgumentMatchers.any())).willReturn(saved);
+      given(estimateEntityMapper.toDomain(saved)).willReturn(domain);
+
+      // Act
+      estimateService.submitEstimate(taskId, participantId, "8", null);
+
+      // Assert
+      then(eventPublisher).should().publishEvent(new EstimateSubmittedEvent(taskId, participantId));
+    }
+
+    @Test
+    void should_publish_event_when_updating_existing_estimate() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+
+      RoomEntity room = RoomEntity.builder().id(UUID.randomUUID()).commentRequired(false).build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+      EstimateEntity existing =
+          EstimateEntity.builder().id(UUID.randomUUID()).task(task).storyPoints("3").build();
+      Estimate domain = Estimate.builder().id(existing.getId()).storyPoints("5").build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.of(existing));
+      given(estimateRepository.save(existing)).willReturn(existing);
+      given(estimateEntityMapper.toDomain(existing)).willReturn(domain);
+
+      // Act
+      estimateService.submitEstimate(taskId, participantId, "5", null);
+
+      // Assert
+      then(eventPublisher).should().publishEvent(new EstimateSubmittedEvent(taskId, participantId));
+    }
+  }
+
+  @Nested
+  @DisplayName("submitEstimate - validateParticipantExists")
+  class SubmitEstimateParticipantValidation {
+
+    @Test
+    void should_not_validate_participant_exists_when_updating_existing_estimate() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+
+      RoomEntity room = RoomEntity.builder().id(UUID.randomUUID()).commentRequired(false).build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+      EstimateEntity existing =
+          EstimateEntity.builder().id(UUID.randomUUID()).task(task).storyPoints("3").build();
+      Estimate domain = Estimate.builder().id(existing.getId()).storyPoints("5").build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.of(existing));
+      given(estimateRepository.save(existing)).willReturn(existing);
+      given(estimateEntityMapper.toDomain(existing)).willReturn(domain);
+
+      // Act
+      estimateService.submitEstimate(taskId, participantId, "5", null);
+
+      // Assert - update path skips participant existence check
+      then(participantApi).should(never()).validateParticipantExists(participantId);
+    }
+  }
+
+  @Nested
+  @DisplayName("validateCommentIfRequired")
+  class ValidateCommentIfRequired {
+
+    @Test
+    void should_not_throw_when_comment_not_required_and_comment_absent() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+
+      ProjectEntity project = ProjectEntity.builder().id(UUID.randomUUID()).build();
+      RoomEntity room =
+          RoomEntity.builder()
+              .id(UUID.randomUUID())
+              .project(project)
+              .commentRequired(false)
+              .build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+      ParticipantEntity participant =
+          ParticipantEntity.builder().id(participantId).nickname("Dave").build();
+      EstimateEntity saved =
+          EstimateEntity.builder()
+              .id(UUID.randomUUID())
+              .task(task)
+              .participant(participant)
+              .storyPoints("5")
+              .build();
+      Estimate domain = Estimate.builder().id(saved.getId()).storyPoints("5").build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.empty());
+      given(taskRepository.findById(taskId)).willReturn(Optional.of(task));
+      given(entityManager.getReference(ParticipantEntity.class, participantId))
+          .willReturn(participant);
+      given(estimateRepository.save(ArgumentMatchers.any())).willReturn(saved);
+      given(estimateEntityMapper.toDomain(saved)).willReturn(domain);
+
+      // Act & Assert - must not throw
+      assertThat(estimateService.submitEstimate(taskId, participantId, "5", null)).isNotNull();
+    }
+
+    @Test
+    void should_not_throw_when_comment_required_and_comment_provided() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+
+      ProjectEntity project = ProjectEntity.builder().id(UUID.randomUUID()).build();
+      RoomEntity room =
+          RoomEntity.builder().id(UUID.randomUUID()).project(project).commentRequired(true).build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+      ParticipantEntity participant =
+          ParticipantEntity.builder().id(participantId).nickname("Eve").build();
+      EstimateEntity saved =
+          EstimateEntity.builder()
+              .id(UUID.randomUUID())
+              .task(task)
+              .participant(participant)
+              .storyPoints("3")
+              .build();
+      Estimate domain = Estimate.builder().id(saved.getId()).storyPoints("3").build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.empty());
+      given(taskRepository.findById(taskId)).willReturn(Optional.of(task));
+      given(entityManager.getReference(ParticipantEntity.class, participantId))
+          .willReturn(participant);
+      given(estimateRepository.save(ArgumentMatchers.any())).willReturn(saved);
+      given(estimateEntityMapper.toDomain(saved)).willReturn(domain);
+
+      // Act & Assert - must not throw when comment is provided
+      assertThat(estimateService.submitEstimate(taskId, participantId, "3", "looks like 3 points"))
+          .isNotNull();
     }
   }
 

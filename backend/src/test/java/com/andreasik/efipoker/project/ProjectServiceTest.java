@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import com.andreasik.efipoker.auth.UserEntity;
 import com.andreasik.efipoker.shared.exception.ResourceNotFoundException;
 import com.andreasik.efipoker.shared.exception.UnauthorizedException;
 import com.andreasik.efipoker.shared.test.BaseUnitTest;
@@ -157,7 +158,9 @@ class ProjectServiceTest extends BaseUnitTest {
       // Act
       Project result = projectService.updateProject(projectId, "New Name");
 
-      // Assert
+      // Assert - verify the name was actually set on the entity (guards against removed setName
+      // call)
+      assertThat(entity.getName()).isEqualTo("New Name");
       assertThat(result.name()).isEqualTo("New Name");
     }
 
@@ -175,7 +178,8 @@ class ProjectServiceTest extends BaseUnitTest {
       // Act
       Project result = projectService.updateProject(projectId, null);
 
-      // Assert
+      // Assert - name on entity must be unchanged (guards against removed null-check)
+      assertThat(entity.getName()).isEqualTo("Test");
       assertThat(result.name()).isEqualTo("Test");
     }
 
@@ -188,6 +192,99 @@ class ProjectServiceTest extends BaseUnitTest {
       // Act & Assert
       assertThatThrownBy(() -> projectService.updateProject(unknownId, "New"))
           .isInstanceOf(ResourceNotFoundException.class);
+    }
+  }
+
+  @Nested
+  @DisplayName("isOwner (via validateAdminAccess)")
+  class IsOwner {
+
+    private final String slug = "owner-proj";
+    private final String adminCode = "admin-code";
+
+    @Test
+    void should_grant_access_when_user_is_owner() {
+      // Arrange
+      UUID ownerId = UUID.randomUUID();
+      UserEntity owner = UserEntity.builder().id(ownerId).username("owner").build();
+      ProjectEntity entity =
+          ProjectEntity.builder()
+              .id(UUID.randomUUID())
+              .adminCode(adminCode)
+              .slug(slug)
+              .name("Owned Project")
+              .createdBy(owner)
+              .build();
+      Project expectedProject =
+          Project.builder().id(entity.getId()).name("Owned Project").slug(slug).build();
+      given(projectRepository.findBySlug(slug)).willReturn(Optional.of(entity));
+      given(projectEntityMapper.toDomain(entity)).willReturn(expectedProject);
+
+      // Act - wrong admin code, but owner ID matches -> should NOT throw
+      Project result = projectService.validateAdminAccess(slug, "wrong-code", ownerId);
+
+      // Assert - owner path returned a project (isOwner returned true)
+      assertThat(result).isEqualTo(expectedProject);
+    }
+
+    @Test
+    void should_deny_access_when_user_is_not_owner() {
+      // Arrange
+      UUID actualOwnerId = UUID.randomUUID();
+      UUID differentUserId = UUID.randomUUID();
+      UserEntity owner = UserEntity.builder().id(actualOwnerId).username("owner").build();
+      ProjectEntity entity =
+          ProjectEntity.builder()
+              .id(UUID.randomUUID())
+              .adminCode(adminCode)
+              .slug(slug)
+              .name("Owned Project")
+              .createdBy(owner)
+              .build();
+      given(projectRepository.findBySlug(slug)).willReturn(Optional.of(entity));
+
+      // Act & Assert - different user ID, wrong admin code -> isOwner must return false
+      assertThatThrownBy(
+              () -> projectService.validateAdminAccess(slug, "wrong-code", differentUserId))
+          .isInstanceOf(UnauthorizedException.class);
+    }
+
+    @Test
+    void should_deny_access_when_user_id_is_null() {
+      // Arrange - userId null means isOwner must return false regardless of entity
+      UUID actualOwnerId = UUID.randomUUID();
+      UserEntity owner = UserEntity.builder().id(actualOwnerId).username("owner").build();
+      ProjectEntity entity =
+          ProjectEntity.builder()
+              .id(UUID.randomUUID())
+              .adminCode(adminCode)
+              .slug(slug)
+              .name("Project")
+              .createdBy(owner)
+              .build();
+      given(projectRepository.findBySlug(slug)).willReturn(Optional.of(entity));
+
+      // Act & Assert
+      assertThatThrownBy(() -> projectService.validateAdminAccess(slug, "wrong-code", null))
+          .isInstanceOf(UnauthorizedException.class);
+    }
+
+    @Test
+    void should_deny_access_when_project_has_no_owner() {
+      // Arrange - createdBy null means isOwner must return false
+      UUID userId = UUID.randomUUID();
+      ProjectEntity entity =
+          ProjectEntity.builder()
+              .id(UUID.randomUUID())
+              .adminCode(adminCode)
+              .slug(slug)
+              .name("Anonymous Project")
+              .build(); // no createdBy
+      given(projectRepository.findBySlug(slug)).willReturn(Optional.of(entity));
+
+      // Act & Assert
+      assertThatThrownBy(() -> projectService.validateAdminAccess(slug, "wrong-code", userId))
+          .isInstanceOf(UnauthorizedException.class);
     }
   }
 

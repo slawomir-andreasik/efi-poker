@@ -7,14 +7,19 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
+import com.andreasik.efipoker.estimation.estimate.EstimateEntity;
 import com.andreasik.efipoker.estimation.estimate.EstimateRepository;
 import com.andreasik.efipoker.estimation.task.TaskEntity;
 import com.andreasik.efipoker.estimation.task.TaskRepository;
 import com.andreasik.efipoker.project.ProjectApi;
 import com.andreasik.efipoker.project.ProjectEntity;
+import com.andreasik.efipoker.shared.event.RoomCreatedEvent;
+import com.andreasik.efipoker.shared.event.RoundStartedEvent;
 import com.andreasik.efipoker.shared.exception.ResourceNotFoundException;
 import com.andreasik.efipoker.shared.test.BaseUnitTest;
 import jakarta.persistence.EntityManager;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -42,87 +47,110 @@ class RoomServiceTest extends BaseUnitTest {
   @DisplayName("newRound")
   class NewRound {
 
-    @Test
-    void should_increment_round_and_clear_estimates() {
-      // Arrange
-      UUID roomId = UUID.randomUUID();
-      UUID phantomTaskId = UUID.randomUUID();
-      RoomEntity entity =
-          RoomEntity.builder()
-              .id(roomId)
-              .roomType("LIVE")
-              .status("OPEN")
-              .roundNumber(1)
-              .title("Live Planning")
-              .build();
-      TaskEntity phantom =
-          TaskEntity.builder()
-              .id(phantomTaskId)
-              .title(RoomService.PHANTOM_TASK_TITLE)
-              .sortOrder(0)
-              .build();
-      RoomEntity saved = RoomEntity.builder().id(roomId).roomType("LIVE").roundNumber(2).build();
-      Room domain = Room.builder().id(roomId).roomType(RoomType.LIVE).roundNumber(2).build();
+    private final UUID roomId = UUID.randomUUID();
+    private final UUID phantomTaskId = UUID.randomUUID();
 
+    private RoomEntity newRoundEntity(String status, int roundNumber) {
+      return RoomEntity.builder()
+          .id(roomId)
+          .roomType("LIVE")
+          .status(status)
+          .roundNumber(roundNumber)
+          .title("Live Planning")
+          .build();
+    }
+
+    private TaskEntity phantomTask() {
+      return TaskEntity.builder()
+          .id(phantomTaskId)
+          .title(RoomService.PHANTOM_TASK_TITLE)
+          .sortOrder(0)
+          .build();
+    }
+
+    private void stubNewRound(RoomEntity entity, int nextRound) {
+      RoomEntity saved =
+          RoomEntity.builder().id(roomId).roomType("LIVE").roundNumber(nextRound).build();
+      Room domain =
+          Room.builder().id(roomId).roomType(RoomType.LIVE).roundNumber(nextRound).build();
       given(roomRepository.findById(roomId)).willReturn(Optional.of(entity));
       given(taskRepository.findByRoomIdAndTitle(roomId, RoomService.PHANTOM_TASK_TITLE))
-          .willReturn(Optional.of(phantom));
+          .willReturn(Optional.of(phantomTask()));
       given(roomRepository.save(entity)).willReturn(saved);
       given(roomEntityMapper.toDomain(saved)).willReturn(domain);
+    }
 
-      // Act
+    @Test
+    void should_increment_round_and_clear_estimates() {
+      RoomEntity entity = newRoundEntity("OPEN", 1);
+      stubNewRound(entity, 2);
+
       roomService.newRound(roomId, "Topic A");
 
-      // Assert
       then(estimateRepository).should().deleteByTaskId(phantomTaskId);
       then(roomRepository).should().save(entity);
+      assertThat(entity.getStatus()).isEqualTo(RoomStatus.OPEN.name());
+      assertThat(entity.getRoundNumber()).isEqualTo(2);
+    }
+
+    @Test
+    void should_publish_round_started_event() {
+      RoomEntity entity = newRoundEntity("OPEN", 3);
+      stubNewRound(entity, 4);
+
+      roomService.newRound(roomId, null);
+
+      ArgumentCaptor<RoundStartedEvent> captor = ArgumentCaptor.forClass(RoundStartedEvent.class);
+      then(eventPublisher).should().publishEvent(captor.capture());
+      assertThat(captor.getValue().roomId()).isEqualTo(roomId);
+    }
+
+    @Test
+    void should_save_round_snapshot_when_room_is_revealed() {
+      RoomEntity entity = newRoundEntity("REVEALED", 2);
+      List<EstimateEntity> estimates = List.of(new EstimateEntity(), new EstimateEntity());
+      stubNewRound(entity, 3);
+      given(estimateRepository.findByTaskId(phantomTaskId)).willReturn(estimates);
+
+      roomService.newRound(roomId, null);
+
+      then(roundHistoryService).should().saveRoundSnapshot(entity, estimates);
+    }
+
+    @Test
+    void should_not_save_round_snapshot_when_room_is_open() {
+      RoomEntity entity = newRoundEntity("OPEN", 1);
+      stubNewRound(entity, 2);
+
+      roomService.newRound(roomId, null);
+
+      then(roundHistoryService).should(never()).saveRoundSnapshot(any(), any());
     }
 
     @Test
     void should_throw_when_room_is_not_live() {
-      // Arrange
-      UUID roomId = UUID.randomUUID();
-      RoomEntity entity = RoomEntity.builder().id(roomId).roomType("ASYNC").build();
-      given(roomRepository.findById(roomId)).willReturn(Optional.of(entity));
+      UUID asyncRoomId = UUID.randomUUID();
+      RoomEntity entity = RoomEntity.builder().id(asyncRoomId).roomType("ASYNC").build();
+      given(roomRepository.findById(asyncRoomId)).willReturn(Optional.of(entity));
 
-      // Act & Assert
-      assertThatThrownBy(() -> roomService.newRound(roomId, null))
+      assertThatThrownBy(() -> roomService.newRound(asyncRoomId, null))
           .isInstanceOf(IllegalStateException.class);
-
       then(estimateRepository).should(never()).deleteByTaskId(any());
     }
 
     @Test
     void should_throw_when_room_not_found() {
-      // Arrange
-      UUID roomId = UUID.randomUUID();
-      given(roomRepository.findById(roomId)).willReturn(Optional.empty());
+      UUID missingId = UUID.randomUUID();
+      given(roomRepository.findById(missingId)).willReturn(Optional.empty());
 
-      // Act & Assert
-      assertThatThrownBy(() -> roomService.newRound(roomId, null))
+      assertThatThrownBy(() -> roomService.newRound(missingId, null))
           .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void should_set_topic_when_provided() {
-      // Arrange
-      UUID roomId = UUID.randomUUID();
-      UUID phantomId = UUID.randomUUID();
-      RoomEntity entity =
-          RoomEntity.builder()
-              .id(roomId)
-              .roomType("LIVE")
-              .status("OPEN")
-              .roundNumber(1)
-              .topic(null)
-              .title("Live Room")
-              .build();
-      TaskEntity phantom =
-          TaskEntity.builder()
-              .id(phantomId)
-              .title(RoomService.PHANTOM_TASK_TITLE)
-              .sortOrder(0)
-              .build();
+      RoomEntity entity = newRoundEntity("OPEN", 1);
+      entity.setTopic(null);
       RoomEntity saved =
           RoomEntity.builder()
               .id(roomId)
@@ -137,56 +165,26 @@ class RoomServiceTest extends BaseUnitTest {
               .roundNumber(2)
               .topic("Sprint Goal")
               .build();
-
       given(roomRepository.findById(roomId)).willReturn(Optional.of(entity));
       given(taskRepository.findByRoomIdAndTitle(roomId, RoomService.PHANTOM_TASK_TITLE))
-          .willReturn(Optional.of(phantom));
+          .willReturn(Optional.of(phantomTask()));
       given(roomRepository.save(entity)).willReturn(saved);
       given(roomEntityMapper.toDomain(saved)).willReturn(domain);
 
-      // Act
       Room result = roomService.newRound(roomId, "Sprint Goal");
 
-      // Assert
       assertThat(entity.getTopic()).isEqualTo("Sprint Goal");
       assertThat(result.topic()).isEqualTo("Sprint Goal");
     }
 
     @Test
     void should_clear_topic_when_null_provided() {
-      // Arrange - room has topic from previous round
-      UUID roomId = UUID.randomUUID();
-      UUID phantomId = UUID.randomUUID();
-      RoomEntity entity =
-          RoomEntity.builder()
-              .id(roomId)
-              .roomType("LIVE")
-              .status("OPEN")
-              .roundNumber(3)
-              .topic("old topic from round 3")
-              .title("Live Room")
-              .build();
-      TaskEntity phantom =
-          TaskEntity.builder()
-              .id(phantomId)
-              .title(RoomService.PHANTOM_TASK_TITLE)
-              .sortOrder(0)
-              .build();
-      RoomEntity saved =
-          RoomEntity.builder().id(roomId).roomType("LIVE").roundNumber(4).topic(null).build();
-      Room domain =
-          Room.builder().id(roomId).roomType(RoomType.LIVE).roundNumber(4).topic(null).build();
+      RoomEntity entity = newRoundEntity("OPEN", 3);
+      entity.setTopic("old topic from round 3");
+      stubNewRound(entity, 4);
 
-      given(roomRepository.findById(roomId)).willReturn(Optional.of(entity));
-      given(taskRepository.findByRoomIdAndTitle(roomId, RoomService.PHANTOM_TASK_TITLE))
-          .willReturn(Optional.of(phantom));
-      given(roomRepository.save(entity)).willReturn(saved);
-      given(roomEntityMapper.toDomain(saved)).willReturn(domain);
-
-      // Act - no topic provided (null) -> must clear, not carry over old topic
       roomService.newRound(roomId, null);
 
-      // Assert - topic must be null on the entity passed to save (not "old topic from round 3")
       assertThat(entity.getTopic()).isNull();
     }
   }
@@ -195,83 +193,279 @@ class RoomServiceTest extends BaseUnitTest {
   @DisplayName("updateRoom")
   class UpdateRoom {
 
-    @Test
-    void should_update_topic() {
-      // Arrange
-      UUID roomId = UUID.randomUUID();
-      RoomEntity entity =
-          RoomEntity.builder().id(roomId).title("Room").roomType("LIVE").status("OPEN").build();
-      RoomEntity saved = RoomEntity.builder().id(roomId).topic("Sprint Goal").build();
-      Room domain = Room.builder().id(roomId).topic("Sprint Goal").build();
+    private final UUID roomId = UUID.randomUUID();
 
+    private RoomEntity updateEntity() {
+      return RoomEntity.builder().id(roomId).title("Room").roomType("LIVE").status("OPEN").build();
+    }
+
+    private void stubUpdate(RoomEntity entity) {
+      RoomEntity saved = RoomEntity.builder().id(roomId).build();
+      Room domain = Room.builder().id(roomId).build();
       given(roomRepository.findById(roomId)).willReturn(Optional.of(entity));
       given(roomRepository.save(entity)).willReturn(saved);
       given(roomEntityMapper.toDomain(saved)).willReturn(domain);
+    }
 
-      // Act
-      Room result =
-          roomService.updateRoom(
-              new UpdateRoomCommand(roomId, null, null, null, "Sprint Goal", null, null, null));
+    private UpdateRoomCommand command(
+        String title,
+        String description,
+        Instant deadline,
+        String topic,
+        String commentTemplate,
+        Boolean commentRequired,
+        Boolean autoReveal) {
+      return new UpdateRoomCommand(
+          roomId,
+          title,
+          description,
+          deadline,
+          topic,
+          commentTemplate,
+          commentRequired,
+          autoReveal);
+    }
 
-      // Assert
+    @Test
+    void should_update_topic() {
+      RoomEntity entity = updateEntity();
+      stubUpdate(entity);
+
+      roomService.updateRoom(command(null, null, null, "Sprint Goal", null, null, null));
+
       assertThat(entity.getTopic()).isEqualTo("Sprint Goal");
-      assertThat(result.topic()).isEqualTo("Sprint Goal");
     }
 
     @Test
     void should_clear_topic_when_blank() {
-      // Arrange
-      UUID roomId = UUID.randomUUID();
-      RoomEntity entity =
-          RoomEntity.builder()
-              .id(roomId)
-              .title("Room")
-              .roomType("LIVE")
-              .status("OPEN")
-              .topic("Old topic")
-              .build();
-      RoomEntity saved = RoomEntity.builder().id(roomId).topic(null).build();
-      Room domain = Room.builder().id(roomId).topic(null).build();
+      RoomEntity entity = updateEntity();
+      entity.setTopic("Old topic");
+      stubUpdate(entity);
 
-      given(roomRepository.findById(roomId)).willReturn(Optional.of(entity));
-      given(roomRepository.save(entity)).willReturn(saved);
-      given(roomEntityMapper.toDomain(saved)).willReturn(domain);
+      roomService.updateRoom(command(null, null, null, "  ", null, null, null));
 
-      // Act
-      Room result =
-          roomService.updateRoom(
-              new UpdateRoomCommand(roomId, null, null, null, "  ", null, null, null));
-
-      // Assert
       assertThat(entity.getTopic()).isNull();
-      assertThat(result.topic()).isNull();
     }
 
     @Test
     void should_not_change_topic_when_null() {
-      // Arrange
-      UUID roomId = UUID.randomUUID();
-      RoomEntity entity =
-          RoomEntity.builder()
-              .id(roomId)
-              .title("Room")
-              .roomType("LIVE")
-              .status("OPEN")
-              .topic("Existing topic")
-              .build();
-      RoomEntity saved = RoomEntity.builder().id(roomId).topic("Existing topic").build();
-      Room domain = Room.builder().id(roomId).topic("Existing topic").build();
+      RoomEntity entity = updateEntity();
+      entity.setTopic("Existing topic");
+      stubUpdate(entity);
 
-      given(roomRepository.findById(roomId)).willReturn(Optional.of(entity));
-      given(roomRepository.save(entity)).willReturn(saved);
-      given(roomEntityMapper.toDomain(saved)).willReturn(domain);
+      roomService.updateRoom(command(null, null, null, null, null, null, null));
+
+      assertThat(entity.getTopic()).isEqualTo("Existing topic");
+    }
+
+    @Test
+    void should_update_title_when_provided() {
+      RoomEntity entity = updateEntity();
+      entity.setTitle("Old Title");
+      stubUpdate(entity);
+
+      roomService.updateRoom(command("New Title", null, null, null, null, null, null));
+
+      assertThat(entity.getTitle()).isEqualTo("New Title");
+    }
+
+    @Test
+    void should_not_change_title_when_null() {
+      RoomEntity entity = updateEntity();
+      entity.setTitle("Existing Title");
+      stubUpdate(entity);
+
+      roomService.updateRoom(command(null, null, null, null, null, null, null));
+
+      assertThat(entity.getTitle()).isEqualTo("Existing Title");
+    }
+
+    @Test
+    void should_update_description_when_provided() {
+      RoomEntity entity = updateEntity();
+      entity.setDescription("Old desc");
+      stubUpdate(entity);
+
+      roomService.updateRoom(command(null, "New desc", null, null, null, null, null));
+
+      assertThat(entity.getDescription()).isEqualTo("New desc");
+    }
+
+    @Test
+    void should_not_change_description_when_null() {
+      RoomEntity entity = updateEntity();
+      entity.setDescription("Existing desc");
+      stubUpdate(entity);
+
+      roomService.updateRoom(command(null, null, null, null, null, null, null));
+
+      assertThat(entity.getDescription()).isEqualTo("Existing desc");
+    }
+
+    @Test
+    void should_update_deadline_when_provided() {
+      Instant newDeadline = Instant.parse("2030-01-01T00:00:00Z");
+      RoomEntity entity = updateEntity();
+      entity.setDeadline(Instant.parse("2025-01-01T00:00:00Z"));
+      stubUpdate(entity);
+
+      roomService.updateRoom(command(null, null, newDeadline, null, null, null, null));
+
+      assertThat(entity.getDeadline()).isEqualTo(newDeadline);
+    }
+
+    @Test
+    void should_not_change_deadline_when_null() {
+      Instant existingDeadline = Instant.parse("2025-01-01T00:00:00Z");
+      RoomEntity entity = updateEntity();
+      entity.setDeadline(existingDeadline);
+      stubUpdate(entity);
+
+      roomService.updateRoom(command(null, null, null, null, null, null, null));
+
+      assertThat(entity.getDeadline()).isEqualTo(existingDeadline);
+    }
+
+    @Test
+    void should_update_comment_template_when_provided() {
+      RoomEntity entity = updateEntity();
+      entity.setCommentTemplate("Old template");
+      stubUpdate(entity);
+
+      roomService.updateRoom(command(null, null, null, null, "New template", null, null));
+
+      assertThat(entity.getCommentTemplate()).isEqualTo("New template");
+    }
+
+    @Test
+    void should_not_change_comment_template_when_null() {
+      RoomEntity entity = updateEntity();
+      entity.setCommentTemplate("Existing template");
+      stubUpdate(entity);
+
+      roomService.updateRoom(command(null, null, null, null, null, null, null));
+
+      assertThat(entity.getCommentTemplate()).isEqualTo("Existing template");
+    }
+
+    @Test
+    void should_update_comment_required_when_provided() {
+      RoomEntity entity = updateEntity();
+      entity.setCommentRequired(false);
+      stubUpdate(entity);
+
+      roomService.updateRoom(command(null, null, null, null, null, true, null));
+
+      assertThat(entity.isCommentRequired()).isTrue();
+    }
+
+    @Test
+    void should_not_change_comment_required_when_null() {
+      RoomEntity entity = updateEntity();
+      entity.setCommentRequired(true);
+      stubUpdate(entity);
+
+      roomService.updateRoom(command(null, null, null, null, null, null, null));
+
+      assertThat(entity.isCommentRequired()).isTrue();
+    }
+
+    @Test
+    void should_update_auto_reveal_when_provided() {
+      RoomEntity entity = updateEntity();
+      entity.setAutoRevealOnDeadline(false);
+      stubUpdate(entity);
+
+      roomService.updateRoom(command(null, null, null, null, null, null, true));
+
+      assertThat(entity.isAutoRevealOnDeadline()).isTrue();
+    }
+
+    @Test
+    void should_not_change_auto_reveal_when_null() {
+      RoomEntity entity = updateEntity();
+      entity.setAutoRevealOnDeadline(true);
+      stubUpdate(entity);
+
+      roomService.updateRoom(command(null, null, null, null, null, null, null));
+
+      assertThat(entity.isAutoRevealOnDeadline()).isTrue();
+    }
+  }
+
+  @Nested
+  @DisplayName("closeExpiredRooms")
+  class CloseExpiredRooms {
+
+    @Test
+    void should_return_empty_list_when_no_expired_rooms() {
+      // Arrange - mutant: removed isEmpty() check -> would call saveAll(emptyList) instead of early
+      // return
+      given(roomRepository.findExpired(any(), any(), any())).willReturn(List.of());
 
       // Act
-      roomService.updateRoom(
-          new UpdateRoomCommand(roomId, null, null, null, null, null, null, null));
+      List<Room> result = roomService.closeExpiredRooms();
+
+      // Assert - empty list returned, saveAll NOT called
+      assertThat(result).isEmpty();
+      then(roomRepository).should(never()).saveAll(any());
+    }
+
+    @Test
+    void should_close_expired_rooms_and_return_them() {
+      // Arrange - complement: non-empty path does call saveAll
+      UUID roomId = UUID.randomUUID();
+      RoomEntity expired =
+          RoomEntity.builder()
+              .id(roomId)
+              .roomType("ASYNC")
+              .status("OPEN")
+              .title("Async Room")
+              .build();
+      RoomEntity closed =
+          RoomEntity.builder().id(roomId).roomType("ASYNC").status("CLOSED").build();
+      Room domain = Room.builder().id(roomId).roomType(RoomType.ASYNC).build();
+
+      given(roomRepository.findExpired(any(), any(), any())).willReturn(List.of(expired));
+      given(roomRepository.saveAll(List.of(expired))).willReturn(List.of(closed));
+      given(roomEntityMapper.toDomainList(List.of(closed))).willReturn(List.of(domain));
+
+      // Act
+      List<Room> result = roomService.closeExpiredRooms();
 
       // Assert
-      assertThat(entity.getTopic()).isEqualTo("Existing topic");
+      assertThat(result).hasSize(1);
+      assertThat(expired.getStatus()).isEqualTo(RoomStatus.CLOSED.name());
+    }
+  }
+
+  @Nested
+  @DisplayName("countOpenRooms")
+  class CountOpenRooms {
+
+    @Test
+    void should_return_count_from_repository() {
+      // Arrange - mutant: replaced return with 0
+      given(roomRepository.countByStatus(RoomStatus.OPEN.name())).willReturn(42L);
+
+      // Act
+      long result = roomService.countOpenRooms();
+
+      // Assert
+      assertThat(result).isEqualTo(42L);
+    }
+
+    @Test
+    void should_return_zero_when_no_open_rooms() {
+      // Arrange - ensure 0 is a valid result from the repo, not a hardcoded return
+      given(roomRepository.countByStatus(RoomStatus.OPEN.name())).willReturn(0L);
+
+      // Act
+      long result = roomService.countOpenRooms();
+
+      // Assert - 0 is valid but must come from the repo call, not be hardcoded
+      assertThat(result).isZero();
+      then(roomRepository).should().countByStatus(RoomStatus.OPEN.name());
     }
   }
 
@@ -321,6 +515,130 @@ class RoomServiceTest extends BaseUnitTest {
     void should_return_false_for_null() {
       // Act & Assert
       assertThat(RoomService.isRevealedStatus(null)).isFalse();
+    }
+  }
+
+  @Nested
+  @DisplayName("createRoom")
+  class CreateRoom {
+
+    private RoomEntity savedLiveRoom(UUID projectId) {
+      ProjectEntity project = ProjectEntity.builder().id(projectId).build();
+      return RoomEntity.builder()
+          .id(UUID.randomUUID())
+          .project(project)
+          .slug("ABC-123")
+          .title("Room")
+          .roomType("LIVE")
+          .build();
+    }
+
+    private void stubLiveRoom(UUID projectId, RoomEntity savedRoom) {
+      ProjectEntity project = ProjectEntity.builder().id(projectId).build();
+      given(entityManager.getReference(ProjectEntity.class, projectId)).willReturn(project);
+      given(roomRepository.save(any(RoomEntity.class))).willReturn(savedRoom);
+      given(taskRepository.save(any(TaskEntity.class))).willReturn(new TaskEntity());
+      given(roomEntityMapper.toDomain(savedRoom))
+          .willReturn(Room.builder().id(savedRoom.getId()).roomType(RoomType.LIVE).build());
+    }
+
+    @Test
+    void should_validate_project_exists() {
+      // Arrange
+      UUID projectId = UUID.randomUUID();
+      RoomEntity savedRoom = savedLiveRoom(projectId);
+      stubLiveRoom(projectId, savedRoom);
+
+      // Act
+      roomService.createRoom(
+          new CreateRoomCommand(projectId, "Room", null, RoomType.LIVE, null, true, null, false));
+
+      // Assert - mutant: removed call to validateProjectExists
+      then(projectApi).should().validateProjectExists(projectId);
+    }
+
+    @Test
+    void should_throw_when_async_without_deadline() {
+      // Arrange
+      UUID projectId = UUID.randomUUID();
+      ProjectEntity project = ProjectEntity.builder().id(projectId).build();
+      given(entityManager.getReference(ProjectEntity.class, projectId)).willReturn(project);
+
+      // Act & Assert - mutant: removed conditional (ASYNC && deadline == null)
+      assertThatThrownBy(
+              () ->
+                  roomService.createRoom(
+                      new CreateRoomCommand(
+                          projectId, "Room", null, RoomType.ASYNC, null, true, null, false)))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("deadline");
+    }
+
+    @Test
+    void should_not_throw_when_async_with_deadline() {
+      // Arrange - tests the OTHER branch: ASYNC + deadline present -> must NOT throw
+      UUID projectId = UUID.randomUUID();
+      ProjectEntity project = ProjectEntity.builder().id(projectId).build();
+      RoomEntity savedRoom =
+          RoomEntity.builder()
+              .id(UUID.randomUUID())
+              .project(project)
+              .slug("ABC-123")
+              .title("Room")
+              .roomType("ASYNC")
+              .build();
+      given(entityManager.getReference(ProjectEntity.class, projectId)).willReturn(project);
+      given(roomRepository.save(any(RoomEntity.class))).willReturn(savedRoom);
+      given(roomEntityMapper.toDomain(savedRoom))
+          .willReturn(Room.builder().id(savedRoom.getId()).roomType(RoomType.ASYNC).build());
+
+      // Act & Assert - mutant: removed conditional (ASYNC && deadline == null) - other branch
+      Room result =
+          roomService.createRoom(
+              new CreateRoomCommand(
+                  projectId, "Room", null, RoomType.ASYNC, Instant.now(), true, null, false));
+
+      assertThat(result).isNotNull();
+    }
+
+    @Test
+    void should_publish_room_created_event() {
+      // Arrange
+      UUID projectId = UUID.randomUUID();
+      RoomEntity savedRoom = savedLiveRoom(projectId);
+      stubLiveRoom(projectId, savedRoom);
+
+      // Act
+      roomService.createRoom(
+          new CreateRoomCommand(projectId, "Room", null, RoomType.LIVE, null, true, null, false));
+
+      // Assert - mutant: removed call to publishEvent
+      ArgumentCaptor<RoomCreatedEvent> captor = ArgumentCaptor.forClass(RoomCreatedEvent.class);
+      then(eventPublisher).should().publishEvent(captor.capture());
+      assertThat(captor.getValue().roomId()).isEqualTo(savedRoom.getId());
+    }
+
+    @Test
+    void should_return_mapped_domain_room() {
+      // Arrange
+      UUID projectId = UUID.randomUUID();
+      RoomEntity savedRoom = savedLiveRoom(projectId);
+      Room expected = Room.builder().id(savedRoom.getId()).roomType(RoomType.LIVE).build();
+      ProjectEntity project = ProjectEntity.builder().id(projectId).build();
+      given(entityManager.getReference(ProjectEntity.class, projectId)).willReturn(project);
+      given(roomRepository.save(any(RoomEntity.class))).willReturn(savedRoom);
+      given(taskRepository.save(any(TaskEntity.class))).willReturn(new TaskEntity());
+      given(roomEntityMapper.toDomain(savedRoom)).willReturn(expected);
+
+      // Act
+      Room result =
+          roomService.createRoom(
+              new CreateRoomCommand(
+                  projectId, "Room", null, RoomType.LIVE, null, true, null, false));
+
+      // Assert - mutant: replaced return with null
+      assertThat(result).isNotNull();
+      assertThat(result).isSameAs(expected);
     }
   }
 
