@@ -400,6 +400,23 @@ export interface ParticipantLeaderboardEntry {
   participationRate: number;
 }
 
+// Participant progress
+
+export interface ParticipantProgressResponse {
+  roomId: string;
+  slug: string;
+  totalTasks: number;
+  participants: ParticipantProgressEntry[];
+}
+
+export interface ParticipantProgressEntry {
+  participantId: string;
+  nickname: string;
+  votedCount: number;
+  totalTasks: number;
+  hasCommentedAll?: boolean;
+}
+
 // Round history
 
 export interface RoundHistoryVote {
@@ -410,8 +427,8 @@ export interface RoundHistoryVote {
 export interface RoundHistoryEntry {
   roundNumber: number;
   topic: string | null;
-  averagePts: number | null;
-  medianPts: number | null;
+  averagePoints: number | null;
+  medianPoints: number | null;
   voteCount: number;
   votes: RoundHistoryVote[];
   completedAt: string;

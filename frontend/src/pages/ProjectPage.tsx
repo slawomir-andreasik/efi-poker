@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getAuth, getJwt, saveAuth, removeProject, ApiError } from '@/api/client';
+import { saveAuth, removeProject, ApiError } from '@/api/client';
 import { queryKeys } from '@/api/queryKeys';
 import { projectApi, roomApi } from '@/api/queries';
+import { useProjectAuth } from '@/hooks/useProjectAuth';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
 import {
   useCreateRoom,
   useRevealRoom,
@@ -20,16 +20,19 @@ import {
 } from '@/api/mutations';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/utils/error';
-import { copyRoomLink } from '@/utils/clipboard';
 import { useToast } from '@/components/Toast';
-import { Spinner, ButtonSpinner } from '@/components/Spinner';
+import { PageSpinner } from '@/components/PageSpinner';
+import { NotFoundState } from '@/components/NotFoundState';
+import { TraceCopyButton } from '@/components/TraceCopyButton';
+import { ShareButton } from '@/components/ShareButton';
+import { ButtonSpinner } from '@/components/Spinner';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { DeadlineInput, getDefaultDeadline, formatPreview } from '@/components/DeadlineInput';
 import { ImportModal } from '@/components/ImportModal';
 import { AddTaskForm } from '@/components/AddTaskForm';
 import { Copy, Trash2, Plus, X, Eye, RotateCcw, Upload, Download } from 'lucide-react';
 import { InlineConfirmAction } from '@/components/InlineConfirmAction';
-import { RoomSettings } from '@/components/RoomSettings';
+import { RoomSettings, DEFAULT_COMMENT_TEMPLATE } from '@/components/RoomSettings';
 import { RandomNameButton } from '@/components/RandomNameButton';
 import { generateRoomName } from '@/utils/nameGenerator';
 import { Linkify } from '@/lib/linkify';
@@ -39,11 +42,7 @@ import type { RoomType } from '@/api/types';
 
 export function ProjectPage() {
   const { slug } = useParams<{ slug: string }>();
-  const auth = slug ? getAuth(slug) : {};
-  const { isAdmin: isSiteAdmin } = useCurrentUser();
-  const [hasAdminCode, setHasAdminCode] = useState(Boolean(auth.adminCode));
-  const isAdmin = hasAdminCode || isSiteAdmin;
-  const jwt = getJwt();
+  const { auth, isAdmin } = useProjectAuth(slug);
   const { showToast } = useToast();
   useDocumentTitle(auth.projectName ?? slug);
 
@@ -62,7 +61,7 @@ export function ProjectPage() {
   const [deadline, setDeadline] = useState(getDefaultDeadline(3));
   const [roomType, setRoomType] = useState<RoomType>('LIVE');
   const [autoRevealOnDeadline, setAutoRevealOnDeadline] = useState(true);
-  const [commentTemplate, setCommentTemplate] = useState('');
+  const [commentTemplate, setCommentTemplate] = useState(DEFAULT_COMMENT_TEMPLATE);
   const [commentRequired, setCommentRequired] = useState(false);
 
   // Queries
@@ -94,35 +93,6 @@ export function ProjectPage() {
     refetchInterval: isAdmin && project ? 30_000 : undefined,
   });
 
-  // Fallback: logged-in owner without adminCode in localStorage
-  const { data: adminProject } = useQuery({
-    queryKey: queryKeys.projects.admin(slug!),
-    queryFn: () => projectApi.admin(slug!),
-    enabled: Boolean(slug && jwt && !auth.adminCode) && !error,
-    retry: false,
-  });
-
-  useEffect(() => {
-    if (adminProject?.adminCode && slug) {
-      saveAuth(slug, { adminCode: adminProject.adminCode, projectName: adminProject.name });
-      setHasAdminCode(true);
-    }
-  }, [adminProject, slug]);
-
-  // Fallback: logged-in user without participantId in localStorage
-  const { data: myParticipant } = useQuery({
-    queryKey: queryKeys.projects.myParticipant(slug!),
-    queryFn: () => projectApi.myParticipant(slug!),
-    enabled: Boolean(slug && jwt && !auth.participantId) && !error,
-    retry: false,
-  });
-
-  useEffect(() => {
-    if (myParticipant?.id && slug) {
-      saveAuth(slug, { participantId: myParticipant.id, nickname: myParticipant.nickname });
-    }
-  }, [myParticipant, slug]);
-
   // Mutations
   const createRoom = useCreateRoom(slug ?? '');
   const revealRoom = useRevealRoom(slug ?? '');
@@ -144,37 +114,19 @@ export function ProjectPage() {
   }, [slug, project?.name]);
 
   if (loading && !project) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Spinner />
-      </div>
-    );
+    return <PageSpinner />;
   }
 
   if (error) {
     if (error instanceof ApiError && error.status === 404) {
       if (slug) removeProject(slug);
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-          <p className="text-efi-text-primary font-medium">Project not found</p>
-          <Link to="/" className="text-sm text-efi-gold-light hover:text-efi-gold transition-colors no-underline hover:underline">
-            Back to Projects
-          </Link>
-        </div>
-      );
+      return <NotFoundState message="Project not found" backTo="/" backLabel="Back to Projects" />;
     }
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <p className="text-efi-error">{getErrorMessage(error)}</p>
         {error instanceof ApiError && error.traceId && (
-          <button
-            type="button"
-            onClick={() => void navigator.clipboard.writeText(error.traceId!).catch(() => {})}
-            title="Copy trace ID for support"
-            className="text-xs text-efi-text-tertiary hover:text-efi-text-secondary font-mono transition-colors cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
-          >
-            Trace: {error.traceId.slice(0, 8)}… [copy]
-          </button>
+          <TraceCopyButton traceId={error.traceId} />
         )}
       </div>
     );
@@ -203,7 +155,7 @@ export function ProjectPage() {
       setDeadline(getDefaultDeadline(3));
       setRoomType('LIVE');
       setAutoRevealOnDeadline(true);
-      setCommentTemplate('');
+      setCommentTemplate(DEFAULT_COMMENT_TEMPLATE);
       setCommentRequired(false);
       setShowForm(false);
     } catch (err) {
@@ -313,10 +265,6 @@ export function ProjectPage() {
     } catch {
       showToast('Failed to copy link');
     }
-  }
-
-  async function handleCopyRoomLink(roomSlug: string) {
-    await copyRoomLink(roomSlug, showToast);
   }
 
   async function handleDeleteParticipant(participantId: string) {
@@ -563,15 +511,7 @@ export function ProjectPage() {
 
                 {/* Share link */}
                 <div className="mb-4">
-                  <button
-                    type="button"
-                    onClick={() => void handleCopyRoomLink(room.slug)}
-                    title="Copy room link"
-                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-efi-text-secondary border border-white/10 rounded-lg hover:text-efi-text-primary hover:border-white/20 transition-colors cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-                  >
-                    <Copy className="w-3 h-3" />
-                    Share
-                  </button>
+                  <ShareButton roomSlug={room.slug} />
                 </div>
 
                 {/* Deadline display for Async rooms */}
@@ -843,7 +783,29 @@ export function ProjectPage() {
                   </>
                 )}
                 <div>
-                  <label className="block text-xs text-efi-text-secondary mb-1.5">Comment Template (optional)</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs text-efi-text-secondary">Comment Template (optional)</label>
+                    <div className="flex gap-2">
+                      {commentTemplate && (
+                        <button
+                          type="button"
+                          onClick={() => setCommentTemplate('')}
+                          className="text-[11px] text-efi-text-tertiary hover:text-red-400 transition-colors cursor-pointer"
+                        >
+                          Clear
+                        </button>
+                      )}
+                      {commentTemplate !== DEFAULT_COMMENT_TEMPLATE && (
+                        <button
+                          type="button"
+                          onClick={() => setCommentTemplate(DEFAULT_COMMENT_TEMPLATE)}
+                          className="text-[11px] text-efi-text-tertiary hover:text-efi-gold-light transition-colors cursor-pointer"
+                        >
+                          Restore default
+                        </button>
+                      )}
+                    </div>
+                  </div>
                   <TextArea
                     value={commentTemplate}
                     onChange={(e) => setCommentTemplate(e.target.value)}
@@ -954,15 +916,7 @@ export function ProjectPage() {
                 <div className="flex items-center gap-2">
                   <h3 className="text-efi-text-primary font-medium">{r.title}</h3>
                   <span className="text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">{r.slug}</span>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); void handleCopyRoomLink(r.slug); }}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    title="Copy room link"
-                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-efi-text-secondary border border-white/10 rounded-lg hover:text-efi-text-primary hover:border-white/20 transition-colors cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-                  >
-                    <Copy className="w-3 h-3" /> Share
-                  </button>
+                  <ShareButton roomSlug={r.slug} />
                   <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${roomTypeBadge(r.roomType)}`}>
                     {r.roomType === 'LIVE' ? 'Live' : 'Async'}
                   </span>

@@ -50,7 +50,7 @@ export function Breadcrumbs() {
           const isMiddle = segments.length > 2 && i > 0 && !isLast;
 
           return (
-            <span key={i} className={`flex items-center gap-1.5 min-w-0 ${isMiddle ? 'hidden sm:flex' : ''}`}>
+            <span key={seg.path || seg.label} className={`flex items-center gap-1.5 min-w-0 ${isMiddle ? 'hidden sm:flex' : ''}`}>
               <ChevronRight className="w-3.5 h-3.5 text-efi-text-tertiary/40 shrink-0" />
 
               {seg.dropdownType === 'project' ? (

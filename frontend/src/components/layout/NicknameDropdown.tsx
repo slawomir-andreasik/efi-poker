@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useDropdownDismiss } from '@/hooks/useDropdownDismiss';
 import { ChevronDown, ChevronUp, Pencil, KeyRound, LogOut } from 'lucide-react';
 import { updateNickname } from '@/api/client';
 import { useToast } from '@/components/Toast';
@@ -24,19 +25,12 @@ export function NicknameDropdown({ displayName, slug, participantId, onNicknameC
   const inputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useToast();
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpen(false);
-        setEditing(false);
-      }
-    }
-    if (open) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [open]);
+  const handleDismiss = useCallback(() => {
+    setOpen(false);
+    setEditing(false);
+  }, []);
+
+  useDropdownDismiss(dropdownRef, open, handleDismiss);
 
   // Focus input when editing starts
   useEffect(() => {

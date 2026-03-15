@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useLocation, matchPath } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getAuth, getLastActiveSlug } from '@/api/client';
@@ -43,72 +44,78 @@ export function useBreadcrumbs(): UseBreadcrumbsResult {
   const currentRoom = rooms?.find((r) => r.id === roomId);
 
   const path = location.pathname;
-  const segments: BreadcrumbSegment[] = [];
 
-  if (!slug) {
-    // Non-project routes
-    if (path === '/login') {
-      segments.push({ label: 'Login', path: null });
-    } else if (path === '/register') {
-      segments.push({ label: 'Register', path: null });
-    } else if (path.startsWith('/admin')) {
-      segments.push({ label: 'Admin', path: null });
-    } else if (path !== '/') {
-      segments.push({ label: 'Page Not Found', path: null });
-    }
-  } else {
-    const isJoinPage = path === `/p/${slug}/join`;
-    const isResultsPage = slug && roomId ? path === `/p/${slug}/r/${roomId}/results` : false;
-    const isRoomAnalyticsPage = slug && roomId ? path === `/p/${slug}/r/${roomId}/analytics` : false;
-    const isProjectAnalyticsPage = path === `/p/${slug}/analytics`;
-    const isRoomPage = slug && roomId ? path.startsWith(`/p/${slug}/r/${roomId}`) && !isResultsPage && !isRoomAnalyticsPage : false;
-    const isProjectPage = path === `/p/${slug}`;
+  const segments = useMemo(() => {
+    const result: BreadcrumbSegment[] = [];
 
-    if (isProjectPage) {
-      // Project page: project name with project switcher
-      segments.push({ label: projectName, path: null, dropdownType: 'project' });
-    } else if (isJoinPage) {
-      // Join page: project (dropdown) + Join current
-      segments.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
-      segments.push({ label: 'Join', path: null });
-    } else if (isProjectAnalyticsPage) {
-      // Project analytics page: project (link) + Analytics current
-      segments.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
-      segments.push({ label: 'Analytics', path: null });
-    } else if (isRoomAnalyticsPage && currentRoom) {
-      // Room analytics page: project (dropdown) + room (link) + Analytics current
-      segments.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
-      segments.push({
-        label: currentRoom.title,
-        path: `/p/${slug}/r/${roomId}`,
-        dropdownType: 'room',
-        badges: { status: currentRoom.status, roomType: currentRoom.roomType },
-      });
-      segments.push({ label: 'Analytics', path: null });
-    } else if (isRoomPage && currentRoom) {
-      // Room page: project (dropdown) + room title (dropdown)
-      segments.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
-      segments.push({
-        label: currentRoom.title,
-        path: null,
-        dropdownType: 'room',
-        badges: { status: currentRoom.status, roomType: currentRoom.roomType },
-      });
-    } else if (isResultsPage && currentRoom) {
-      // Results page: project (dropdown) + room (dropdown) + Results current
-      segments.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
-      segments.push({
-        label: currentRoom.title,
-        path: `/p/${slug}/r/${roomId}`,
-        dropdownType: 'room',
-        badges: { status: currentRoom.status, roomType: currentRoom.roomType },
-      });
-      segments.push({ label: 'Results', path: null });
-    } else if (slug) {
-      // Unknown project sub-route - show project name as link
-      segments.push({ label: projectName, path: `/p/${slug}` });
+    if (!slug) {
+      // Non-project routes
+      if (path === '/login') {
+        result.push({ label: 'Login', path: null });
+      } else if (path === '/register') {
+        result.push({ label: 'Register', path: null });
+      } else if (path.startsWith('/admin')) {
+        result.push({ label: 'Admin', path: null });
+      } else if (path !== '/') {
+        result.push({ label: 'Page Not Found', path: null });
+      }
+    } else {
+      const isJoinPage = path === `/p/${slug}/join`;
+      const isResultsPage = slug && roomId ? path === `/p/${slug}/r/${roomId}/results` : false;
+      const isRoomAnalyticsPage = slug && roomId ? path === `/p/${slug}/r/${roomId}/analytics` : false;
+      const isProjectAnalyticsPage = path === `/p/${slug}/analytics`;
+      const isRoomPage = slug && roomId ? path.startsWith(`/p/${slug}/r/${roomId}`) && !isResultsPage && !isRoomAnalyticsPage : false;
+      const isProjectPage = path === `/p/${slug}`;
+
+      if (isProjectPage) {
+        // Project page: project name with project switcher
+        result.push({ label: projectName, path: null, dropdownType: 'project' });
+      } else if (isJoinPage) {
+        // Join page: project (dropdown) + Join current
+        result.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
+        result.push({ label: 'Join', path: null });
+      } else if (isProjectAnalyticsPage) {
+        // Project analytics page: project (link) + Analytics current
+        result.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
+        result.push({ label: 'Analytics', path: null });
+      } else if (isRoomAnalyticsPage && currentRoom) {
+        // Room analytics page: project (dropdown) + room (link) + Analytics current
+        result.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
+        result.push({
+          label: currentRoom.title,
+          path: `/p/${slug}/r/${roomId}`,
+          dropdownType: 'room',
+          badges: { status: currentRoom.status, roomType: currentRoom.roomType },
+        });
+        result.push({ label: 'Analytics', path: null });
+      } else if (isRoomPage && currentRoom) {
+        // Room page: project (dropdown) + room title (dropdown)
+        result.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
+        result.push({
+          label: currentRoom.title,
+          path: null,
+          dropdownType: 'room',
+          badges: { status: currentRoom.status, roomType: currentRoom.roomType },
+        });
+      } else if (isResultsPage && currentRoom) {
+        // Results page: project (dropdown) + room (dropdown) + Results current
+        result.push({ label: projectName, path: `/p/${slug}`, dropdownType: 'project' });
+        result.push({
+          label: currentRoom.title,
+          path: `/p/${slug}/r/${roomId}`,
+          dropdownType: 'room',
+          badges: { status: currentRoom.status, roomType: currentRoom.roomType },
+        });
+        result.push({ label: 'Results', path: null });
+      } else if (slug) {
+        // Unknown project sub-route - show project name as link
+        result.push({ label: projectName, path: `/p/${slug}` });
+      }
     }
-  }
+
+    return result;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- granular deps avoid re-render on every poll (currentRoom ref changes each cycle)
+  }, [path, slug, roomId, currentRoom?.id, currentRoom?.title, currentRoom?.status, currentRoom?.roomType, projectName]);
 
   return { segments, slug, roomId, currentRoom, isAdmin };
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { RoundHistoryEntry } from '@/api/types';
 
@@ -8,6 +8,7 @@ interface RoundHistoryPanelProps {
 
 export function RoundHistoryPanel({ history }: RoundHistoryPanelProps) {
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
+  const sorted = useMemo(() => [...history].reverse(), [history]);
 
   if (history.length === 0) {
     return (
@@ -20,8 +21,6 @@ export function RoundHistoryPanel({ history }: RoundHistoryPanelProps) {
     );
   }
 
-  const sorted = [...history].reverse();
-
   return (
     <div className="glass-frost rounded-xl p-4 border border-white/10">
       <h2 className="text-xs font-semibold text-efi-text-secondary uppercase tracking-wider mb-3">
@@ -33,7 +32,7 @@ export function RoundHistoryPanel({ history }: RoundHistoryPanelProps) {
       <div className="space-y-1.5">
         {sorted.map((entry) => {
           const isOpen = expandedRound === entry.roundNumber;
-          const hasStats = entry.averagePts != null || entry.medianPts != null;
+          const hasStats = entry.averagePoints != null || entry.medianPoints != null;
           return (
             <div key={entry.roundNumber} className="rounded-lg border border-white/8 overflow-hidden">
               <button
@@ -55,14 +54,14 @@ export function RoundHistoryPanel({ history }: RoundHistoryPanelProps) {
                   </div>
                   {hasStats && (
                     <div className="flex items-center gap-3">
-                      {entry.averagePts != null && (
+                      {entry.averagePoints != null && (
                         <span className="text-xs text-efi-text-tertiary">
-                          avg <span className="text-efi-gold-light font-semibold">{entry.averagePts.toFixed(1)}</span>
+                          avg <span className="text-efi-gold-light font-semibold">{entry.averagePoints.toFixed(1)}</span>
                         </span>
                       )}
-                      {entry.medianPts != null && (
+                      {entry.medianPoints != null && (
                         <span className="text-xs text-efi-text-tertiary">
-                          med <span className="text-efi-gold-light font-semibold">{entry.medianPts.toFixed(1)}</span>
+                          med <span className="text-efi-gold-light font-semibold">{entry.medianPoints.toFixed(1)}</span>
                         </span>
                       )}
                       <span className="text-xs text-efi-text-tertiary">

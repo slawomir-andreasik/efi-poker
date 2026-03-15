@@ -2,11 +2,19 @@ import { useState, useRef } from 'react';
 import { Settings } from 'lucide-react';
 import { useUpdateRoom } from '@/api/mutations';
 import { useToast } from '@/components/Toast';
+import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { DeadlineInput, formatPreview, toLocalDatetimeString } from '@/components/DeadlineInput';
 import { TextInput, TextArea } from '@/components/TextInput';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/utils/error';
 import type { RoomDetailResponse } from '@/api/types';
+
+export const DEFAULT_COMMENT_TEMPLATE = `Assumptions:
+- all clear / ...
+Risks:
+- no risks / ...
+Open questions:
+- no questions / ...`;
 
 type RoomSettingsRoom = Pick<RoomDetailResponse, 'id' | 'title' | 'description' | 'deadline' | 'topic' | 'roomType' | 'autoRevealOnDeadline' | 'commentTemplate' | 'commentRequired'>;
 
@@ -16,7 +24,6 @@ interface RoomSettingsProps {
 }
 
 export function RoomSettings({ slug, room }: RoomSettingsProps) {
-  const [open, setOpen] = useState(false);
   const { showToast } = useToast();
   const updateRoom = useUpdateRoom(slug);
 
@@ -35,21 +42,8 @@ export function RoomSettings({ slug, room }: RoomSettingsProps) {
   const isAsync = room.roomType === 'ASYNC';
 
   return (
-    <div className="glass-frost rounded-xl p-4 border border-efi-gold-light/10">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 text-xs font-semibold text-efi-text-secondary uppercase tracking-wider cursor-pointer hover:text-efi-text-primary transition-colors w-full focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none rounded"
-      >
-        <Settings className="w-3.5 h-3.5" />
-        Room Settings
-        <svg className={`w-3 h-3 ml-auto transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {open && (
-        <div className="mt-4 space-y-4">
+    <CollapsibleSection icon={Settings} label="Room Settings">
+      <div className="space-y-4">
           <BlurSaveInput
             label="Title"
             initialValue={room.title}
@@ -73,12 +67,9 @@ export function RoomSettings({ slug, room }: RoomSettingsProps) {
             />
           )}
 
-          <BlurSaveInput
-            label="Comment Template"
+          <CommentTemplateField
             initialValue={room.commentTemplate ?? ''}
             onSave={(v) => saveField('commentTemplate', v || null)}
-            placeholder="Paste your team's comment template..."
-            multiline
           />
 
           <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -105,8 +96,7 @@ export function RoomSettings({ slug, room }: RoomSettingsProps) {
 
           {isAsync && <DeadlineEditor room={room} onSave={(v) => saveField('deadline', v)} />}
         </div>
-      )}
-    </div>
+    </CollapsibleSection>
   );
 }
 
@@ -161,6 +151,73 @@ function BlurSaveInput({
           className={inputClass}
         />
       )}
+    </div>
+  );
+}
+
+function CommentTemplateField({
+  initialValue,
+  onSave,
+}: {
+  initialValue: string;
+  onSave: (value: string) => void;
+}) {
+  const [value, setValue] = useState(initialValue);
+  const initialRef = useRef(initialValue);
+
+  function handleBlur() {
+    const trimmed = value.trim();
+    if (trimmed !== initialRef.current.trim()) {
+      onSave(trimmed);
+      initialRef.current = trimmed;
+    }
+  }
+
+  function handleSet(newValue: string) {
+    const trimmed = newValue.trim();
+    setValue(newValue);
+    if (trimmed !== initialRef.current.trim()) {
+      onSave(trimmed || '');
+      initialRef.current = trimmed;
+    }
+  }
+
+  const inputClass = 'w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold resize-y max-h-40 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void';
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <label className="text-xs text-efi-text-secondary">Comment Template</label>
+        <div className="flex gap-2">
+          {value && (
+            <button
+              type="button"
+              onClick={() => handleSet('')}
+              className="text-[11px] text-efi-text-tertiary hover:text-red-400 transition-colors cursor-pointer"
+            >
+              Clear
+            </button>
+          )}
+          {value !== DEFAULT_COMMENT_TEMPLATE && (
+            <button
+              type="button"
+              onClick={() => handleSet(DEFAULT_COMMENT_TEMPLATE)}
+              className="text-[11px] text-efi-text-tertiary hover:text-efi-gold-light transition-colors cursor-pointer"
+            >
+              Restore default
+            </button>
+          )}
+        </div>
+      </div>
+      <TextArea
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={handleBlur}
+        placeholder="Paste your team's comment template..."
+        maxLength={2000}
+        rows={2}
+        className={inputClass}
+      />
     </div>
   );
 }

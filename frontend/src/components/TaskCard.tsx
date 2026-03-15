@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { memo, useState, useRef } from 'react';
 import { EstimateButtons } from './EstimateButtons';
 import { ProgressBar } from './ProgressBar';
 import { Linkify } from '@/lib/linkify';
@@ -31,7 +31,7 @@ interface TaskCardProps {
   myComment?: string;
 }
 
-export function TaskCard({
+export const TaskCard = memo(function TaskCard({
   id,
   title,
   description,
@@ -81,6 +81,7 @@ export function TaskCard({
                 <div
                   className="flex items-center justify-center w-6 h-6 rounded-full bg-efi-warning/20 text-efi-warning border border-efi-warning/30 text-xs font-bold mr-1 cursor-help"
                   title={`${questionVotesCount} person${questionVotesCount > 1 ? 's' : ''} have questions/doubts. Please clarify.`}
+                  aria-label={`${questionVotesCount} person${questionVotesCount > 1 ? 's' : ''} have questions or doubts`}
                 >
                   ?
                 </div>
@@ -215,7 +216,7 @@ export function TaskCard({
       )}
     </div>
   );
-}
+});
 
 function InlineDescription({
   taskId,

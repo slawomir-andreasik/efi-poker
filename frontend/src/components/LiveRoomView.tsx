@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Check, Copy, Trash2, Eye, RotateCw } from 'lucide-react';
+import { Check, Trash2, Eye, RotateCw } from 'lucide-react';
 import { InlineConfirmAction } from '@/components/InlineConfirmAction';
 import { getAuth } from '@/api/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -15,12 +15,12 @@ import { EstimateButtons } from '@/components/EstimateButtons';
 import { AdminJoinBanner } from '@/components/AdminJoinBanner';
 import type { StoryPoints, RoomDetailResponse } from '@/api/types';
 import { getErrorMessage } from '@/utils/error';
-import { copyRoomLink } from '@/utils/clipboard';
 import { useSaveIndicator } from '@/hooks/useSaveIndicator';
 import { useDeleteRoomAction } from '@/hooks/useDeleteRoomAction';
 import { TextInput } from '@/components/TextInput';
 import { CommentInput } from '@/components/CommentInput';
 import { RoomSettings } from '@/components/RoomSettings';
+import { ShareButton } from '@/components/ShareButton';
 
 interface LiveRoomViewProps {
   slug: string;
@@ -47,7 +47,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
     refetchInterval: (query) => (query.state.status === 'error' ? false : 2_000),
   });
 
-  const { data: history = [] } = useQuery({
+  const { data: history = [], isError: historyError } = useQuery({
     queryKey: queryKeys.rooms.history(roomId),
     queryFn: () => roomApi.history(roomId, slug),
   });
@@ -220,15 +220,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
             )}
           </div>
           <div className="flex items-center gap-2 mt-3 sm:mt-0">
-            <button
-              type="button"
-              onClick={() => void copyRoomLink(initialRoom.slug, showToast)}
-              title="Copy room join link"
-              className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-efi-text-secondary border border-white/10 rounded-lg hover:text-efi-text-primary hover:border-white/20 transition-colors cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-            >
-              <Copy className="w-3 h-3" />
-              Share
-            </button>
+            <ShareButton roomSlug={initialRoom.slug} />
             {isAdmin && (
               <InlineConfirmAction
                 label="Delete room?"
@@ -413,8 +405,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
         </div>
 
         {/* Right: participants */}
-        <div>
-          <aside className="lg:sticky lg:top-[var(--nav-total-height)]">
+        <aside className="lg:sticky lg:top-[var(--nav-total-height)]">
             <div className="glass-whisper rounded-2xl p-4 border border-efi-info/20">
               <h2 className="text-xs font-semibold text-efi-text-secondary uppercase tracking-wider mb-3">
                 Participants ({participants.length})
@@ -439,13 +430,16 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                 <p className="text-xs text-efi-text-tertiary">No participants yet.</p>
               )}
             </div>
-          </aside>
-        </div>
+        </aside>
       </div>
 
       {/* Round history */}
       <div className="mt-6">
-        <RoundHistoryPanel history={history} />
+        {historyError ? (
+          <p className="text-sm text-efi-error">Failed to load round history.</p>
+        ) : (
+          <RoundHistoryPanel history={history} />
+        )}
       </div>
     </div>
   );

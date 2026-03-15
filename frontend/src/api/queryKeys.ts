@@ -12,6 +12,7 @@ export const queryKeys = {
     admin: (id: string) => ['rooms', id, 'admin'] as const,
     results: (id: string) => ['rooms', id, 'results'] as const,
     history: (id: string) => ['rooms', id, 'history'] as const,
+    participantProgress: (id: string) => ['rooms', id, 'participant-progress'] as const,
     bySlug: (slug: string) => ['rooms', 'by-slug', slug] as const,
   },
   auth: {

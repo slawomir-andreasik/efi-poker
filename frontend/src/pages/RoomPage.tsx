@@ -1,35 +1,36 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Copy, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { InlineConfirmAction } from '@/components/InlineConfirmAction';
 import { useQuery } from '@tanstack/react-query';
-import { getAuth, getJwt, saveAuth, ApiError } from '@/api/client';
+import { ApiError } from '@/api/client';
 import { queryKeys } from '@/api/queryKeys';
-import { roomApi, projectApi } from '@/api/queries';
+import { roomApi } from '@/api/queries';
+import { useProjectAuth } from '@/hooks/useProjectAuth';
 import { useSubmitEstimate, useDeleteEstimate, useSetFinalEstimate, useUpdateTask } from '@/api/mutations';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/utils/error';
-import { copyRoomLink } from '@/utils/clipboard';
 import { useSortedTasks } from '@/hooks/useSortedTasks';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useDeleteRoomAction } from '@/hooks/useDeleteRoomAction';
 import { useToast } from '@/components/Toast';
-import { Spinner } from '@/components/Spinner';
+import { PageSpinner } from '@/components/PageSpinner';
+import { NotFoundState } from '@/components/NotFoundState';
+import { TraceCopyButton } from '@/components/TraceCopyButton';
+import { ShareButton } from '@/components/ShareButton';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { TaskCard } from '@/components/TaskCard';
 import { SortControls } from '@/components/SortControls';
 import { RoomSidebar } from '@/components/RoomSidebar';
 import { LiveRoomView } from '@/components/LiveRoomView';
 import { RoomSettings } from '@/components/RoomSettings';
+import { ParticipantProgress } from '@/components/ParticipantProgress';
 import { AdminJoinBanner } from '@/components/AdminJoinBanner';
 import type { StoryPoints } from '@/api/types';
 
 export function RoomPage() {
   const { slug, roomId } = useParams<{ slug: string; roomId: string }>();
-  const [auth, setAuth] = useState(() => (slug ? getAuth(slug) : {}));
-  const { isAdmin: isSiteAdmin } = useCurrentUser();
-  const isAdmin = Boolean(auth.adminCode) || isSiteAdmin;
+  const { auth, isAdmin } = useProjectAuth(slug);
   const hasParticipant = Boolean(auth.participantId);
   const { showToast } = useToast();
   const projectName = auth.projectName ?? slug;
@@ -41,40 +42,13 @@ export function RoomPage() {
     queryKey: queryKeys.rooms.detail(roomId!),
     queryFn: () => roomApi.detail(roomId!, slug!),
     enabled: Boolean(roomId && slug),
-    refetchInterval: (query) => (query.state.status === 'error' ? false : 5_000),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      if (status === 'REVEALED' || status === 'CLOSED') return false;
+      if (query.state.status === 'error') return false;
+      return 5_000;
+    },
   });
-
-  const jwt = getJwt();
-
-  // Fallback: logged-in owner without adminCode in localStorage
-  const { data: adminProject } = useQuery({
-    queryKey: queryKeys.projects.admin(slug!),
-    queryFn: () => projectApi.admin(slug!),
-    enabled: Boolean(slug && jwt && !auth.adminCode),
-    retry: false,
-  });
-
-  useEffect(() => {
-    if (adminProject?.adminCode && slug) {
-      saveAuth(slug, { adminCode: adminProject.adminCode, projectName: adminProject.name });
-      setAuth(getAuth(slug));
-    }
-  }, [adminProject, slug]);
-
-  // Fallback: logged-in user without participantId in localStorage
-  const { data: myParticipant } = useQuery({
-    queryKey: queryKeys.projects.myParticipant(slug!),
-    queryFn: () => projectApi.myParticipant(slug!),
-    enabled: Boolean(slug && jwt && !auth.participantId),
-    retry: false,
-  });
-
-  useEffect(() => {
-    if (myParticipant?.id && slug) {
-      saveAuth(slug, { participantId: myParticipant.id, nickname: myParticipant.nickname });
-      setAuth(getAuth(slug));
-    }
-  }, [myParticipant, slug]);
 
   useDocumentTitle(room?.title, projectName);
 
@@ -94,7 +68,7 @@ export function RoomPage() {
   const setFinalEstimate = useSetFinalEstimate(slug ?? '');
   const updateTask = useUpdateTask(slug ?? '');
 
-  async function handleEstimate(taskId: string, value: StoryPoints | null, comment?: string) {
+  const handleEstimate = useCallback(async (taskId: string, value: StoryPoints | null, comment?: string) => {
     if (!slug || !roomId) return;
     logger.debug(`Estimate: task=${taskId} sp=${value}`);
 
@@ -129,9 +103,9 @@ export function RoomPage() {
       logger.warn('Failed to submit estimate:', getErrorMessage(err));
       showToast(getErrorMessage(err));
     }
-  }
+  }, [deleteEstimate, submitEstimate, votes, showToast, roomId, slug]);
 
-  async function handleSetFinalEstimate(taskId: string, value: StoryPoints) {
+  const handleSetFinalEstimate = useCallback(async (taskId: string, value: StoryPoints) => {
     if (!slug) return;
     try {
       await setFinalEstimate.mutateAsync({ taskId, storyPoints: value });
@@ -139,9 +113,9 @@ export function RoomPage() {
       logger.warn('Failed to set final estimate:', getErrorMessage(err));
       showToast(getErrorMessage(err));
     }
-  }
+  }, [setFinalEstimate, showToast, slug]);
 
-  async function handleUpdateDescription(taskId: string, description: string) {
+  const handleUpdateDescription = useCallback(async (taskId: string, description: string) => {
     if (!slug) return;
     try {
       await updateTask.mutateAsync({ taskId, body: { description } });
@@ -149,42 +123,21 @@ export function RoomPage() {
       logger.warn('Failed to update description:', getErrorMessage(err));
       showToast(getErrorMessage(err));
     }
-  }
+  }, [updateTask, showToast, slug]);
 
   if (loading && !room) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Spinner />
-      </div>
-    );
+    return <PageSpinner />;
   }
 
   if (error) {
     if (error instanceof ApiError && error.status === 404) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-          <p className="text-efi-text-primary font-medium">Room not found</p>
-          <Link
-            to={`/p/${slug}`}
-            className="text-sm text-efi-gold-light hover:text-efi-gold transition-colors no-underline hover:underline"
-          >
-            Back to Project
-          </Link>
-        </div>
-      );
+      return <NotFoundState message="Room not found" backTo={`/p/${slug}`} backLabel="Back to Project" />;
     }
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <p className="text-efi-error">{getErrorMessage(error)}</p>
         {error instanceof ApiError && error.traceId && (
-          <button
-            type="button"
-            onClick={() => void navigator.clipboard.writeText(error.traceId!).catch(() => {})}
-            title="Copy trace ID for support"
-            className="text-xs text-efi-text-tertiary hover:text-efi-text-secondary font-mono transition-colors cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
-          >
-            Trace: {error.traceId.slice(0, 8)}… [copy]
-          </button>
+          <TraceCopyButton traceId={error.traceId} />
         )}
       </div>
     );
@@ -217,17 +170,7 @@ export function RoomPage() {
                 {room?.title}
               </h1>
               {room?.slug && <span className="text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">{room.slug}</span>}
-              {room?.slug && (
-                <button
-                  type="button"
-                  onClick={() => void copyRoomLink(room.slug, showToast)}
-                  title="Copy room join link"
-                  className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-efi-text-secondary border border-white/10 rounded-lg hover:text-efi-text-primary hover:border-white/20 transition-colors cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-                >
-                  <Copy className="w-3 h-3" />
-                  Share
-                </button>
-              )}
+              {room?.slug && <ShareButton roomSlug={room.slug} />}
             </div>
             {room?.description && (
               <p className="text-efi-text-secondary mt-2">{room.description}</p>
@@ -269,13 +212,20 @@ export function RoomPage() {
 
       {/* Admin join banner */}
       {isAdmin && !hasParticipant && !isRevealed && (
-        <AdminJoinBanner slug={slug!} onJoined={() => setAuth(getAuth(slug!))} />
+        <AdminJoinBanner slug={slug!} onJoined={() => {}} />
       )}
 
       {/* Room settings (admin only) */}
       {isAdmin && room && (
         <div className="mb-6">
           <RoomSettings slug={slug!} room={room} />
+        </div>
+      )}
+
+      {/* Participant progress (OPEN state only) */}
+      {!isRevealed && room && slug && roomId && (
+        <div className="mb-6">
+          <ParticipantProgress roomId={roomId} slug={slug} />
         </div>
       )}
 

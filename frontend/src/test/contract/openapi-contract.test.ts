@@ -18,10 +18,11 @@ interface OpenApiProperty {
 }
 
 interface OpenApiSchema {
-  type: string;
+  type?: string;
   required?: string[];
   properties?: Record<string, OpenApiProperty>;
   enum?: string[];
+  allOf?: (OpenApiSchema | { $ref: string })[];
 }
 
 interface OpenApiSpec {
@@ -43,14 +44,32 @@ const specPath = resolve(__dirname, '../../../../api/src/main/resources/api-defi
 const spec = yaml.load(readFileSync(specPath, 'utf-8')) as OpenApiSpec;
 const schemas = spec.components.schemas;
 
+function resolveSchema(schema: OpenApiSchema): OpenApiSchema {
+  if (!schema.allOf) return schema;
+  const merged: OpenApiSchema = { type: 'object', properties: {}, required: [] };
+  for (const part of schema.allOf) {
+    const resolved = '$ref' in part
+      ? schemas[((part as { $ref: string }).$ref as string).replace('#/components/schemas/', '')]
+      : part as OpenApiSchema;
+    if (!resolved) continue;
+    const inner = resolveSchema(resolved);
+    Object.assign(merged.properties!, inner.properties ?? {});
+    merged.required = [...(merged.required ?? []), ...(inner.required ?? [])];
+  }
+  return merged;
+}
+
 function getSchemaFields(schemaName: string): string[] {
   const schema = schemas[schemaName];
-  if (!schema?.properties) return [];
-  return Object.keys(schema.properties);
+  if (!schema) return [];
+  const resolved = resolveSchema(schema);
+  return Object.keys(resolved.properties ?? {});
 }
 
 function getRequiredFields(schemaName: string): string[] {
-  return schemas[schemaName]?.required ?? [];
+  const schema = schemas[schemaName];
+  if (!schema) return [];
+  return resolveSchema(schema).required ?? [];
 }
 
 describe('OpenAPI contract: response schemas', () => {
@@ -282,5 +301,92 @@ describe('OpenAPI contract: API paths exist', () => {
       p.match(/\/projects\/\{slug\}\/rooms\/\{roomId\}/)
     );
     expect(nested).toEqual([]);
+  });
+});
+
+describe('OpenAPI quality rules', () => {
+  it('all response schemas should declare required fields', () => {
+    const responseSchemaNames = Object.keys(schemas).filter(
+      (name) =>
+        name.endsWith('Response') ||
+        name.endsWith('Entry') ||
+        name.endsWith('Status') ||
+        name === 'RoundHistoryVote'
+    );
+    const missing: string[] = [];
+    for (const name of responseSchemaNames) {
+      const schema = schemas[name];
+      if (!schema) continue;
+      const resolved = resolveSchema(schema);
+      // Skip pure enum/primitive schemas (no properties to declare required for)
+      if (!resolved.properties || Object.keys(resolved.properties).length === 0) continue;
+      if (!resolved.required || resolved.required.length === 0) {
+        missing.push(name);
+      }
+    }
+    expect(missing, `Schemas missing required array: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  it('schemas should not define inline enums (use $ref to enums/)', () => {
+    const violations: string[] = [];
+    for (const [name, schema] of Object.entries(schemas)) {
+      const resolved = resolveSchema(schema);
+      for (const [field, prop] of Object.entries(resolved.properties ?? {})) {
+        if (prop.enum && !prop.$ref) {
+          violations.push(`${name}.${field}`);
+        }
+      }
+    }
+    expect(violations, `Inline enums found: ${violations.join(', ')}`).toEqual([]);
+  });
+
+  it('endpoints with request body should have 400 response', () => {
+    const violations: string[] = [];
+    for (const [path, methods] of Object.entries(spec.paths)) {
+      for (const [method, operation] of Object.entries(methods)) {
+        if (
+          ['post', 'patch', 'put'].includes(method) &&
+          operation.requestBody &&
+          !operation.responses?.['400']
+        ) {
+          violations.push(`${method.toUpperCase()} ${path}`);
+        }
+      }
+    }
+    expect(violations, `Missing 400: ${violations.join(', ')}`).toEqual([]);
+  });
+
+  it('endpoints with ID path params should have 404 response', () => {
+    const violations: string[] = [];
+    for (const [path, methods] of Object.entries(spec.paths)) {
+      const hasIdParam = /\{(roomId|taskId|id|participantId)\}/.test(path);
+      if (!hasIdParam) continue;
+      for (const [method, operation] of Object.entries(methods)) {
+        if (
+          ['get', 'patch', 'put', 'delete'].includes(method) &&
+          !operation.responses?.['404']
+        ) {
+          violations.push(`${method.toUpperCase()} ${path}`);
+        }
+      }
+    }
+    expect(violations, `Missing 404: ${violations.join(', ')}`).toEqual([]);
+  });
+
+  it('error responses should have content body', () => {
+    const violations: string[] = [];
+    for (const [path, methods] of Object.entries(spec.paths)) {
+      for (const [method, operation] of Object.entries(methods)) {
+        for (const [code, response] of Object.entries(operation.responses ?? {})) {
+          if (
+            ['400', '401', '403', '404', '409'].includes(code) &&
+            !response.content
+          ) {
+            violations.push(`${method.toUpperCase()} ${path} ${code}`);
+          }
+        }
+      }
+    }
+    expect(violations, `Empty error bodies: ${violations.join(', ')}`).toEqual([]);
   });
 });

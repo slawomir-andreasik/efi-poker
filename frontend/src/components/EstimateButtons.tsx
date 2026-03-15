@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { SP_VALUES } from '@/api/types';
 import type { StoryPoints } from '@/api/types';
 
@@ -7,7 +8,7 @@ interface EstimateButtonsProps {
   disabled?: boolean;
 }
 
-export function EstimateButtons({ selectedValue, onSelect, disabled = false }: EstimateButtonsProps) {
+export const EstimateButtons = memo(function EstimateButtons({ selectedValue, onSelect, disabled = false }: EstimateButtonsProps) {
   return (
     <div className="flex flex-wrap gap-1.5 sm:gap-2">
       {SP_VALUES.map((value) => {
@@ -17,6 +18,7 @@ export function EstimateButtons({ selectedValue, onSelect, disabled = false }: E
             key={value}
             onClick={() => onSelect(isSelected ? null : value)}
             disabled={disabled}
+            aria-pressed={isSelected}
             className={`
               w-11 h-11 rounded-lg font-bold text-sm transition-all
               ${
@@ -33,4 +35,4 @@ export function EstimateButtons({ selectedValue, onSelect, disabled = false }: E
       })}
     </div>
   );
-}
+});

@@ -8,6 +8,7 @@ import type {
   RoomResultsResponse,
   RoomSlugResponse,
   ParticipantResponse,
+  ParticipantProgressResponse,
   LiveRoomStateResponse,
   RoundHistoryEntry,
   AuthConfigResponse,
@@ -33,6 +34,7 @@ export const roomApi = {
   results: (id: string, slug: string) => api<RoomResultsResponse>(`/rooms/${id}/results`, {}, slug),
   history: (id: string, slug: string) => api<RoundHistoryEntry[]>(`/rooms/${id}/history`, {}, slug),
   resultsExport: (id: string, slug: string) => api<string>(`/rooms/${id}/results/export`, {}, slug),
+  participantProgress: (id: string, slug: string) => api<ParticipantProgressResponse>(`/rooms/${id}/participant-progress`, {}, slug),
   bySlug: (slug: string) => api<RoomSlugResponse>(`/rooms/by-slug/${slug}`),
 };
 

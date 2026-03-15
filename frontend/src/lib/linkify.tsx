@@ -1,8 +1,9 @@
+import { memo } from 'react';
 import type { ReactNode } from 'react';
 
 const URL_REGEX = /https?:\/\/[^\s<>"'()]+/g;
 
-export function Linkify({ text }: { text: string }) {
+export const Linkify = memo(function Linkify({ text }: { text: string }) {
   const parts: ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -32,4 +33,4 @@ export function Linkify({ text }: { text: string }) {
   }
 
   return <>{parts}</>;
-}
+});

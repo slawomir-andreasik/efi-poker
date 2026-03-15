@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { TaskWithEstimateResponse } from '@/api/types';
 
 interface ProgressStatsProps {
@@ -7,9 +8,15 @@ interface ProgressStatsProps {
 
 export function ProgressStats({ tasks, isRevealed }: ProgressStatsProps) {
   const totalTasks = tasks.length;
-  const myVotes = tasks.filter((t) => t.myEstimate != null).length;
-  const fullyVoted = tasks.filter((t) => t.totalParticipants > 0 && t.votedCount === t.totalParticipants).length;
-  const finalSet = tasks.filter((t) => t.finalEstimate != null).length;
+  const stats = useMemo(() => {
+    let myVotes = 0, fullyVoted = 0, finalSet = 0;
+    for (const t of tasks) {
+      if (t.myEstimate != null) myVotes++;
+      if (t.totalParticipants > 0 && t.votedCount === t.totalParticipants) fullyVoted++;
+      if (t.finalEstimate != null) finalSet++;
+    }
+    return { myVotes, fullyVoted, finalSet };
+  }, [tasks]);
 
   if (totalTasks === 0) return null;
 
@@ -25,13 +32,13 @@ export function ProgressStats({ tasks, isRevealed }: ProgressStatsProps) {
         </div>
 
         {/* My votes - hidden on revealed rooms if user didn't participate */}
-        {(!isRevealed || myVotes > 0) && (
+        {(!isRevealed || stats.myVotes > 0) && (
           <div>
             <div className="flex items-center justify-between text-sm mb-1">
               <span className="text-efi-text-secondary">My votes</span>
-              <span className="text-efi-text-primary font-medium">{myVotes} / {totalTasks}</span>
+              <span className="text-efi-text-primary font-medium">{stats.myVotes} / {totalTasks}</span>
             </div>
-            <MiniBar value={myVotes} total={totalTasks} />
+            <MiniBar value={stats.myVotes} total={totalTasks} />
           </div>
         )}
 
@@ -39,9 +46,9 @@ export function ProgressStats({ tasks, isRevealed }: ProgressStatsProps) {
         <div>
           <div className="flex items-center justify-between text-sm mb-1">
             <span className="text-efi-text-secondary">Team complete</span>
-            <span className="text-efi-text-primary font-medium">{fullyVoted} / {totalTasks}</span>
+            <span className="text-efi-text-primary font-medium">{stats.fullyVoted} / {totalTasks}</span>
           </div>
-          <MiniBar value={fullyVoted} total={totalTasks} />
+          <MiniBar value={stats.fullyVoted} total={totalTasks} />
         </div>
 
         {/* Final SP set (after reveal) */}
@@ -49,9 +56,9 @@ export function ProgressStats({ tasks, isRevealed }: ProgressStatsProps) {
           <div>
             <div className="flex items-center justify-between text-sm mb-1">
               <span className="text-efi-text-secondary">Final SP set</span>
-              <span className="text-efi-text-primary font-medium">{finalSet} / {totalTasks}</span>
+              <span className="text-efi-text-primary font-medium">{stats.finalSet} / {totalTasks}</span>
             </div>
-            <MiniBar value={finalSet} total={totalTasks} color="green" />
+            <MiniBar value={stats.finalSet} total={totalTasks} color="green" />
           </div>
         )}
       </div>

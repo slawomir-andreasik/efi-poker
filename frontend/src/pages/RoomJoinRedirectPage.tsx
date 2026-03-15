@@ -5,6 +5,7 @@ import { queryKeys } from '@/api/queryKeys';
 import { roomApi } from '@/api/queries';
 import { ApiError, getAuth, api, saveAuth } from '@/api/client';
 import { Spinner } from '@/components/Spinner';
+import { TraceCopyButton } from '@/components/TraceCopyButton';
 import { getErrorMessage } from '@/utils/error';
 import { logger } from '@/utils/logger';
 import type { ParticipantResponse } from '@/api/types';
@@ -68,8 +69,10 @@ export function RoomJoinRedirectPage() {
       );
     }
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <p className="text-efi-error">{getErrorMessage(error)}</p>
+        {error instanceof ApiError && error.traceId && <TraceCopyButton traceId={error.traceId} />}
+        <Link to="/" className="text-sm text-efi-gold-light hover:text-white transition-colors">Back to Home</Link>
       </div>
     );
   }

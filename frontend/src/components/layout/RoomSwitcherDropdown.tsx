@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/api/queryKeys';
@@ -7,6 +7,7 @@ import { getAuth } from '@/api/client';
 import { statusBadge, roomTypeBadge, statusLabel } from '@/utils/roomBadges';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { Spinner } from '@/components/Spinner';
+import { useDropdownDismiss } from '@/hooks/useDropdownDismiss';
 
 interface RoomSwitcherDropdownProps {
   slug: string;
@@ -26,32 +27,14 @@ export function RoomSwitcherDropdown({ slug, projectName, currentRoomId, onClose
     staleTime: 10_000,
   });
 
-  // Close on click-outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onClose]);
-
-  // Close on Escape
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  useDropdownDismiss(dropdownRef, true, onClose);
 
   // Sort: OPEN first, then by createdAt desc
-  const sortedRooms = [...(rooms ?? [])].sort((a, b) => {
+  const sortedRooms = useMemo(() => [...(rooms ?? [])].sort((a, b) => {
     if (a.status === 'OPEN' && b.status !== 'OPEN') return -1;
     if (a.status !== 'OPEN' && b.status === 'OPEN') return 1;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
+  }), [rooms]);
 
   return (
     <div

@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { Link, useLocation, matchPath } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { X, Github, ChevronRight, ChevronDown, LogOut, Home, Shield, LogIn, UserPlus } from 'lucide-react';
@@ -8,6 +8,7 @@ import { getJwt, getAllProjects, getIdentity } from '@/api/client';
 import { queryKeys } from '@/api/queryKeys';
 import { projectApi } from '@/api/queries';
 import { statusBadge, roomTypeBadge, statusLabel } from '@/utils/roomBadges';
+import { RoleBadge } from '@/components/RoleBadge';
 
 interface MobileSidebarProps {
   open: boolean;
@@ -49,13 +50,13 @@ export function MobileSidebar({ open, onClose, onLogout }: MobileSidebarProps) {
     if (slug) setExpandedSlug(slug);
   }, [slug]);
 
-  const projectEntries = Object.entries(getAllProjects())
+  const projectEntries = useMemo(() => Object.entries(getAllProjects())
     .map(([s, a]) => ({
       slug: s,
       name: a.projectName ?? s,
       isAdmin: Boolean(a.adminCode),
     }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => a.name.localeCompare(b.name)), []);
 
   // Fetch rooms for expanded project
   const { data: rooms, isLoading: roomsLoading } = useQuery({
@@ -65,14 +66,14 @@ export function MobileSidebar({ open, onClose, onLogout }: MobileSidebarProps) {
     staleTime: 10_000,
   });
 
-  const sortedRooms = rooms
+  const sortedRooms = useMemo(() => rooms
     ?.slice()
     .sort((a, b) => {
       // OPEN first, then by createdAt desc
       if (a.status === 'OPEN' && b.status !== 'OPEN') return -1;
       if (a.status !== 'OPEN' && b.status === 'OPEN') return 1;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+    }), [rooms]);
 
   // Close on route change
   useEffect(() => {
@@ -185,12 +186,8 @@ export function MobileSidebar({ open, onClose, onLogout }: MobileSidebarProps) {
                         >
                           {entry.name}
                         </Link>
-                        <span className={`shrink-0 mr-3 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${
-                          entry.isAdmin
-                            ? 'bg-efi-gold/20 text-efi-gold-light border-efi-gold/30'
-                            : 'bg-white/8 text-efi-text-secondary border-white/10'
-                        }`}>
-                          {entry.isAdmin ? 'Admin' : 'Voter'}
+                        <span className="shrink-0 mr-3">
+                          <RoleBadge isAdmin={entry.isAdmin} />
                         </span>
                       </div>
 

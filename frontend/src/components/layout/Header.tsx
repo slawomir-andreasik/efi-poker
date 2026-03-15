@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, matchPath } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAuth, setLastActiveSlug, getLastActiveSlug, getIdentity, getJwt, clearAllStorage } from '@/api/client';
@@ -12,6 +12,7 @@ import { copyRoomLink } from '@/utils/clipboard';
 import { NicknameDropdown } from './NicknameDropdown';
 import { MobileSidebar } from './MobileSidebar';
 import { ChangePasswordModal } from '@/components/ChangePasswordModal';
+import { RoleBadge } from '@/components/RoleBadge';
 
 export function Header() {
   const location = useLocation();
@@ -41,7 +42,7 @@ export function Header() {
   }, [location.pathname]);
 
   const effectiveSlug = slug ?? getLastActiveSlug() ?? undefined;
-  const auth = effectiveSlug ? getAuth(effectiveSlug) : {};
+  const auth = useMemo(() => effectiveSlug ? getAuth(effectiveSlug) : {}, [effectiveSlug]);
   const [displayName, setDisplayName] = useState(auth.nickname || getIdentity() || currentUser?.username || null);
   const isAdmin = Boolean(auth.adminCode);
   const participantId = auth.participantId;
@@ -94,6 +95,7 @@ export function Header() {
               type="button"
               onClick={() => setSidebarOpen(true)}
               title="Open menu"
+              aria-label="Open menu"
               className="p-1.5 rounded-lg text-efi-text-secondary hover:text-efi-text-primary hover:bg-white/8 transition-colors cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
             >
               <Menu className="w-5 h-5" />
@@ -135,15 +137,7 @@ export function Header() {
             )}
 
             {/* Role badge - only inside a project */}
-            {slug && (
-              <span className={`inline-flex text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${
-                isAdmin
-                  ? 'bg-efi-gold/20 text-efi-gold-light border-efi-gold/30'
-                  : 'bg-white/8 text-efi-text-secondary border-white/10'
-              }`}>
-                {isAdmin ? 'Admin' : 'Voter'}
-              </span>
-            )}
+            {slug && <RoleBadge isAdmin={isAdmin} />}
 
             {isAppAdmin && (
               <Link

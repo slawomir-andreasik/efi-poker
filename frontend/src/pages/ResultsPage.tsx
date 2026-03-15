@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getAuth, ApiError } from '@/api/client';
@@ -5,7 +6,10 @@ import { queryKeys } from '@/api/queryKeys';
 import { roomApi } from '@/api/queries';
 import { getErrorMessage } from '@/utils/error';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { Spinner } from '@/components/Spinner';
+import { PageSpinner } from '@/components/PageSpinner';
+import { NotFoundState } from '@/components/NotFoundState';
+import { TraceCopyButton } from '@/components/TraceCopyButton';
+import { SummaryCard } from '@/components/charts/SummaryCard';
 import { ResultsTable, getConsensusLevel, type TaskEstimate } from '@/components/ResultsTable';
 
 function getTaskSp(task: TaskEstimate): number {
@@ -24,78 +28,74 @@ export function ResultsPage() {
     queryKey: queryKeys.rooms.results(roomId!),
     queryFn: () => roomApi.results(roomId!, slug!),
     enabled: Boolean(roomId && slug),
-    refetchInterval: (query) => (query.state.status === 'error' ? false : 10_000),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      if (status === 'CLOSED') return false;
+      if (query.state.status === 'error') return false;
+      return 10_000;
+    },
   });
 
   useDocumentTitle('Results', results?.title, projectName);
 
+  const participantNames = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (results?.tasks ?? []).flatMap((task) => task.estimates.map((e) => e.participantNickname)),
+        ),
+      ),
+    [results],
+  );
+
+  const tableData = useMemo<TaskEstimate[]>(
+    () =>
+      (results?.tasks ?? []).map((task) => {
+        const estimates: Record<string, number | string> = {};
+        const comments: Record<string, string> = {};
+        for (const est of task.estimates) {
+          const numeric = Number(est.storyPoints);
+          estimates[est.participantNickname] = isNaN(numeric) ? est.storyPoints : numeric;
+          if (est.comment) {
+            comments[est.participantNickname] = est.comment;
+          }
+        }
+        return {
+          taskId: task.taskId,
+          taskTitle: task.title,
+          estimates,
+          comments,
+          average: task.averagePoints,
+          median: task.medianPoints,
+          finalEstimate: task.finalEstimate,
+        };
+      }),
+    [results],
+  );
+
   if (isLoading && !results) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Spinner />
-      </div>
-    );
+    return <PageSpinner />;
   }
 
   if (error) {
     if (error instanceof ApiError && error.status === 404) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-          <p className="text-efi-text-primary font-medium">Room not found</p>
-          <Link
-            to={slug ? `/p/${slug}` : '/'}
-            className="text-sm text-efi-gold-light hover:text-efi-gold transition-colors no-underline hover:underline"
-          >
-            {slug ? 'Back to Project' : 'Back to Projects'}
-          </Link>
-        </div>
+        <NotFoundState
+          message="Room not found"
+          backTo={slug ? `/p/${slug}` : '/'}
+          backLabel={slug ? 'Back to Project' : 'Back to Projects'}
+        />
       );
     }
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <p className="text-efi-error">{getErrorMessage(error)}</p>
         {error instanceof ApiError && error.traceId && (
-          <button
-            type="button"
-            onClick={() => void navigator.clipboard.writeText(error.traceId!).catch(() => {})}
-            title="Copy trace ID for support"
-            className="text-xs text-efi-text-tertiary hover:text-efi-text-secondary font-mono transition-colors cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
-          >
-            Trace: {error.traceId.slice(0, 8)}… [copy]
-          </button>
+          <TraceCopyButton traceId={error.traceId} />
         )}
       </div>
     );
   }
-
-  // Derive unique participant names from all estimates
-  const participantNames = Array.from(
-    new Set(
-      (results?.tasks ?? []).flatMap((task) => task.estimates.map((e) => e.participantNickname)),
-    ),
-  );
-
-  // Transform API data to ResultsTable format
-  const tableData: TaskEstimate[] = (results?.tasks ?? []).map((task) => {
-    const estimates: Record<string, number | string> = {};
-    const comments: Record<string, string> = {};
-    for (const est of task.estimates) {
-      const numeric = Number(est.storyPoints);
-      estimates[est.participantNickname] = isNaN(numeric) ? est.storyPoints : numeric;
-      if (est.comment) {
-        comments[est.participantNickname] = est.comment;
-      }
-    }
-    return {
-      taskId: task.taskId,
-      taskTitle: task.title,
-      estimates,
-      comments,
-      average: task.averagePoints,
-      median: task.medianPoints,
-      finalEstimate: task.finalEstimate,
-    };
-  });
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
@@ -133,22 +133,12 @@ export function ResultsPage() {
       {/* Summary cards */}
       {tableData.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-8">
-          <div className="glass-whisper rounded-xl p-4 text-center">
-            <p className="text-sm text-efi-text-secondary">Total Tasks</p>
-            <p className="text-2xl font-bold text-efi-text-primary mt-1">{tableData.length}</p>
-          </div>
-          <div className="glass-whisper rounded-xl p-4 text-center">
-            <p className="text-sm text-efi-text-secondary">Total SP</p>
-            <p className="text-2xl font-bold text-efi-gold-light mt-1">
-              {tableData.reduce((sum, t) => sum + getTaskSp(t), 0)}
-            </p>
-          </div>
-          <div className="glass-whisper rounded-xl p-4 text-center">
-            <p className="text-sm text-efi-text-secondary">Consensus</p>
-            <p className="text-2xl font-bold text-efi-success mt-1">
-              {tableData.filter((t) => getConsensusLevel(t.estimates) === 'consensus').length}/{tableData.length}
-            </p>
-          </div>
+          <SummaryCard label="Total Tasks" value={tableData.length} />
+          <SummaryCard label="Total SP" value={tableData.reduce((sum, t) => sum + getTaskSp(t), 0)} />
+          <SummaryCard
+            label="Consensus"
+            value={`${tableData.filter((t) => getConsensusLevel(t.estimates) === 'consensus').length}/${tableData.length}`}
+          />
         </div>
       )}
     </div>

@@ -12,6 +12,7 @@ import type {
   AdminUpdateUserRequest,
   ChangePasswordRequest,
   AdminResetPasswordRequest,
+  RoomType,
 } from './types';
 
 // --- Auth mutations ---
@@ -81,7 +82,7 @@ export function useDeleteProject(slug: string) {
 export function useCreateRoom(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { title: string; description?: string; deadline?: string; roomType: string; autoRevealOnDeadline?: boolean; commentTemplate?: string; commentRequired?: boolean }) =>
+    mutationFn: (body: { title: string; description?: string; deadline?: string; roomType: RoomType; autoRevealOnDeadline?: boolean; commentTemplate?: string; commentRequired?: boolean }) =>
       api<RoomResponse>(`/projects/${slug}/rooms`, { method: 'POST', body }, slug),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.projects.rooms(slug) });

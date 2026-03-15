@@ -59,6 +59,9 @@ export function JoinPage() {
           .catch((err) => {
             if (cancelled) return;
             logger.warn('Auto-join failed:', getErrorMessage(err));
+            if (!(err instanceof ApiError)) {
+              showToast(getErrorMessage(err));
+            }
             setMode('join-form');
           });
         return () => { cancelled = true; };
@@ -85,6 +88,8 @@ export function JoinPage() {
         }
         if (pid) {
           showToast('Invalid or expired link. Please join with your nickname.');
+        } else if (!(err instanceof ApiError)) {
+          showToast(getErrorMessage(err));
         }
         setMode('join-form');
       });
@@ -92,7 +97,8 @@ export function JoinPage() {
     return () => {
       cancelled = true;
     };
-  }, [slug, searchParams, showToast, navigate]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roomRedirect derived from roomParam, searchParams covers both
+  }, [slug, searchParams, showToast, navigate, roomParam]);
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault();

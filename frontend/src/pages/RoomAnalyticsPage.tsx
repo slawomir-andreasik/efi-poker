@@ -6,7 +6,9 @@ import { queryKeys } from '@/api/queryKeys';
 import { analyticsApi } from '@/api/queries';
 import { getErrorMessage } from '@/utils/error';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { Spinner } from '@/components/Spinner';
+import { PageSpinner } from '@/components/PageSpinner';
+import { NotFoundState } from '@/components/NotFoundState';
+import { TraceCopyButton } from '@/components/TraceCopyButton';
 import { SummaryCard } from '@/components/charts/SummaryCard';
 import { VoteDistributionChart } from '@/components/charts/VoteDistributionChart';
 import { AvgVsFinalChart } from '@/components/charts/AvgVsFinalChart';
@@ -30,39 +32,24 @@ export function RoomAnalyticsPage() {
   const selectedTask = tasks.find((t) => t.taskId === effectiveTaskId);
 
   if (isLoading && !analytics) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Spinner />
-      </div>
-    );
+    return <PageSpinner />;
   }
 
   if (error) {
     if (error instanceof ApiError && error.status === 404) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-          <p className="text-efi-text-primary font-medium">Room not found</p>
-          <Link
-            to={slug ? `/p/${slug}` : '/'}
-            className="text-sm text-efi-gold-light hover:text-efi-gold transition-colors no-underline hover:underline"
-          >
-            Back to Project
-          </Link>
-        </div>
+        <NotFoundState
+          message="Room not found"
+          backTo={slug ? `/p/${slug}` : '/'}
+          backLabel="Back to Project"
+        />
       );
     }
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <p className="text-efi-error">{getErrorMessage(error)}</p>
         {error instanceof ApiError && error.traceId && (
-          <button
-            type="button"
-            onClick={() => void navigator.clipboard.writeText(error.traceId!).catch(() => {})}
-            title="Copy trace ID for support"
-            className="text-xs text-efi-text-tertiary hover:text-efi-text-secondary font-mono transition-colors cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
-          >
-            Trace: {error.traceId.slice(0, 8)}… [copy]
-          </button>
+          <TraceCopyButton traceId={error.traceId} />
         )}
         <Link
           to={slug && roomId ? `/p/${slug}/r/${roomId}/results` : '/'}

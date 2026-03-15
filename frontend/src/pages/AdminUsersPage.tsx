@@ -82,13 +82,14 @@ export function AdminUsersPage() {
         email: newEmail.trim() || undefined,
         role: newRole,
       });
-      showToast(`User "${newUsername.trim()}" created`);
+      showToast(`User "${newUsername.trim()}" created`, 'success');
       setShowCreate(false);
       setNewUsername('');
       setNewPassword('');
       setNewEmail('');
       setNewRole('USER');
     } catch (err) {
+      logger.warn('Failed to create user:', getErrorMessage(err));
       showToast(getErrorMessage(err));
     }
   }
@@ -109,8 +110,9 @@ export function AdminUsersPage() {
         },
       });
       setEditingId(null);
-      showToast('User updated');
+      showToast('User updated', 'success');
     } catch (err) {
+      logger.warn('Failed to update user:', getErrorMessage(err));
       showToast(getErrorMessage(err));
     }
   }
@@ -132,8 +134,9 @@ export function AdminUsersPage() {
     try {
       await deleteUser.mutateAsync(id);
       setDeletingId(null);
-      showToast('User deleted');
+      showToast('User deleted', 'success');
     } catch (err) {
+      logger.warn('Failed to delete user:', getErrorMessage(err));
       showToast(getErrorMessage(err));
     }
   }

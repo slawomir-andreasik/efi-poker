@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { getAllProjects } from '@/api/client';
 import type { ProjectAuth } from '@/api/client';
+import { useDropdownDismiss } from '@/hooks/useDropdownDismiss';
+import { RoleBadge } from '@/components/RoleBadge';
 
 interface ProjectSwitcherDropdownProps {
   currentSlug: string | undefined;
@@ -26,29 +28,10 @@ function getProjectEntries(): ProjectEntry[] {
 }
 
 export function ProjectSwitcherDropdown({ currentSlug, onClose }: ProjectSwitcherDropdownProps) {
-  const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const entries = getProjectEntries();
 
-  // Close on click-outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onClose]);
-
-  // Close on Escape
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  useDropdownDismiss(dropdownRef, true, onClose);
 
   return (
     <div
@@ -64,13 +47,11 @@ export function ProjectSwitcherDropdown({ currentSlug, onClose }: ProjectSwitche
           {entries.map((entry) => {
             const isCurrent = entry.slug === currentSlug;
             return (
-              <button
+              <Link
                 key={entry.slug}
-                onClick={() => {
-                  navigate(`/p/${entry.slug}`);
-                  onClose();
-                }}
-                className={`w-full text-left px-3 py-3 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none ${
+                to={`/p/${entry.slug}`}
+                onClick={onClose}
+                className={`block px-3 py-3 transition-colors no-underline focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none ${
                   isCurrent
                     ? 'bg-efi-gold/15 border-l-2 border-efi-gold'
                     : 'border-l-2 border-transparent hover:bg-white/5'
@@ -80,15 +61,9 @@ export function ProjectSwitcherDropdown({ currentSlug, onClose }: ProjectSwitche
                   <span className={`text-sm font-medium truncate ${isCurrent ? 'text-efi-gold-light' : 'text-efi-text-primary'}`}>
                     {entry.name}
                   </span>
-                  <span className={`shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${
-                    entry.isAdmin
-                      ? 'bg-efi-gold/20 text-efi-gold-light border-efi-gold/30'
-                      : 'bg-white/8 text-efi-text-secondary border-white/10'
-                  }`}>
-                    {entry.isAdmin ? 'Admin' : 'Voter'}
-                  </span>
+                  <RoleBadge isAdmin={entry.isAdmin} />
                 </div>
-              </button>
+              </Link>
             );
           })}
         </div>

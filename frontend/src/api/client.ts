@@ -60,15 +60,6 @@ function migrateStorage(): void {
 }
 migrateStorage();
 
-function getStoredAuth(slug: string): ProjectAuth {
-  try {
-    const projects = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Record<string, ProjectAuth>;
-    return projects[slug] || {};
-  } catch {
-    return {};
-  }
-}
-
 export function saveAuth(slug: string, data: Partial<ProjectAuth>) {
   const projects = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Record<string, unknown>;
   const existing = (projects[slug] || {}) as Record<string, unknown>;
@@ -118,7 +109,7 @@ export async function api<T>(path: string, options: RequestOptions = {}, slug?: 
   const method = options.method || 'GET';
 
   if (slug) {
-    const auth = getStoredAuth(slug);
+    const auth = getAuth(slug);
     if (auth.adminCode) headers['X-Admin-Code'] = auth.adminCode;
     if (auth.participantId) headers['X-Participant-Id'] = auth.participantId;
   }

@@ -23,7 +23,7 @@ function getProgressRatio(task: TaskWithEstimateResponse): number {
 }
 
 function compareTasks(a: TaskWithEstimateResponse, b: TaskWithEstimateResponse, field: SortField, direction: SortDirection): number {
-  let result = 0;
+  let result: number;
 
   switch (field) {
     case 'title':

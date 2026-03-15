@@ -1,4 +1,4 @@
-import type { ProjectAdminResponse, ProjectResponse, RoomResponse, ParticipantResponse, RoomDetailResponse, RoomResultsResponse } from '@/api/types';
+import type { ProjectAdminResponse, ProjectResponse, RoomResponse, ParticipantResponse, RoomDetailResponse, RoomResultsResponse, ParticipantProgressResponse } from '@/api/types';
 
 export function mockProject(overrides?: Partial<ProjectResponse>): ProjectResponse {
   return {
@@ -68,6 +68,20 @@ export function mockRoomResults(overrides?: Partial<RoomResultsResponse>): RoomR
     title: 'Results',
     status: 'REVEALED',
     tasks: [],
+    ...overrides,
+  };
+}
+
+export function mockParticipantProgress(overrides?: Partial<ParticipantProgressResponse>): ParticipantProgressResponse {
+  return {
+    roomId: 'room-1',
+    slug: 'A3X-K7B',
+    totalTasks: 5,
+    participants: [
+      { participantId: 'p1', nickname: 'Alice', votedCount: 5, totalTasks: 5, hasCommentedAll: true },
+      { participantId: 'p2', nickname: 'Bob', votedCount: 2, totalTasks: 5, hasCommentedAll: false },
+      { participantId: 'p3', nickname: 'Charlie', votedCount: 0, totalTasks: 5 },
+    ],
     ...overrides,
   };
 }

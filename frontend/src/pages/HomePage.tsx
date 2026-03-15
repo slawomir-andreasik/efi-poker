@@ -11,6 +11,7 @@ import { useToast } from '@/components/Toast';
 import { getErrorMessage } from '@/utils/error';
 import { Info, ChevronRight, Plus, Target, Clock, BarChart3 } from 'lucide-react';
 import { Spinner } from '@/components/Spinner';
+import { RoleBadge } from '@/components/RoleBadge';
 import { RandomNameButton } from '@/components/RandomNameButton';
 import { JoinByCodeModal } from '@/components/JoinByCodeModal';
 import { CreateProjectModal } from '@/components/CreateProjectModal';
@@ -167,12 +168,16 @@ export function HomePage() {
   }
 
   // Sort: projects with OPEN rooms first, then by room count desc
-  const sortedProjects = [...projectsWithRooms].sort((a, b) => {
-    const aHasOpen = a.rooms.some((r) => r.status === 'OPEN');
-    const bHasOpen = b.rooms.some((r) => r.status === 'OPEN');
-    if (aHasOpen !== bHasOpen) return aHasOpen ? -1 : 1;
-    return b.rooms.length - a.rooms.length;
-  });
+  const sortedProjects = useMemo(
+    () =>
+      [...projectsWithRooms].sort((a, b) => {
+        const aHasOpen = a.rooms.some((r) => r.status === 'OPEN');
+        const bHasOpen = b.rooms.some((r) => r.status === 'OPEN');
+        if (aHasOpen !== bHasOpen) return aHasOpen ? -1 : 1;
+        return b.rooms.length - a.rooms.length;
+      }),
+    [projectsWithRooms],
+  );
 
 
   if (!identity) {
@@ -320,13 +325,7 @@ export function HomePage() {
                     <span className="text-sm font-medium text-efi-text-primary truncate">
                       {project.auth.projectName ?? project.slug}
                     </span>
-                    <span className={`shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${
-                      project.auth.adminCode
-                        ? 'bg-efi-gold/20 text-efi-gold-light border-efi-gold/30'
-                        : 'bg-white/8 text-efi-text-secondary border-white/10'
-                    }`}>
-                      {project.auth.adminCode ? 'Admin' : 'Voter'}
-                    </span>
+                    <RoleBadge isAdmin={Boolean(project.auth.adminCode)} />
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {project.loading ? (
