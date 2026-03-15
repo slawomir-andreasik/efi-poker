@@ -54,7 +54,7 @@ public class RoomEntity {
   @Column(name = "room_type", nullable = false, length = 20)
   @Builder.Default
   @ToString.Include
-  private String roomType = "ASYNC";
+  private String roomType = RoomType.ASYNC.name();
 
   @Column(nullable = true)
   private Instant deadline;
@@ -93,7 +93,7 @@ public class RoomEntity {
       status = RoomStatus.OPEN.name();
     }
     if (roomType == null) {
-      roomType = "ASYNC";
+      roomType = RoomType.ASYNC.name();
     }
   }
 

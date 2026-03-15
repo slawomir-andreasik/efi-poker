@@ -30,10 +30,8 @@ public interface RoomMapper {
     return com.andreasik.efipoker.api.model.RoomStatus.fromValue(status);
   }
 
-  default RoomType mapRoomType(String roomType) {
-    if (roomType == null) {
-      return null;
-    }
-    return RoomType.fromValue(roomType);
+  default RoomType mapRoomType(com.andreasik.efipoker.estimation.room.RoomType roomType) {
+    if (roomType == null) return null;
+    return RoomType.fromValue(roomType.name());
   }
 }

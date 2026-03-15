@@ -70,7 +70,7 @@ public class UserService {
   public User findOrCreateOAuth2User(String sub, String email, String name) {
     // Look up by auth provider + provider ID first (stable across email changes)
     return userRepository
-        .findByAuthProviderAndAuthProviderId("AUTH0", sub)
+        .findByAuthProviderAndAuthProviderId(AuthProvider.AUTH0.name(), sub)
         .map(
             entity -> {
               log.debug("Found existing OAuth2 user by provider ID: {}", entity.getUsername());
@@ -89,7 +89,7 @@ public class UserService {
                             email != null
                                 ? email.substring(0, Math.min(5, email.length()))
                                 : "null");
-                        entity.setAuthProvider("AUTH0");
+                        entity.setAuthProvider(AuthProvider.AUTH0.name());
                         entity.setAuthProviderId(sub);
                         return userEntityMapper.toDomain(userRepository.save(entity));
                       })
@@ -101,9 +101,9 @@ public class UserService {
                             UserEntity.builder()
                                 .username(username)
                                 .email(email)
-                                .authProvider("AUTH0")
+                                .authProvider(AuthProvider.AUTH0.name())
                                 .authProviderId(sub)
-                                .role("USER")
+                                .role(UserRole.USER.name())
                                 .build();
                         return userEntityMapper.toDomain(userRepository.save(newUser));
                       });

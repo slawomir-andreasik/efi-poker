@@ -33,6 +33,10 @@ public final class EstimationStats {
     return numeric.stream().mapToDouble(Double::doubleValue).sum();
   }
 
+  public static long countQuestionVotes(List<String> storyPoints) {
+    return storyPoints.stream().filter("?"::equals).count();
+  }
+
   public static boolean isNumeric(String value) {
     if (value == null) {
       return false;

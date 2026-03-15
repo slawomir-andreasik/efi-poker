@@ -48,20 +48,12 @@ public class RoomService {
   private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
-  public Room createRoom(
-      UUID projectId,
-      String title,
-      String description,
-      String roomType,
-      Instant deadline,
-      boolean autoRevealOnDeadline,
-      String commentTemplate,
-      boolean commentRequired) {
-    projectApi.validateProjectExists(projectId);
-    ProjectEntity project = entityManager.getReference(ProjectEntity.class, projectId);
+  public Room createRoom(CreateRoomCommand command) {
+    projectApi.validateProjectExists(command.projectId());
+    ProjectEntity project = entityManager.getReference(ProjectEntity.class, command.projectId());
 
-    if ("ASYNC".equals(roomType) && deadline == null) {
-      log.warn("ASYNC room without deadline: projectId={}", projectId);
+    if (RoomType.ASYNC == command.roomType() && command.deadline() == null) {
+      log.warn("ASYNC room without deadline: projectId={}", command.projectId());
       throw new IllegalArgumentException("ASYNC rooms require a deadline");
     }
 
@@ -72,13 +64,13 @@ public class RoomService {
           RoomEntity.builder()
               .project(project)
               .slug(slug)
-              .title(title)
-              .description(description)
-              .roomType(roomType)
-              .deadline(deadline)
-              .autoRevealOnDeadline(autoRevealOnDeadline)
-              .commentTemplate(commentTemplate)
-              .commentRequired(commentRequired)
+              .title(command.title())
+              .description(command.description())
+              .roomType(command.roomType().name())
+              .deadline(command.deadline())
+              .autoRevealOnDeadline(command.autoRevealOnDeadline())
+              .commentTemplate(command.commentTemplate())
+              .commentRequired(command.commentRequired())
               .build();
       try {
         saved = roomRepository.save(entity);
@@ -94,12 +86,12 @@ public class RoomService {
         "Room created: id={}, slug={}, projectId={}, title={}, type={}",
         saved.getId(),
         saved.getSlug(),
-        projectId,
-        title,
-        roomType);
-    eventPublisher.publishEvent(new RoomCreatedEvent(saved.getId(), roomType));
+        command.projectId(),
+        command.title(),
+        command.roomType());
+    eventPublisher.publishEvent(new RoomCreatedEvent(saved.getId(), command.roomType().name()));
 
-    if ("LIVE".equals(roomType)) {
+    if (RoomType.LIVE == command.roomType()) {
       TaskEntity phantom =
           TaskEntity.builder().room(saved).title(PHANTOM_TASK_TITLE).sortOrder(0).build();
       taskRepository.save(phantom);
@@ -130,43 +122,47 @@ public class RoomService {
     return roomEntityMapper.toDomainList(roomRepository.findByProjectId(projectId));
   }
 
-  @Transactional
-  public Room updateRoom(
-      UUID id,
-      String title,
-      String description,
-      Instant deadline,
-      String topic,
-      String commentTemplate,
-      Boolean commentRequired,
-      Boolean autoRevealOnDeadline) {
+  public Room validateAdminAndGetRoom(UUID roomId, String adminCode) {
     RoomEntity entity =
-        roomRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Room", id));
+        roomRepository
+            .findById(roomId)
+            .orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
+    projectApi.validateAdminCodeForProject(entity.getProject().getId(), adminCode);
+    return roomEntityMapper.toDomain(entity);
+  }
 
-    if (title != null) {
-      entity.setTitle(title);
+  @Transactional
+  public Room updateRoom(UpdateRoomCommand command) {
+    RoomEntity entity =
+        roomRepository
+            .findById(command.id())
+            .orElseThrow(() -> new ResourceNotFoundException("Room", command.id()));
+
+    if (command.title() != null) {
+      entity.setTitle(command.title());
     }
-    if (description != null) {
-      entity.setDescription(description);
+    if (command.description() != null) {
+      entity.setDescription(command.description());
     }
-    if (deadline != null) {
-      entity.setDeadline(deadline);
+    if (command.deadline() != null) {
+      entity.setDeadline(command.deadline());
     }
-    if (topic != null) {
-      entity.setTopic(topic.isBlank() ? null : topic);
+    if (command.topic() != null) {
+      entity.setTopic(command.topic().isBlank() ? null : command.topic());
     }
-    if (commentTemplate != null) {
-      entity.setCommentTemplate(commentTemplate.isBlank() ? null : commentTemplate);
+    if (command.commentTemplate() != null) {
+      entity.setCommentTemplate(
+          command.commentTemplate().isBlank() ? null : command.commentTemplate());
     }
-    if (commentRequired != null) {
-      entity.setCommentRequired(commentRequired);
+    if (command.commentRequired() != null) {
+      entity.setCommentRequired(command.commentRequired());
     }
-    if (autoRevealOnDeadline != null) {
-      entity.setAutoRevealOnDeadline(autoRevealOnDeadline);
+    if (command.autoRevealOnDeadline() != null) {
+      entity.setAutoRevealOnDeadline(command.autoRevealOnDeadline());
     }
 
     RoomEntity saved = roomRepository.save(entity);
-    log.info("Room updated: id={}", id);
+    log.info("Room updated: id={}", command.id());
     return roomEntityMapper.toDomain(saved);
   }
 
@@ -200,7 +196,7 @@ public class RoomService {
         roomRepository
             .findById(roomId)
             .orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
-    if (!"LIVE".equals(entity.getRoomType())) {
+    if (!RoomType.LIVE.name().equals(entity.getRoomType())) {
       log.warn("newRound on non-LIVE room: roomId={}", roomId);
       throw new IllegalStateException("newRound is only available for LIVE rooms");
     }
@@ -229,7 +225,7 @@ public class RoomService {
   public List<Room> closeExpiredRooms() {
     log.trace("Checking for expired rooms");
     List<RoomEntity> expired =
-        roomRepository.findExpired(RoomStatus.OPEN.name(), "ASYNC", Instant.now());
+        roomRepository.findExpired(RoomStatus.OPEN.name(), RoomType.ASYNC.name(), Instant.now());
 
     if (expired.isEmpty()) {
       return List.of();

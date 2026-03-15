@@ -13,4 +13,12 @@ public interface RoomEntityMapper {
   List<Room> toDomainList(List<RoomEntity> entities);
 
   RoomEntity toEntity(Room domain);
+
+  default RoomType mapRoomType(String roomType) {
+    return roomType == null ? null : RoomType.valueOf(roomType);
+  }
+
+  default String mapRoomTypeToString(RoomType roomType) {
+    return roomType == null ? null : roomType.name();
+  }
 }

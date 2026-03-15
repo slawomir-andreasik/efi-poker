@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 import com.andreasik.efipoker.api.model.RoomResponse;
 import com.andreasik.efipoker.api.model.RoomSlugResponse;
-import com.andreasik.efipoker.api.model.RoomType;
 import com.andreasik.efipoker.project.Project;
 import com.andreasik.efipoker.shared.test.BaseUnitTest;
 import java.time.Instant;
@@ -41,7 +40,7 @@ class RoomMapperTest extends BaseUnitTest {
               .slug("X4P-Q2R")
               .title("Sprint 1 Planning")
               .description("Estimate sprint items")
-              .roomType("ASYNC")
+              .roomType(RoomType.ASYNC)
               .deadline(deadline)
               .status("OPEN")
               .createdAt(now)
@@ -57,7 +56,9 @@ class RoomMapperTest extends BaseUnitTest {
           () -> assertThat(response.getProjectId()).isEqualTo(projectId),
           () -> assertThat(response.getTitle()).isEqualTo("Sprint 1 Planning"),
           () -> assertThat(response.getDescription()).isEqualTo("Estimate sprint items"),
-          () -> assertThat(response.getRoomType()).isEqualTo(RoomType.ASYNC),
+          () ->
+              assertThat(response.getRoomType())
+                  .isEqualTo(com.andreasik.efipoker.api.model.RoomType.ASYNC),
           () -> assertThat(response.getDeadline()).isEqualTo(deadline),
           () ->
               assertThat(response.getStatus())
@@ -88,7 +89,7 @@ class RoomMapperTest extends BaseUnitTest {
               .id(UUID.randomUUID())
               .project(project)
               .title("Room 1")
-              .roomType("ASYNC")
+              .roomType(RoomType.ASYNC)
               .status("OPEN")
               .createdAt(Instant.now())
               .build();
@@ -97,7 +98,7 @@ class RoomMapperTest extends BaseUnitTest {
               .id(UUID.randomUUID())
               .project(project)
               .title("Room 2")
-              .roomType("LIVE")
+              .roomType(RoomType.LIVE)
               .status("REVEALED")
               .createdAt(Instant.now())
               .build();
@@ -130,7 +131,7 @@ class RoomMapperTest extends BaseUnitTest {
               .slug("A3X-K7B")
               .title("Sprint 1 Planning")
               .status("OPEN")
-              .roomType("ASYNC")
+              .roomType(RoomType.ASYNC)
               .createdAt(Instant.now())
               .build();
 
@@ -186,17 +187,19 @@ class RoomMapperTest extends BaseUnitTest {
 
     @Test
     void should_map_async_type() {
-      assertThat(mapper.mapRoomType("ASYNC")).isEqualTo(RoomType.ASYNC);
+      assertThat(mapper.mapRoomType(RoomType.ASYNC))
+          .isEqualTo(com.andreasik.efipoker.api.model.RoomType.ASYNC);
     }
 
     @Test
     void should_map_live_type() {
-      assertThat(mapper.mapRoomType("LIVE")).isEqualTo(RoomType.LIVE);
+      assertThat(mapper.mapRoomType(RoomType.LIVE))
+          .isEqualTo(com.andreasik.efipoker.api.model.RoomType.LIVE);
     }
 
     @Test
     void should_return_null_for_null_type() {
-      assertThat(mapper.mapRoomType(null)).isNull();
+      assertThat(mapper.mapRoomType((RoomType) null)).isNull();
     }
   }
 }

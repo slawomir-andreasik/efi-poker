@@ -58,7 +58,7 @@ class RoomEntityMapperTest extends BaseUnitTest {
           () -> assertThat(result.slug()).isEqualTo("A3X-K7B"),
           () -> assertThat(result.title()).isEqualTo("Sprint 1 Planning"),
           () -> assertThat(result.description()).isEqualTo("Estimate sprint items"),
-          () -> assertThat(result.roomType()).isEqualTo("ASYNC"),
+          () -> assertThat(result.roomType()).isEqualTo(RoomType.ASYNC),
           () -> assertThat(result.status()).isEqualTo("OPEN"),
           () -> assertThat(result.createdAt()).isEqualTo(now));
     }
@@ -84,7 +84,7 @@ class RoomEntityMapperTest extends BaseUnitTest {
               .slug("B2Y-M9N")
               .title("Sprint 1 Planning")
               .description("Estimate sprint items")
-              .roomType("LIVE")
+              .roomType(RoomType.LIVE)
               .status("OPEN")
               .createdAt(now)
               .build();

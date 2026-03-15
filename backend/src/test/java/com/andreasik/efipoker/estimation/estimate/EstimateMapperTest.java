@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import com.andreasik.efipoker.api.model.EstimateResponse;
+import com.andreasik.efipoker.api.model.StoryPoints;
 import com.andreasik.efipoker.participant.Participant;
 import com.andreasik.efipoker.shared.test.BaseUnitTest;
 import java.time.Instant;
@@ -46,7 +47,7 @@ class EstimateMapperTest extends BaseUnitTest {
       assertAll(
           () -> assertThat(response.getId()).isEqualTo(id),
           () -> assertThat(response.getParticipantId()).isEqualTo(participantId),
-          () -> assertThat(response.getStoryPoints()).isEqualTo("8"),
+          () -> assertThat(response.getStoryPoints()).isEqualTo(StoryPoints.fromValue("8")),
           () -> assertThat(response.getComment()).isEqualTo("Complex task"),
           () -> assertThat(response.getCreatedAt()).isEqualTo(now),
           () -> assertThat(response.getParticipantNickname()).isEqualTo("Alice"));

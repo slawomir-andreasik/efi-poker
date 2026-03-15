@@ -70,8 +70,8 @@ public class RoundHistoryService {
     return new RoundHistoryEntry()
         .roundNumber(entity.getRoundNumber())
         .topic(entity.getTopic())
-        .averagePts(entity.getAveragePts() != null ? entity.getAveragePts().doubleValue() : null)
-        .medianPts(entity.getMedianPts() != null ? entity.getMedianPts().doubleValue() : null)
+        .averagePoints(entity.getAveragePts() != null ? entity.getAveragePts().doubleValue() : null)
+        .medianPoints(entity.getMedianPts() != null ? entity.getMedianPts().doubleValue() : null)
         .voteCount(entity.getVoteCount())
         .votes(votes)
         .completedAt(entity.getCompletedAt());
@@ -101,7 +101,12 @@ public class RoundHistoryService {
                   .getTypeFactory()
                   .constructCollectionType(List.class, VoteSnapshot.class));
       return snapshots.stream()
-          .map(s -> new RoundHistoryVote().nickname(s.nickname()).storyPoints(s.storyPoints()))
+          .map(
+              s ->
+                  new RoundHistoryVote()
+                      .nickname(s.nickname())
+                      .storyPoints(
+                          com.andreasik.efipoker.api.model.StoryPoints.fromValue(s.storyPoints())))
           .toList();
     } catch (JsonProcessingException e) {
       log.warn("Failed to deserialize votes: {}", e.getMessage());

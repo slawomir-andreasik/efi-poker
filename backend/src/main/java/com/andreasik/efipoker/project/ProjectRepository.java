@@ -1,6 +1,5 @@
 package com.andreasik.efipoker.project;
 
-import com.andreasik.efipoker.auth.UserEntity;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,10 +32,10 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, UUID> {
       """
       SELECT p FROM ProjectEntity p
       LEFT JOIN FETCH p.createdBy
-      WHERE p.createdBy = :owner
+      WHERE p.createdBy.id = :ownerId
       ORDER BY p.createdAt DESC
       """)
-  List<ProjectEntity> findByOwner(@Param("owner") UserEntity owner);
+  List<ProjectEntity> findByOwnerId(@Param("ownerId") UUID ownerId);
 
   @Query(
       """

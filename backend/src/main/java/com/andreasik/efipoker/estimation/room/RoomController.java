@@ -7,6 +7,8 @@ import com.andreasik.efipoker.api.model.LiveParticipantStatus;
 import com.andreasik.efipoker.api.model.LiveRoomResults;
 import com.andreasik.efipoker.api.model.LiveRoomStateResponse;
 import com.andreasik.efipoker.api.model.NewRoundRequest;
+import com.andreasik.efipoker.api.model.ParticipantProgressEntry;
+import com.andreasik.efipoker.api.model.ParticipantProgressResponse;
 import com.andreasik.efipoker.api.model.RoomAdminResponse;
 import com.andreasik.efipoker.api.model.RoomDetailResponse;
 import com.andreasik.efipoker.api.model.RoomProgressResponse;
@@ -64,21 +66,22 @@ public class RoomController implements RoomsApi {
     log.debug("POST /projects/{}/rooms type={}", slug, createRoomRequest.getRoomType());
     Project project = projectService.validateAdminCode(slug, xAdminCode);
 
-    String roomType = createRoomRequest.getRoomType().getValue();
+    RoomType roomType = RoomType.valueOf(createRoomRequest.getRoomType().getValue());
     boolean autoReveal =
         createRoomRequest.getAutoRevealOnDeadline() == null
             || createRoomRequest.getAutoRevealOnDeadline();
     boolean commentRequired = Boolean.TRUE.equals(createRoomRequest.getCommentRequired());
     Room room =
         roomService.createRoom(
-            project.id(),
-            createRoomRequest.getTitle(),
-            createRoomRequest.getDescription(),
-            roomType,
-            createRoomRequest.getDeadline(),
-            autoReveal,
-            createRoomRequest.getCommentTemplate(),
-            commentRequired);
+            new CreateRoomCommand(
+                project.id(),
+                createRoomRequest.getTitle(),
+                createRoomRequest.getDescription(),
+                roomType,
+                createRoomRequest.getDeadline(),
+                autoReveal,
+                createRoomRequest.getCommentTemplate(),
+                commentRequired));
     return ResponseEntity.status(HttpStatus.CREATED).body(roomMapper.toResponse(room));
   }
 
@@ -114,8 +117,7 @@ public class RoomController implements RoomsApi {
   @Override
   public ResponseEntity<RoomAdminResponse> getRoomAdmin(UUID roomId, String xAdminCode) {
     log.debug("GET /rooms/{}/admin", roomId);
-    Room room = roomService.getRoom(roomId);
-    projectService.validateAdminCodeForProject(room.project().id(), xAdminCode);
+    Room room = roomService.validateAdminAndGetRoom(roomId, xAdminCode);
     List<Task> tasks = taskService.listByRoom(roomId);
     List<Participant> participants = participantService.listParticipants(room.project().id());
 
@@ -126,7 +128,7 @@ public class RoomController implements RoomsApi {
     for (Task task : tasks) {
       List<Estimate> estimates = estimatesByTask.getOrDefault(task.id(), List.of());
       List<EstimateResponse> estimateResponses =
-          estimates.stream().map(estimateMapper::toResponse).collect(Collectors.toList());
+          estimates.stream().map(estimateMapper::toResponse).toList();
 
       taskResponses.add(
           new TaskWithAllEstimatesResponse()
@@ -164,27 +166,26 @@ public class RoomController implements RoomsApi {
   public ResponseEntity<RoomResponse> updateRoom(
       UUID roomId, UpdateRoomRequest updateRoomRequest, String xAdminCode) {
     log.debug("PATCH /rooms/{}", roomId);
-    Room room = roomService.getRoom(roomId);
-    projectService.validateAdminCodeForProject(room.project().id(), xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
 
     Room updated =
         roomService.updateRoom(
-            roomId,
-            updateRoomRequest.getTitle(),
-            updateRoomRequest.getDescription(),
-            updateRoomRequest.getDeadline(),
-            updateRoomRequest.getTopic(),
-            updateRoomRequest.getCommentTemplate(),
-            updateRoomRequest.getCommentRequired(),
-            updateRoomRequest.getAutoRevealOnDeadline());
+            new UpdateRoomCommand(
+                roomId,
+                updateRoomRequest.getTitle(),
+                updateRoomRequest.getDescription(),
+                updateRoomRequest.getDeadline(),
+                updateRoomRequest.getTopic(),
+                updateRoomRequest.getCommentTemplate(),
+                updateRoomRequest.getCommentRequired(),
+                updateRoomRequest.getAutoRevealOnDeadline()));
     return ResponseEntity.ok(roomMapper.toResponse(updated));
   }
 
   @Override
   public ResponseEntity<Void> deleteRoom(UUID roomId, String xAdminCode) {
     log.debug("DELETE /rooms/{}", roomId);
-    Room room = roomService.getRoom(roomId);
-    projectService.validateAdminCodeForProject(room.project().id(), xAdminCode);
+    Room room = roomService.validateAdminAndGetRoom(roomId, xAdminCode);
     roomService.deleteRoom(room);
     return ResponseEntity.noContent().build();
   }
@@ -192,8 +193,7 @@ public class RoomController implements RoomsApi {
   @Override
   public ResponseEntity<RoomDetailResponse> revealEstimates(UUID roomId, String xAdminCode) {
     log.debug("POST /rooms/{}/reveal", roomId);
-    Room room = roomService.getRoom(roomId);
-    projectService.validateAdminCodeForProject(room.project().id(), xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
     Room revealed = roomService.revealRoom(roomId);
     return ResponseEntity.ok(buildDetailResponse(revealed, null));
   }
@@ -201,8 +201,7 @@ public class RoomController implements RoomsApi {
   @Override
   public ResponseEntity<RoomDetailResponse> reopenRoom(UUID roomId, String xAdminCode) {
     log.debug("POST /rooms/{}/reopen", roomId);
-    Room room = roomService.getRoom(roomId);
-    projectService.validateAdminCodeForProject(room.project().id(), xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
     Room reopened = roomService.reopenRoom(roomId);
     return ResponseEntity.ok(buildDetailResponse(reopened, null));
   }
@@ -220,7 +219,8 @@ public class RoomController implements RoomsApi {
     List<TaskProgressResponse> taskProgress = new ArrayList<>();
     for (Task task : tasks) {
       List<Estimate> estimates = estimatesByTask.getOrDefault(task.id(), List.of());
-      long questionVotesCount = estimates.stream().filter(e -> "?".equals(e.storyPoints())).count();
+      List<String> points = estimates.stream().map(Estimate::storyPoints).toList();
+      long questionVotesCount = EstimationStats.countQuestionVotes(points);
 
       taskProgress.add(
           new TaskProgressResponse()
@@ -243,6 +243,56 @@ public class RoomController implements RoomsApi {
   }
 
   @Override
+  public ResponseEntity<ParticipantProgressResponse> getParticipantProgress(UUID roomId) {
+    log.debug("GET /rooms/{}/participant-progress", roomId);
+    Room room = roomService.getRoom(roomId);
+    List<Task> tasks =
+        taskService.listByRoom(roomId).stream()
+            .filter(t -> !RoomService.PHANTOM_TASK_TITLE.equals(t.title()))
+            .toList();
+    List<Participant> participants = participantService.listParticipants(room.project().id());
+
+    List<UUID> taskIds = tasks.stream().map(Task::id).toList();
+    Map<UUID, List<Estimate>> estimatesByTask = estimateService.getEstimatesByTaskIds(taskIds);
+
+    // Flatten all estimates and group by participant
+    Map<UUID, List<Estimate>> estimatesByParticipant =
+        estimatesByTask.values().stream()
+            .flatMap(List::stream)
+            .collect(Collectors.groupingBy(e -> e.participant().id()));
+
+    int totalTasks = tasks.size();
+
+    List<ParticipantProgressEntry> entries = new ArrayList<>();
+    for (Participant participant : participants) {
+      List<Estimate> participantEstimates =
+          estimatesByParticipant.getOrDefault(participant.id(), List.of());
+      int votedCount = participantEstimates.size();
+      boolean hasCommentedAll =
+          votedCount > 0
+              && participantEstimates.stream()
+                  .allMatch(e -> e.comment() != null && !e.comment().isBlank());
+
+      entries.add(
+          new ParticipantProgressEntry()
+              .participantId(participant.id())
+              .nickname(participant.nickname())
+              .votedCount(votedCount)
+              .totalTasks(totalTasks)
+              .hasCommentedAll(hasCommentedAll));
+    }
+
+    ParticipantProgressResponse response =
+        new ParticipantProgressResponse()
+            .roomId(roomId)
+            .slug(room.slug())
+            .totalTasks(totalTasks)
+            .participants(entries);
+
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
   public ResponseEntity<RoomResultsResponse> getRoomResults(UUID roomId) {
     log.debug("GET /rooms/{}/results", roomId);
     Room room = roomService.getRoom(roomId);
@@ -250,19 +300,13 @@ public class RoomController implements RoomsApi {
       throw new UnauthorizedException("Results are not available until estimates are revealed");
     }
 
-    List<Task> tasks =
-        taskService.listByRoom(roomId).stream()
-            .filter(t -> !RoomService.PHANTOM_TASK_TITLE.equals(t.title()))
-            .toList();
-
-    List<UUID> taskIds = tasks.stream().map(Task::id).toList();
-    Map<UUID, List<Estimate>> estimatesByTask = estimateService.getEstimatesByTaskIds(taskIds);
+    TasksWithEstimates data = loadTasksAndEstimates(roomId);
 
     List<TaskResultResponse> taskResults = new ArrayList<>();
-    for (Task task : tasks) {
-      List<Estimate> estimates = estimatesByTask.getOrDefault(task.id(), List.of());
+    for (Task task : data.tasks()) {
+      List<Estimate> estimates = data.estimatesByTask().getOrDefault(task.id(), List.of());
       List<EstimateResponse> estimateResponses =
-          estimates.stream().map(estimateMapper::toResponse).collect(Collectors.toList());
+          estimates.stream().map(estimateMapper::toResponse).toList();
 
       List<String> points = estimates.stream().map(Estimate::storyPoints).toList();
       taskResults.add(
@@ -272,7 +316,10 @@ public class RoomController implements RoomsApi {
               .estimates(estimateResponses)
               .averagePoints(EstimationStats.computeAverage(points))
               .medianPoints(EstimationStats.computeMedian(points))
-              .finalEstimate(task.finalEstimate()));
+              .finalEstimate(
+                  task.finalEstimate() != null
+                      ? com.andreasik.efipoker.api.model.StoryPoints.fromValue(task.finalEstimate())
+                      : null));
     }
 
     RoomResultsResponse response =
@@ -289,23 +336,17 @@ public class RoomController implements RoomsApi {
   @Override
   public ResponseEntity<String> exportResults(UUID roomId, String xAdminCode) {
     log.debug("GET /rooms/{}/export", roomId);
-    Room room = roomService.getRoom(roomId);
-    projectService.validateAdminCodeForProject(room.project().id(), xAdminCode);
+    Room room = roomService.validateAdminAndGetRoom(roomId, xAdminCode);
 
     if (!RoomService.isRevealedStatus(room.status())) {
       throw new UnauthorizedException("Results are not available until estimates are revealed");
     }
-    List<Task> tasks =
-        taskService.listByRoom(roomId).stream()
-            .filter(t -> !RoomService.PHANTOM_TASK_TITLE.equals(t.title()))
-            .toList();
+
+    TasksWithEstimates data = loadTasksAndEstimates(roomId);
     List<Participant> participants = participantService.listParticipants(room.project().id());
 
-    List<UUID> taskIds = tasks.stream().map(Task::id).toList();
-    Map<UUID, List<Estimate>> estimatesByTask = estimateService.getEstimatesByTaskIds(taskIds);
-
     boolean hasComments =
-        estimatesByTask.values().stream()
+        data.estimatesByTask().values().stream()
             .flatMap(List::stream)
             .anyMatch(e -> e.comment() != null && !e.comment().isBlank());
 
@@ -320,9 +361,9 @@ public class RoomController implements RoomsApi {
     csv.append(",Final SP");
     csv.append("\n");
 
-    for (Task task : tasks) {
+    for (Task task : data.tasks()) {
       csv.append(escapeCsv(task.title()));
-      List<Estimate> estimates = estimatesByTask.getOrDefault(task.id(), List.of());
+      List<Estimate> estimates = data.estimatesByTask().getOrDefault(task.id(), List.of());
       Map<UUID, Estimate> estimateByParticipant =
           estimates.stream().collect(Collectors.toMap(e -> e.participant().id(), e -> e));
       for (Participant p : participants) {
@@ -346,7 +387,7 @@ public class RoomController implements RoomsApi {
   public ResponseEntity<LiveRoomStateResponse> getLiveRoomState(UUID roomId, UUID xParticipantId) {
     log.debug("GET /rooms/{}/live", roomId);
     Room room = roomService.getRoom(roomId);
-    if (!"LIVE".equals(room.roomType())) {
+    if (RoomType.LIVE != room.roomType()) {
       throw new IllegalStateException("getLiveRoomState is only available for LIVE rooms");
     }
     return ResponseEntity.ok(buildLiveRoomStateResponse(room, xParticipantId));
@@ -356,8 +397,7 @@ public class RoomController implements RoomsApi {
   public ResponseEntity<LiveRoomStateResponse> newRound(
       UUID roomId, String xAdminCode, NewRoundRequest newRoundRequest) {
     log.debug("POST /rooms/{}/new-round", roomId);
-    Room room = roomService.getRoom(roomId);
-    projectService.validateAdminCodeForProject(room.project().id(), xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
     String topic = newRoundRequest != null ? newRoundRequest.getTopic() : null;
     Room updated = roomService.newRound(roomId, topic);
     return ResponseEntity.ok(buildLiveRoomStateResponse(updated, null));
@@ -367,10 +407,22 @@ public class RoomController implements RoomsApi {
   public ResponseEntity<List<RoundHistoryEntry>> getRoundHistory(UUID roomId) {
     log.debug("GET /rooms/{}/history", roomId);
     Room room = roomService.getRoom(roomId);
-    if (!"LIVE".equals(room.roomType())) {
+    if (RoomType.LIVE != room.roomType()) {
       throw new IllegalStateException("getRoundHistory is only available for LIVE rooms");
     }
     return ResponseEntity.ok(roundHistoryService.getHistory(roomId));
+  }
+
+  private record TasksWithEstimates(List<Task> tasks, Map<UUID, List<Estimate>> estimatesByTask) {}
+
+  private TasksWithEstimates loadTasksAndEstimates(UUID roomId) {
+    List<Task> tasks =
+        taskService.listByRoom(roomId).stream()
+            .filter(t -> !RoomService.PHANTOM_TASK_TITLE.equals(t.title()))
+            .toList();
+    List<UUID> taskIds = tasks.stream().map(Task::id).toList();
+    Map<UUID, List<Estimate>> estimatesByTask = estimateService.getEstimatesByTaskIds(taskIds);
+    return new TasksWithEstimates(tasks, estimatesByTask);
   }
 
   private LiveRoomStateResponse buildLiveRoomStateResponse(Room room, UUID participantId) {
@@ -404,7 +456,7 @@ public class RoomController implements RoomsApi {
     LiveRoomResults results = null;
     if (roomRevealed) {
       List<EstimateResponse> estimateResponses =
-          estimates.stream().map(estimateMapper::toResponse).collect(Collectors.toList());
+          estimates.stream().map(estimateMapper::toResponse).toList();
       List<String> points = estimates.stream().map(Estimate::storyPoints).toList();
       results =
           new LiveRoomResults()
@@ -413,7 +465,8 @@ public class RoomController implements RoomsApi {
               .medianPoints(EstimationStats.computeMedian(points));
     }
 
-    long questionVotesCount = estimates.stream().filter(e -> "?".equals(e.storyPoints())).count();
+    List<String> points = estimates.stream().map(Estimate::storyPoints).toList();
+    long questionVotesCount = EstimationStats.countQuestionVotes(points);
 
     return new LiveRoomStateResponse()
         .roomId(room.id())
@@ -466,11 +519,11 @@ public class RoomController implements RoomsApi {
 
       List<EstimateResponse> allEstimates = null;
       if (roomRevealed) {
-        allEstimates =
-            estimates.stream().map(estimateMapper::toResponse).collect(Collectors.toList());
+        allEstimates = estimates.stream().map(estimateMapper::toResponse).toList();
       }
 
-      long questionVotesCount = estimates.stream().filter(e -> "?".equals(e.storyPoints())).count();
+      List<String> points = estimates.stream().map(Estimate::storyPoints).toList();
+      long questionVotesCount = EstimationStats.countQuestionVotes(points);
 
       TaskWithEstimateResponse taskResponse =
           new TaskWithEstimateResponse()
@@ -486,10 +539,10 @@ public class RoomController implements RoomsApi {
               .revealed(task.revealed())
               .active(task.active());
 
-      List<String> points = estimates.stream().map(Estimate::storyPoints).toList();
       taskResponse
           .averagePoints(EstimationStats.computeAverage(points))
-          .medianPoints(EstimationStats.computeMedian(points));
+          .medianPoints(EstimationStats.computeMedian(points))
+          .questionVotesCount((int) questionVotesCount);
 
       taskResponses.add(taskResponse);
     }

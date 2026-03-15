@@ -17,6 +17,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -81,9 +82,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
         request.getMethod(),
         timestamps.size());
 
-    // Cleanup stale IPs periodically (piggyback on request processing)
-    cleanupStaleEntries(bucket);
-
     filterChain.doFilter(request, response);
   }
 
@@ -112,6 +110,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 + "\"title\":\"Too Many Requests\","
                 + "\"status\":429,"
                 + "\"detail\":\"Rate limit exceeded. Try again later.\"}");
+  }
+
+  @Scheduled(fixedRate = 60_000)
+  void cleanupAllBuckets() {
+    cleanupStaleEntries(writeRequestCounts);
+    cleanupStaleEntries(readRequestCounts);
   }
 
   private void cleanupStaleEntries(ConcurrentHashMap<String, Deque<Instant>> bucket) {

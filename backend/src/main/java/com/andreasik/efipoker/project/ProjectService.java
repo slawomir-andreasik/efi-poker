@@ -58,8 +58,7 @@ public class ProjectService implements ProjectApi {
 
   public List<Project> listProjectsByOwner(UUID ownerId) {
     log.debug("listProjectsByOwner: ownerId={}", ownerId);
-    UserEntity owner = UserEntity.builder().id(ownerId).build();
-    return projectEntityMapper.toDomainList(projectRepository.findByOwner(owner));
+    return projectEntityMapper.toDomainList(projectRepository.findByOwnerId(ownerId));
   }
 
   public Project getProjectBySlug(String slug) {

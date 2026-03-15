@@ -1,7 +1,7 @@
 package com.andreasik.efipoker.auth;
 
-import com.andreasik.efipoker.api.model.AdminUserResponse;
 import com.andreasik.efipoker.api.model.UserResponse;
+import com.andreasik.efipoker.api.model.UserRole;
 import com.andreasik.efipoker.shared.mapper.EfiMapperConfig;
 import java.util.List;
 import org.mapstruct.Mapper;
@@ -13,21 +13,14 @@ public interface UserMapper {
   @Mapping(target = "hasPassword", expression = "java(user.passwordHash() != null)")
   UserResponse toResponse(User user);
 
-  AdminUserResponse toAdminResponse(User user);
+  com.andreasik.efipoker.api.model.AdminUserResponse toAdminResponse(User user);
 
-  List<AdminUserResponse> toAdminResponseList(List<User> users);
+  List<com.andreasik.efipoker.api.model.AdminUserResponse> toAdminResponseList(List<User> users);
 
-  default UserResponse.RoleEnum mapRole(String role) {
+  default UserRole mapRole(String role) {
     if (role == null) {
       return null;
     }
-    return UserResponse.RoleEnum.fromValue(role);
-  }
-
-  default AdminUserResponse.RoleEnum mapAdminRole(String role) {
-    if (role == null) {
-      return null;
-    }
-    return AdminUserResponse.RoleEnum.fromValue(role);
+    return UserRole.fromValue(role);
   }
 }

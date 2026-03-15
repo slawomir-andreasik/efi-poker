@@ -5,8 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 import com.andreasik.efipoker.estimation.estimate.Estimate;
 import com.andreasik.efipoker.estimation.estimate.EstimateService;
+import com.andreasik.efipoker.estimation.room.CreateRoomCommand;
 import com.andreasik.efipoker.estimation.room.Room;
 import com.andreasik.efipoker.estimation.room.RoomService;
+import com.andreasik.efipoker.estimation.room.RoomType;
 import com.andreasik.efipoker.estimation.task.Task;
 import com.andreasik.efipoker.estimation.task.TaskService;
 import com.andreasik.efipoker.participant.Participant;
@@ -46,7 +48,15 @@ class EstimationModuleTest extends BaseModuleTest {
     Instant deadline = Instant.now().plus(7, ChronoUnit.DAYS);
     Room room =
         roomService.createRoom(
-            project.id(), "Sprint 1", "Sprint planning", "ASYNC", deadline, true, null, false);
+            new CreateRoomCommand(
+                project.id(),
+                "Sprint 1",
+                "Sprint planning",
+                RoomType.ASYNC,
+                deadline,
+                true,
+                null,
+                false));
     Task task = taskService.createTask(room.id(), "Login Page", "Implement login", 0);
 
     // Act
@@ -75,7 +85,9 @@ class EstimationModuleTest extends BaseModuleTest {
     Participant alice = participantService.joinProject(project.id(), "Alice", null, null);
     Instant deadline = Instant.now().plus(7, ChronoUnit.DAYS);
     Room room =
-        roomService.createRoom(project.id(), "Room", null, "ASYNC", deadline, true, null, false);
+        roomService.createRoom(
+            new CreateRoomCommand(
+                project.id(), "Room", null, RoomType.ASYNC, deadline, true, null, false));
     Task task = taskService.createTask(room.id(), "Task 1", null, 0);
     estimateService.submitEstimate(task.id(), alice.id(), "3", null);
 

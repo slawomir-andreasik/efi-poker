@@ -7,14 +7,12 @@ import com.andreasik.efipoker.api.model.UpdateParticipantRequest;
 import com.andreasik.efipoker.project.Project;
 import com.andreasik.efipoker.project.ProjectService;
 import com.andreasik.efipoker.shared.exception.UnauthorizedException;
+import com.andreasik.efipoker.shared.security.SecurityUtils;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -35,7 +33,7 @@ public class ParticipantController implements ParticipantsApi {
         participantService.joinProject(
             project.id(),
             joinProjectRequest.getNickname(),
-            getCurrentUserId(),
+            SecurityUtils.getCurrentUserId(),
             joinProjectRequest.getRoomId());
     return ResponseEntity.ok(participantMapper.toResponse(participant));
   }
@@ -77,7 +75,7 @@ public class ParticipantController implements ParticipantsApi {
   @Override
   public ResponseEntity<ParticipantResponse> getMyParticipant(String slug) {
     log.debug("GET /projects/{}/participants/me", slug);
-    UUID userId = getCurrentUserId();
+    UUID userId = SecurityUtils.getCurrentUserId();
     if (userId == null) {
       throw new UnauthorizedException("Authentication required");
     }
@@ -94,13 +92,5 @@ public class ParticipantController implements ParticipantsApi {
     Project project = projectService.validateAdminCode(slug, xAdminCode);
     participantService.deleteParticipant(project.id(), participantId);
     return ResponseEntity.noContent().build();
-  }
-
-  private UUID getCurrentUserId() {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth instanceof JwtAuthenticationToken) {
-      return UUID.fromString(auth.getName());
-    }
-    return null;
   }
 }

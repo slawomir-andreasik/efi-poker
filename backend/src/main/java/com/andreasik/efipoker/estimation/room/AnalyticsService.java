@@ -107,7 +107,10 @@ public class AnalyticsService {
       entry.setTitle(task.title());
       entry.setAveragePoints(average);
       entry.setMedianPoints(median);
-      entry.setFinalEstimate(task.finalEstimate());
+      entry.setFinalEstimate(
+          task.finalEstimate() != null
+              ? com.andreasik.efipoker.api.model.StoryPoints.fromValue(task.finalEstimate())
+              : null);
       entry.setSpread(spread);
       entry.setVoteDistribution(voteDistribution);
       taskAnalytics.add(entry);

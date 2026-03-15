@@ -62,7 +62,7 @@ class RoomServiceTest extends BaseUnitTest {
               .sortOrder(0)
               .build();
       RoomEntity saved = RoomEntity.builder().id(roomId).roomType("LIVE").roundNumber(2).build();
-      Room domain = Room.builder().id(roomId).roomType("LIVE").roundNumber(2).build();
+      Room domain = Room.builder().id(roomId).roomType(RoomType.LIVE).roundNumber(2).build();
 
       given(roomRepository.findById(roomId)).willReturn(Optional.of(entity));
       given(taskRepository.findByRoomIdAndTitle(roomId, RoomService.PHANTOM_TASK_TITLE))
@@ -131,7 +131,12 @@ class RoomServiceTest extends BaseUnitTest {
               .topic("Sprint Goal")
               .build();
       Room domain =
-          Room.builder().id(roomId).roomType("LIVE").roundNumber(2).topic("Sprint Goal").build();
+          Room.builder()
+              .id(roomId)
+              .roomType(RoomType.LIVE)
+              .roundNumber(2)
+              .topic("Sprint Goal")
+              .build();
 
       given(roomRepository.findById(roomId)).willReturn(Optional.of(entity));
       given(taskRepository.findByRoomIdAndTitle(roomId, RoomService.PHANTOM_TASK_TITLE))
@@ -169,7 +174,8 @@ class RoomServiceTest extends BaseUnitTest {
               .build();
       RoomEntity saved =
           RoomEntity.builder().id(roomId).roomType("LIVE").roundNumber(4).topic(null).build();
-      Room domain = Room.builder().id(roomId).roomType("LIVE").roundNumber(4).topic(null).build();
+      Room domain =
+          Room.builder().id(roomId).roomType(RoomType.LIVE).roundNumber(4).topic(null).build();
 
       given(roomRepository.findById(roomId)).willReturn(Optional.of(entity));
       given(taskRepository.findByRoomIdAndTitle(roomId, RoomService.PHANTOM_TASK_TITLE))
@@ -204,7 +210,8 @@ class RoomServiceTest extends BaseUnitTest {
 
       // Act
       Room result =
-          roomService.updateRoom(roomId, null, null, null, "Sprint Goal", null, null, null);
+          roomService.updateRoom(
+              new UpdateRoomCommand(roomId, null, null, null, "Sprint Goal", null, null, null));
 
       // Assert
       assertThat(entity.getTopic()).isEqualTo("Sprint Goal");
@@ -231,7 +238,9 @@ class RoomServiceTest extends BaseUnitTest {
       given(roomEntityMapper.toDomain(saved)).willReturn(domain);
 
       // Act
-      Room result = roomService.updateRoom(roomId, null, null, null, "  ", null, null, null);
+      Room result =
+          roomService.updateRoom(
+              new UpdateRoomCommand(roomId, null, null, null, "  ", null, null, null));
 
       // Assert
       assertThat(entity.getTopic()).isNull();
@@ -258,7 +267,8 @@ class RoomServiceTest extends BaseUnitTest {
       given(roomEntityMapper.toDomain(saved)).willReturn(domain);
 
       // Act
-      roomService.updateRoom(roomId, null, null, null, null, null, null, null);
+      roomService.updateRoom(
+          new UpdateRoomCommand(roomId, null, null, null, null, null, null, null));
 
       // Assert
       assertThat(entity.getTopic()).isEqualTo("Existing topic");
@@ -273,7 +283,7 @@ class RoomServiceTest extends BaseUnitTest {
     void should_delete_via_reference() {
       // Arrange
       UUID roomId = UUID.randomUUID();
-      Room room = Room.builder().id(roomId).slug("A3X-K7B").roomType("ASYNC").build();
+      Room room = Room.builder().id(roomId).slug("A3X-K7B").roomType(RoomType.ASYNC).build();
       RoomEntity ref = new RoomEntity();
       given(entityManager.getReference(RoomEntity.class, roomId)).willReturn(ref);
 
@@ -332,7 +342,8 @@ class RoomServiceTest extends BaseUnitTest {
               .title("Room")
               .roomType("LIVE")
               .build();
-      Room domain = Room.builder().id(savedRoom.getId()).slug("A3X-K7B").roomType("LIVE").build();
+      Room domain =
+          Room.builder().id(savedRoom.getId()).slug("A3X-K7B").roomType(RoomType.LIVE).build();
 
       given(entityManager.getReference(ProjectEntity.class, projectId)).willReturn(project);
       given(roomRepository.save(captor.capture())).willReturn(savedRoom);
@@ -340,7 +351,8 @@ class RoomServiceTest extends BaseUnitTest {
       given(roomEntityMapper.toDomain(savedRoom)).willReturn(domain);
 
       // Act
-      roomService.createRoom(projectId, "Room", null, "LIVE", null, true, null, false);
+      roomService.createRoom(
+          new CreateRoomCommand(projectId, "Room", null, RoomType.LIVE, null, true, null, false));
 
       // Assert
       String slug = captor.getValue().getSlug();
@@ -359,7 +371,7 @@ class RoomServiceTest extends BaseUnitTest {
               .title("Live Room")
               .roomType("LIVE")
               .build();
-      Room domain = Room.builder().id(savedRoom.getId()).roomType("LIVE").build();
+      Room domain = Room.builder().id(savedRoom.getId()).roomType(RoomType.LIVE).build();
 
       given(entityManager.getReference(ProjectEntity.class, projectId)).willReturn(project);
       given(roomRepository.save(any(RoomEntity.class))).willReturn(savedRoom);
@@ -367,7 +379,9 @@ class RoomServiceTest extends BaseUnitTest {
       given(roomEntityMapper.toDomain(savedRoom)).willReturn(domain);
 
       // Act
-      roomService.createRoom(projectId, "Live Room", null, "LIVE", null, true, null, false);
+      roomService.createRoom(
+          new CreateRoomCommand(
+              projectId, "Live Room", null, RoomType.LIVE, null, true, null, false));
 
       // Assert
       then(taskRepository).should().save(any(TaskEntity.class));
@@ -385,7 +399,7 @@ class RoomServiceTest extends BaseUnitTest {
               .title("Async Room")
               .roomType("ASYNC")
               .build();
-      Room domain = Room.builder().id(savedRoom.getId()).roomType("ASYNC").build();
+      Room domain = Room.builder().id(savedRoom.getId()).roomType(RoomType.ASYNC).build();
 
       given(entityManager.getReference(ProjectEntity.class, projectId)).willReturn(project);
       given(roomRepository.save(any(RoomEntity.class))).willReturn(savedRoom);
@@ -393,7 +407,15 @@ class RoomServiceTest extends BaseUnitTest {
 
       // Act
       roomService.createRoom(
-          projectId, "Async Room", null, "ASYNC", java.time.Instant.now(), true, null, false);
+          new CreateRoomCommand(
+              projectId,
+              "Async Room",
+              null,
+              RoomType.ASYNC,
+              java.time.Instant.now(),
+              true,
+              null,
+              false));
 
       // Assert
       then(taskRepository).should(never()).save(any(TaskEntity.class));

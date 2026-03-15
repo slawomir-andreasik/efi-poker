@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.andreasik.efipoker.estimation.estimate.EstimateEntity;
 import com.andreasik.efipoker.estimation.task.TaskEntity;
 import com.andreasik.efipoker.participant.ParticipantEntity;
 import com.andreasik.efipoker.project.ProjectEntity;
@@ -339,6 +340,68 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.roomId").value(room.getId().toString()))
           .andExpect(jsonPath("$.tasks").isArray());
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /api/v1/rooms/{roomId}/participant-progress")
+  class GetParticipantProgress {
+
+    @Test
+    void should_return_progress_with_participants_200() throws Exception {
+      RoomEntity room = roomRepository.save(Fixtures.roomEntity(project));
+      TaskEntity task1 = taskRepository.save(Fixtures.taskEntity(room, "Task 1", 0));
+      TaskEntity task2 = taskRepository.save(Fixtures.taskEntity(room, "Task 2", 1));
+      ParticipantEntity alice =
+          participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+      ParticipantEntity bob =
+          participantRepository.save(Fixtures.participantEntity(project, "Bob"));
+
+      // Alice voted on both tasks (with comments)
+      estimateRepository.save(
+          EstimateEntity.builder()
+              .task(task1)
+              .participant(alice)
+              .storyPoints("5")
+              .comment("Looks good")
+              .build());
+      estimateRepository.save(
+          EstimateEntity.builder()
+              .task(task2)
+              .participant(alice)
+              .storyPoints("3")
+              .comment("Simple")
+              .build());
+
+      // Bob voted on task1 only (no comment)
+      estimateRepository.save(Fixtures.estimateEntity(task1, bob, "8"));
+
+      mockMvc
+          .perform(get("/api/v1/rooms/{roomId}/participant-progress", room.getId()))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.roomId").value(room.getId().toString()))
+          .andExpect(jsonPath("$.totalTasks").value(2))
+          .andExpect(jsonPath("$.participants").isArray())
+          .andExpect(jsonPath("$.participants.length()").value(2));
+    }
+
+    @Test
+    void should_return_empty_participants_when_no_participants() throws Exception {
+      RoomEntity room = roomRepository.save(Fixtures.roomEntity(project));
+      taskRepository.save(Fixtures.taskEntity(room));
+
+      mockMvc
+          .perform(get("/api/v1/rooms/{roomId}/participant-progress", room.getId()))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.totalTasks").value(1))
+          .andExpect(jsonPath("$.participants").isEmpty());
+    }
+
+    @Test
+    void should_return_404_for_unknown_room() throws Exception {
+      mockMvc
+          .perform(get("/api/v1/rooms/{roomId}/participant-progress", UUID.randomUUID()))
+          .andExpect(status().isNotFound());
     }
   }
 

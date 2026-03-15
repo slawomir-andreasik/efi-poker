@@ -5,6 +5,7 @@ import com.andreasik.efipoker.estimation.estimate.EstimateEntity;
 import com.andreasik.efipoker.estimation.room.Room;
 import com.andreasik.efipoker.estimation.room.RoomEntity;
 import com.andreasik.efipoker.estimation.room.RoomStatus;
+import com.andreasik.efipoker.estimation.room.RoomType;
 import com.andreasik.efipoker.estimation.task.Task;
 import com.andreasik.efipoker.estimation.task.TaskEntity;
 import com.andreasik.efipoker.participant.Participant;
@@ -46,10 +47,10 @@ public final class Fixtures {
   }
 
   public static Room room(Project project) {
-    return room(project, "ASYNC");
+    return room(project, RoomType.ASYNC);
   }
 
-  public static Room room(Project project, String roomType) {
+  public static Room room(Project project, RoomType roomType) {
     return Room.builder()
         .project(project)
         .slug(randomRoomSlug())
@@ -67,7 +68,7 @@ public final class Fixtures {
         .slug(randomRoomSlug())
         .title("Sprint 2 Planning")
         .description("Revealed room")
-        .roomType("ASYNC")
+        .roomType(RoomType.ASYNC)
         .deadline(Instant.now().plus(7, ChronoUnit.DAYS))
         .status(RoomStatus.REVEALED.name())
         .build();
@@ -79,7 +80,7 @@ public final class Fixtures {
         .slug(randomRoomSlug())
         .title("Sprint 3 Planning")
         .description("Closed room")
-        .roomType("ASYNC")
+        .roomType(RoomType.ASYNC)
         .deadline(Instant.now().plus(7, ChronoUnit.DAYS))
         .status(RoomStatus.CLOSED.name())
         .build();

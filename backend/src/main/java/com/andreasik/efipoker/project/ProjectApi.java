@@ -6,4 +6,6 @@ import java.util.UUID;
 public interface ProjectApi {
 
   void validateProjectExists(UUID projectId);
+
+  void validateAdminCodeForProject(UUID projectId, String adminCode);
 }

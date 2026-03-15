@@ -3,6 +3,7 @@ package com.andreasik.efipoker.auth;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import com.andreasik.efipoker.api.model.AuthProvider;
 import com.andreasik.efipoker.api.model.UserResponse;
 import com.andreasik.efipoker.shared.test.BaseUnitTest;
 import java.time.Instant;
@@ -47,7 +48,7 @@ class UserMapperTest extends BaseUnitTest {
           () -> assertThat(response.getUsername()).isEqualTo("john.doe"),
           () -> assertThat(response.getEmail()).isEqualTo("john@example.com"),
           () -> assertThat(response.getHasPassword()).isTrue(),
-          () -> assertThat(response.getAuthProvider()).isEqualTo("LOCAL"));
+          () -> assertThat(response.getAuthProvider()).isEqualTo(AuthProvider.LOCAL));
     }
 
     @Test
@@ -68,7 +69,7 @@ class UserMapperTest extends BaseUnitTest {
       // Assert
       assertAll(
           () -> assertThat(response.getHasPassword()).isFalse(),
-          () -> assertThat(response.getAuthProvider()).isEqualTo("AUTH0"));
+          () -> assertThat(response.getAuthProvider()).isEqualTo(AuthProvider.AUTH0));
     }
 
     @ParameterizedTest

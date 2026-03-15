@@ -13,11 +13,13 @@ import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.support.LdapEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "app.ldap.enabled", havingValue = "true")
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class LdapAuthService {
 
   private final LdapContextSource ldapContextSource;

@@ -4,6 +4,7 @@ import com.andreasik.efipoker.estimation.estimate.StoryPoints;
 import com.andreasik.efipoker.estimation.room.RoomEntity;
 import com.andreasik.efipoker.estimation.room.RoomRepository;
 import com.andreasik.efipoker.estimation.room.RoomService;
+import com.andreasik.efipoker.estimation.room.RoomType;
 import com.andreasik.efipoker.shared.exception.ResourceNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +41,7 @@ public class TaskService {
             .findById(roomId)
             .orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
 
-    if ("LIVE".equals(room.getRoomType())) {
+    if (RoomType.LIVE.name().equals(room.getRoomType())) {
       log.warn("Cannot create task in LIVE room: roomId={}", roomId);
       throw new IllegalStateException("Tasks cannot be manually created in a LIVE room.");
     }
@@ -65,7 +66,7 @@ public class TaskService {
             .findById(roomId)
             .orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
 
-    if ("LIVE".equals(room.getRoomType())) {
+    if (RoomType.LIVE.name().equals(room.getRoomType())) {
       log.warn("Cannot import tasks into LIVE room: roomId={}", roomId);
       throw new IllegalStateException("Tasks cannot be imported into a LIVE room.");
     }
@@ -123,10 +124,11 @@ public class TaskService {
 
   @Transactional
   public void deleteTask(UUID taskId) {
-    if (!taskRepository.existsById(taskId)) {
-      throw new ResourceNotFoundException("Task", taskId);
-    }
-    taskRepository.deleteById(taskId);
+    TaskEntity entity =
+        taskRepository
+            .findById(taskId)
+            .orElseThrow(() -> new ResourceNotFoundException("Task", taskId));
+    taskRepository.delete(entity);
     log.info("Task deleted: id={}", taskId);
   }
 

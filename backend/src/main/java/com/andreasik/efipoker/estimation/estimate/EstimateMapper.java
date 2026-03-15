@@ -11,4 +11,11 @@ public interface EstimateMapper {
   @Mapping(source = "participant.id", target = "participantId")
   @Mapping(source = "participant.nickname", target = "participantNickname")
   EstimateResponse toResponse(Estimate estimate);
+
+  default com.andreasik.efipoker.api.model.StoryPoints mapStoryPoints(String value) {
+    if (value == null) {
+      return null;
+    }
+    return com.andreasik.efipoker.api.model.StoryPoints.fromValue(value);
+  }
 }

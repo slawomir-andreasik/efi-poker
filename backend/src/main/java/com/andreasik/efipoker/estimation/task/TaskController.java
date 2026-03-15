@@ -8,7 +8,6 @@ import com.andreasik.efipoker.api.model.TaskResponse;
 import com.andreasik.efipoker.api.model.UpdateTaskRequest;
 import com.andreasik.efipoker.estimation.room.Room;
 import com.andreasik.efipoker.estimation.room.RoomService;
-import com.andreasik.efipoker.project.ProjectService;
 import com.andreasik.efipoker.shared.exception.UnauthorizedException;
 import java.util.List;
 import java.util.UUID;
@@ -25,15 +24,13 @@ public class TaskController implements TasksApi {
 
   private final TaskService taskService;
   private final RoomService roomService;
-  private final ProjectService projectService;
   private final TaskMapper taskMapper;
 
   @Override
   public ResponseEntity<TaskResponse> createTask(
       UUID roomId, CreateTaskRequest createTaskRequest, String xAdminCode) {
     log.debug("POST /rooms/{}/tasks", roomId);
-    Room room = roomService.getRoom(roomId);
-    projectService.validateAdminCodeForProject(room.project().id(), xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
 
     int sortOrder = createTaskRequest.getSortOrder() != null ? createTaskRequest.getSortOrder() : 0;
 
@@ -47,8 +44,7 @@ public class TaskController implements TasksApi {
   public ResponseEntity<List<TaskResponse>> importTasks(
       UUID roomId, ImportTasksRequest importTasksRequest, String xAdminCode) {
     log.debug("POST /rooms/{}/tasks/import", roomId);
-    Room room = roomService.getRoom(roomId);
-    projectService.validateAdminCodeForProject(room.project().id(), xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
 
     List<Task> tasks = taskService.importTasks(roomId, importTasksRequest.getTitles());
     return ResponseEntity.status(HttpStatus.CREATED).body(taskMapper.toResponseList(tasks));
@@ -59,8 +55,7 @@ public class TaskController implements TasksApi {
       UUID taskId, UpdateTaskRequest updateTaskRequest, String xAdminCode) {
     log.debug("PATCH /tasks/{}", taskId);
     Task task = taskService.getTask(taskId);
-    Room room = roomService.getRoom(task.room().id());
-    projectService.validateAdminCodeForProject(room.project().id(), xAdminCode);
+    roomService.validateAdminAndGetRoom(task.room().id(), xAdminCode);
 
     Task updated =
         taskService.updateTask(
@@ -76,8 +71,7 @@ public class TaskController implements TasksApi {
       UUID taskId, SetFinalEstimateRequest setFinalEstimateRequest, String xAdminCode) {
     log.debug("PUT /tasks/{}/final-estimate", taskId);
     Task task = taskService.getTask(taskId);
-    Room room = roomService.getRoom(task.room().id());
-    projectService.validateAdminCodeForProject(room.project().id(), xAdminCode);
+    Room room = roomService.validateAdminAndGetRoom(task.room().id(), xAdminCode);
 
     if (!RoomService.isRevealedStatus(room.status())) {
       throw new UnauthorizedException("Final estimate can only be set after votes are revealed");
@@ -92,8 +86,7 @@ public class TaskController implements TasksApi {
   public ResponseEntity<Void> deleteTask(UUID taskId, String xAdminCode) {
     log.debug("DELETE /tasks/{}", taskId);
     Task task = taskService.getTask(taskId);
-    Room room = roomService.getRoom(task.room().id());
-    projectService.validateAdminCodeForProject(room.project().id(), xAdminCode);
+    roomService.validateAdminAndGetRoom(task.room().id(), xAdminCode);
 
     taskService.deleteTask(taskId);
     return ResponseEntity.noContent().build();

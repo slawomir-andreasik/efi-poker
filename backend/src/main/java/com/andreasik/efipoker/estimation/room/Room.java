@@ -12,7 +12,7 @@ public record Room(
     String slug,
     String title,
     String description,
-    String roomType,
+    RoomType roomType,
     Instant deadline,
     String status,
     String topic,

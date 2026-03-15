@@ -5,7 +5,6 @@ spring:
     show-sql: false
   datasource:
     hikari:
-      connection-test-query: "SELECT 1"
       maximum-pool-size: 15
       minimum-idle: 5
       idle-timeout: 300000
