@@ -86,10 +86,7 @@ tasks.register<GenerateTask>("generateFlattenedSpec") {
     configOptions.set(mapOf("outputFile" to "api-definition.yaml"))
     additionalProperties.set(mapOf("flatten" to "true"))
 
-    // Disable build cache - OpenAPI generator reads from tempSourcesDir which
-    // is an output of prepareOpenApiSources, so cache key doesn't track actual
-    // YAML content changes reliably (see lessons-learned #24)
-    outputs.cacheIf { false }
+    inputs.dir(openApiSourceDir)
 }
 
 tasks.register<Copy>("copyFlattenedSpec") {
@@ -99,7 +96,6 @@ tasks.register<Copy>("copyFlattenedSpec") {
 }
 
 tasks.named("openApiGenerate") {
-    outputs.cacheIf { false }
     dependsOn("cleanGeneratedApi", "generateFlattenedSpec")
     mustRunAfter("cleanGeneratedApi", "generateFlattenedSpec")
 }
@@ -123,8 +119,6 @@ tasks.register<GenerateTask>("generateTypescriptClient") {
     configOptions.set(mapOf(
         "typescriptThreePlus" to "true"
     ))
-
-    outputs.cacheIf { false }
 }
 
 tasks.register<Delete>("cleanGeneratedApi") {

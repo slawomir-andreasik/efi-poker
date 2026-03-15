@@ -1,5 +1,5 @@
 # Build stage
-FROM oven/bun:1 AS build
+FROM oven/bun:1-alpine AS build
 ARG APP_VERSION=dev
 WORKDIR /app
 COPY package.json bun.lock* ./

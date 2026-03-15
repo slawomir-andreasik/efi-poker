@@ -14,6 +14,7 @@ services:
       resources:
         limits:
           memory: 128M
+    restart: unless-stopped
 
   app:
     build:
@@ -41,13 +42,14 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    restart: unless-stopped
 
   postgres:
     image: postgres:17-alpine
     environment:
       POSTGRES_DB: efipoker
       POSTGRES_USER: efipoker
-      POSTGRES_PASSWORD: changeme
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -63,6 +65,7 @@ services:
       resources:
         limits:
           memory: 512M
+    restart: unless-stopped
 
   ldap:
     image: osixia/openldap:1.5.0
@@ -89,6 +92,7 @@ services:
       resources:
         limits:
           memory: 256M
+    restart: unless-stopped
 
 networks:
   frontend: # client <-> app

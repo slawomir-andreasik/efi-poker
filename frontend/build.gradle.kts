@@ -17,6 +17,8 @@ val buildFrontend = tasks.register<Exec>("buildFrontend") {
     inputs.file("package.json")
     inputs.file("vite.config.ts")
     inputs.file("tsconfig.json")
+    inputs.file("index.html")
+    inputs.dir("public")
     outputs.dir("dist")
     commandLine("bun", "run", "build")
 }
@@ -24,8 +26,16 @@ val buildFrontend = tasks.register<Exec>("buildFrontend") {
 val testFrontend = tasks.register<Exec>("testFrontend") {
     dependsOn(bunInstall)
     inputs.dir("src")
-    outputs.upToDateWhen { true }
+    inputs.file("package.json")
+    inputs.file("vitest.config.ts")
+    outputs.file(layout.buildDirectory.file("test-results/.frontend-tests-passed"))
     commandLine("bun", "run", "test", "--run")
+    doLast {
+        layout.buildDirectory.file("test-results/.frontend-tests-passed").get().asFile.apply {
+            parentFile.mkdirs()
+            writeText("ok")
+        }
+    }
 }
 
 tasks.named("build") {

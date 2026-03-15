@@ -93,6 +93,7 @@ tasks.jacocoTestReport {
 }
 
 tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
     violationRules {
         rule {
             limit {
@@ -107,7 +108,9 @@ tasks.named("check") {
 }
 
 springBoot {
-    buildInfo()
+    buildInfo {
+        excludes.set(setOf("time"))
+    }
 }
 
 tasks.bootRun {
