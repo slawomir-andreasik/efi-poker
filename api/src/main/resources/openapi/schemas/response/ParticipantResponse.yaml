@@ -1,4 +1,8 @@
 type: object
+required:
+  - id
+  - nickname
+  - createdAt
 properties:
   id:
     type: string

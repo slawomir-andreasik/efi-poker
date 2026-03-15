@@ -1,0 +1,8 @@
+type: object
+properties:
+  averagePoints:
+    type: number
+    format: double
+  medianPoints:
+    type: number
+    format: double

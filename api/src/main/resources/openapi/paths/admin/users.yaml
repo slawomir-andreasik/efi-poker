@@ -34,6 +34,12 @@ get:
         application/json:
           schema:
             $ref: '../../schemas/response/PagedUsersResponse.yaml'
+    '401':
+      description: Authentication required
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
 
 post:
   operationId: createUser
@@ -55,6 +61,18 @@ post:
         application/json:
           schema:
             $ref: '../../schemas/response/AdminUserResponse.yaml'
+    '400':
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ValidationErrorResponse.yaml'
+    '401':
+      description: Authentication required
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
     '409':
       description: Username already taken
       content:

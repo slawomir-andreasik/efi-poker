@@ -1,6 +1,9 @@
 type: object
+required:
+  - nickname
+  - storyPoints
 properties:
   nickname:
     type: string
   storyPoints:
-    type: string
+    $ref: '../enums/StoryPoints.yaml'

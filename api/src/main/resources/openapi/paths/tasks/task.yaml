@@ -18,6 +18,18 @@ patch:
         application/json:
           schema:
             $ref: '../../schemas/response/TaskResponse.yaml'
+    '400':
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ValidationErrorResponse.yaml'
+    '404':
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
 delete:
   operationId: deleteTask
   tags: [tasks]
@@ -28,3 +40,9 @@ delete:
   responses:
     '204':
       description: Task deleted
+    '404':
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

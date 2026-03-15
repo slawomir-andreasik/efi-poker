@@ -1,4 +1,10 @@
 type: object
+required:
+  - taskId
+  - taskTitle
+  - roomTitle
+  - spread
+  - voteCount
 properties:
   taskId:
     type: string

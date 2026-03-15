@@ -1,4 +1,10 @@
 type: object
+required:
+  - id
+  - name
+  - slug
+  - adminCode
+  - createdAt
 properties:
   id:
     type: string

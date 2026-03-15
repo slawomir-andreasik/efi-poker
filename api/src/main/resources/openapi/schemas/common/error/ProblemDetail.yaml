@@ -10,3 +10,6 @@ properties:
     type: string
   instance:
     type: string
+  traceId:
+    type: string
+    description: OpenTelemetry trace ID for log correlation

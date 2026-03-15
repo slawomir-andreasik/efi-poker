@@ -1,4 +1,9 @@
 type: object
+required:
+  - id
+  - name
+  - slug
+  - createdAt
 properties:
   id:
     type: string

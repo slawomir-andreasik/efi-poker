@@ -1,4 +1,11 @@
 type: object
+required:
+  - roomId
+  - title
+  - totalStoryPoints
+  - taskCount
+  - consensusRate
+  - createdAt
 properties:
   roomId:
     type: string

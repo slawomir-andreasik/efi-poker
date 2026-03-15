@@ -1,6 +1,7 @@
 name: taskId
 in: path
 required: true
+description: UUID of the task
 schema:
   type: string
   format: uuid

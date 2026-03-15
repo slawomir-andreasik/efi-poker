@@ -1,6 +1,7 @@
 name: roomSlug
 in: path
 required: true
+description: Human-readable room slug (e.g. A3X-K7B)
 schema:
   type: string
   pattern: '^[A-Z0-9]{3}-[A-Z0-9]{3}$'

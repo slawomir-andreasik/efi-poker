@@ -1,4 +1,11 @@
 type: object
+required:
+  - id
+  - username
+  - email
+  - role
+  - hasPassword
+  - authProvider
 properties:
   id:
     type: string
@@ -8,11 +15,9 @@ properties:
   email:
     type: string
   role:
-    type: string
-    enum: [ADMIN, USER]
+    $ref: '../enums/UserRole.yaml'
   hasPassword:
     type: boolean
     description: Whether the user has a local password set
   authProvider:
-    type: string
-    description: Authentication provider (LOCAL or AUTH0)
+    $ref: '../enums/AuthProvider.yaml'

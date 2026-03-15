@@ -4,12 +4,7 @@ get:
   summary: Get participant by ID (magic link validation)
   parameters:
     - $ref: '../../parameters/SlugPath.yaml'
-    - name: participantId
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
+    - $ref: '../../parameters/ParticipantIdPath.yaml'
   responses:
     '200':
       description: Participant info
@@ -29,12 +24,7 @@ patch:
   summary: Update participant nickname (self-service)
   parameters:
     - $ref: '../../parameters/SlugPath.yaml'
-    - name: participantId
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
+    - $ref: '../../parameters/ParticipantIdPath.yaml'
     - $ref: '../../parameters/ParticipantIdHeader.yaml'
   requestBody:
     required: true
@@ -49,6 +39,12 @@ patch:
         application/json:
           schema:
             $ref: '../../schemas/response/ParticipantResponse.yaml'
+    '400':
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ValidationErrorResponse.yaml'
     '403':
       description: Not allowed to update this participant
       content:
@@ -73,12 +69,7 @@ delete:
   summary: Delete participant (admin only)
   parameters:
     - $ref: '../../parameters/SlugPath.yaml'
-    - name: participantId
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
+    - $ref: '../../parameters/ParticipantIdPath.yaml'
     - $ref: '../../parameters/AdminCodeHeader.yaml'
   responses:
     '204':

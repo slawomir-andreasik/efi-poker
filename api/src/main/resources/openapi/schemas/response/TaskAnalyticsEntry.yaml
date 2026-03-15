@@ -1,4 +1,9 @@
 type: object
+required:
+  - taskId
+  - title
+  - spread
+  - voteDistribution
 properties:
   taskId:
     type: string
@@ -8,11 +13,14 @@ properties:
   averagePoints:
     type: number
     format: double
+    nullable: true
   medianPoints:
     type: number
     format: double
+    nullable: true
   finalEstimate:
-    type: string
+    $ref: '../enums/StoryPoints.yaml'
+    nullable: true
   spread:
     type: number
     format: double

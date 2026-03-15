@@ -37,6 +37,12 @@ patch:
         application/json:
           schema:
             $ref: '../../schemas/response/ProjectAdminResponse.yaml'
+    '400':
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ValidationErrorResponse.yaml'
     '403':
       description: Access denied
       content:

@@ -1,7 +1,7 @@
-name: roomId
+name: id
 in: path
 required: true
-description: UUID of the room
+description: UUID of the user
 schema:
   type: string
   format: uuid

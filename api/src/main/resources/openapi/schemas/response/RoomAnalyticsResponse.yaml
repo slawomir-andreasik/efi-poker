@@ -1,4 +1,11 @@
 type: object
+required:
+  - roomId
+  - title
+  - slug
+  - summary
+  - taskAnalytics
+  - participationMatrix
 properties:
   roomId:
     type: string

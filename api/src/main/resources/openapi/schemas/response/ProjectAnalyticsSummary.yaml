@@ -1,4 +1,9 @@
 type: object
+required:
+  - totalRooms
+  - totalTasks
+  - totalStoryPoints
+  - averageConsensusRate
 properties:
   totalRooms:
     type: integer

@@ -1,4 +1,11 @@
 type: object
+required:
+  - id
+  - username
+  - email
+  - role
+  - authProvider
+  - createdAt
 properties:
   id:
     type: string
@@ -8,10 +15,9 @@ properties:
   email:
     type: string
   role:
-    type: string
-    enum: [ADMIN, USER]
+    $ref: '../enums/UserRole.yaml'
   authProvider:
-    type: string
+    $ref: '../enums/AuthProvider.yaml'
   createdAt:
     type: string
     format: date-time

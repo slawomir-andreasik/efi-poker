@@ -1,4 +1,9 @@
 type: object
+required:
+  - taskId
+  - title
+  - votedCount
+  - totalParticipants
 properties:
   taskId:
     type: string

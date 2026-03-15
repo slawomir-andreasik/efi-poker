@@ -15,6 +15,12 @@ post:
         application/json:
           schema:
             $ref: '../../schemas/response/AuthResponse.yaml'
+    '400':
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ValidationErrorResponse.yaml'
     '401':
       description: Authentication required
       content:

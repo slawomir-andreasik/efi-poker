@@ -2,20 +2,18 @@ type: object
 required:
   - participantId
   - nickname
-  - tasksVoted
+  - votedCount
   - totalTasks
-  - participationRate
 properties:
   participantId:
     type: string
     format: uuid
   nickname:
     type: string
-  tasksVoted:
+  votedCount:
     type: integer
   totalTasks:
     type: integer
-  participationRate:
-    type: number
-    format: double
-    description: Percentage 0-100
+  hasCommentedAll:
+    type: boolean
+    description: true if participant left comment on every voted task

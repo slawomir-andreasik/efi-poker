@@ -1,17 +1,16 @@
 get:
-  operationId: exportResults
+  operationId: getParticipantProgress
   tags: [rooms]
-  summary: Export results as CSV
+  summary: Get per-participant voting progress
   parameters:
     - $ref: '../../parameters/RoomIdPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   responses:
     '200':
-      description: CSV export
+      description: Participant progress
       content:
-        text/csv:
+        application/json:
           schema:
-            type: string
+            $ref: '../../schemas/response/ParticipantProgressResponse.yaml'
     '404':
       description: Resource not found
       content:

@@ -1,6 +1,7 @@
 name: X-Participant-Id
 in: header
 required: false
+description: UUID of the current participant
 schema:
   type: string
   format: uuid

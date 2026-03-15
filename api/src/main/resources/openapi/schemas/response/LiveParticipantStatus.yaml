@@ -1,4 +1,8 @@
 type: object
+required:
+  - participantId
+  - nickname
+  - hasVoted
 properties:
   participantId:
     type: string

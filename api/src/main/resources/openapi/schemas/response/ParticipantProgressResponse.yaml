@@ -1,0 +1,18 @@
+type: object
+required:
+  - roomId
+  - slug
+  - totalTasks
+  - participants
+properties:
+  roomId:
+    type: string
+    format: uuid
+  slug:
+    type: string
+  totalTasks:
+    type: integer
+  participants:
+    type: array
+    items:
+      $ref: './ParticipantProgressEntry.yaml'

@@ -13,3 +13,13 @@ get:
             $ref: '../../schemas/response/RoomAnalyticsResponse.yaml'
     '403':
       description: Room not yet revealed
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '404':
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

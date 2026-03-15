@@ -1,4 +1,12 @@
 type: object
+required:
+  - projectId
+  - projectName
+  - slug
+  - summary
+  - roomStats
+  - topContentiousTasks
+  - participantLeaderboard
 properties:
   projectId:
     type: string

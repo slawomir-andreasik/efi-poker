@@ -13,3 +13,7 @@ get:
             $ref: '../../schemas/response/ProjectAnalyticsResponse.yaml'
     '404':
       description: Project not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

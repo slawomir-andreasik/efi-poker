@@ -1,4 +1,13 @@
 type: object
+required:
+  - roomId
+  - slug
+  - title
+  - status
+  - roundNumber
+  - taskId
+  - questionVotesCount
+  - participants
 properties:
   roomId:
     type: string
@@ -10,12 +19,14 @@ properties:
     type: string
   topic:
     type: string
+    nullable: true
   status:
     $ref: '../enums/RoomStatus.yaml'
   roundNumber:
     type: integer
   commentTemplate:
     type: string
+    nullable: true
   commentRequired:
     type: boolean
   questionVotesCount:
@@ -26,9 +37,11 @@ properties:
     description: Phantom task ID for submitting estimates
   myEstimate:
     $ref: './EstimateResponse.yaml'
+    nullable: true
   participants:
     type: array
     items:
       $ref: './LiveParticipantStatus.yaml'
   results:
     $ref: './LiveRoomResults.yaml'
+    nullable: true

@@ -45,3 +45,9 @@ post:
         application/json:
           schema:
             $ref: '../../schemas/response/ParticipantResponse.yaml'
+    '400':
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ValidationErrorResponse.yaml'

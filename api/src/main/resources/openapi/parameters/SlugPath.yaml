@@ -1,5 +1,6 @@
 name: slug
 in: path
 required: true
+description: URL-safe project slug
 schema:
   type: string

@@ -11,3 +11,9 @@ get:
         application/json:
           schema:
             $ref: '../../schemas/response/RoomProgressResponse.yaml'
+    '404':
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

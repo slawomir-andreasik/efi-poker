@@ -18,6 +18,12 @@ post:
         application/json:
           schema:
             $ref: '../../schemas/response/EstimateResponse.yaml'
+    '400':
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ValidationErrorResponse.yaml'
 
 delete:
   operationId: deleteEstimate
@@ -29,3 +35,9 @@ delete:
   responses:
     '204':
       description: Estimate removed
+    '404':
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

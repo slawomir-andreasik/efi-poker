@@ -3,6 +3,6 @@ properties:
   email:
     type: string
     format: email
+    maxLength: 254
   role:
-    type: string
-    enum: [ADMIN, USER]
+    $ref: '../enums/UserRole.yaml'

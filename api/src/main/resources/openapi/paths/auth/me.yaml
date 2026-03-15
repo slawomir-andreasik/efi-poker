@@ -11,3 +11,9 @@ get:
         application/json:
           schema:
             $ref: '../../schemas/response/UserResponse.yaml'
+    '401':
+      description: Authentication required
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

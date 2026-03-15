@@ -20,3 +20,9 @@ post:
             type: array
             items:
               $ref: '../../schemas/response/TaskResponse.yaml'
+    '400':
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ValidationErrorResponse.yaml'

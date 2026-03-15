@@ -1,15 +1,19 @@
 type: object
+required:
+  - roundNumber
+  - voteCount
+  - votes
 properties:
   roundNumber:
     type: integer
   topic:
     type: string
     nullable: true
-  averagePts:
+  averagePoints:
     type: number
     format: double
     nullable: true
-  medianPts:
+  medianPoints:
     type: number
     format: double
     nullable: true

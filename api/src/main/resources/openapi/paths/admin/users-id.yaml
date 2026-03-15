@@ -6,12 +6,7 @@ get:
   security:
     - bearerAuth: []
   parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
+    - $ref: '../../parameters/UserIdPath.yaml'
   responses:
     '200':
       description: User details
@@ -19,6 +14,12 @@ get:
         application/json:
           schema:
             $ref: '../../schemas/response/AdminUserResponse.yaml'
+    '401':
+      description: Authentication required
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
     '404':
       description: User not found
       content:
@@ -34,12 +35,7 @@ patch:
   security:
     - bearerAuth: []
   parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
+    - $ref: '../../parameters/UserIdPath.yaml'
   requestBody:
     required: true
     content:
@@ -53,6 +49,18 @@ patch:
         application/json:
           schema:
             $ref: '../../schemas/response/AdminUserResponse.yaml'
+    '400':
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ValidationErrorResponse.yaml'
+    '401':
+      description: Authentication required
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
     '404':
       description: User not found
       content:
@@ -68,15 +76,16 @@ delete:
   security:
     - bearerAuth: []
   parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
+    - $ref: '../../parameters/UserIdPath.yaml'
   responses:
     '204':
       description: User deleted
+    '401':
+      description: Authentication required
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
     '404':
       description: User not found
       content:

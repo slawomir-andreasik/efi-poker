@@ -18,8 +18,20 @@ post:
         application/json:
           schema:
             $ref: '../../schemas/response/LiveRoomStateResponse.yaml'
+    '400':
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ValidationErrorResponse.yaml'
     '403':
       description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '404':
+      description: Resource not found
       content:
         application/problem+json:
           schema:
