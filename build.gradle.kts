@@ -52,4 +52,26 @@ configure(subprojects.filter { it.name != "frontend" }) {
         }
     }
 
+    val testTask = tasks.named<Test>("test")
+
+    tasks.register<Test>("unitTest") {
+        description = "Run unit tests only (no Spring context, fast feedback)"
+        group = "verification"
+        testClassesDirs = testTask.get().testClassesDirs
+        classpath = testTask.get().classpath
+        useJUnitPlatform { includeTags("unit") }
+        jvmArgs("-Xmx256m", "-XX:+UseG1GC")
+        maxParallelForks = (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(1)
+    }
+
+    tasks.register<Test>("integrationTest") {
+        description = "Run integration + module tests (Spring context, Testcontainers)"
+        group = "verification"
+        testClassesDirs = testTask.get().testClassesDirs
+        classpath = testTask.get().classpath
+        useJUnitPlatform { includeTags("component", "module") }
+        jvmArgs("-Xmx512m", "-XX:+UseG1GC")
+        shouldRunAfter("unitTest")
+    }
+
 }

@@ -71,13 +71,19 @@ api-generate:  ## Regenerate API clients from OpenAPI specs
 	./gradlew :api:openApiGenerate :api:generateTypescriptClient :api:copyFlattenedSpec
 
 ##@ Backend
-.PHONY: server-build server-test server-run spotless
+.PHONY: server-build server-test server-test-unit server-test-integration server-run spotless
 
 server-build:  ## Gradle build (tests + formatting + coverage)
 	./gradlew :backend:check
 
 server-test:  ## Backend tests only
 	./gradlew :backend:test
+
+server-test-unit:  ## Backend unit tests only (fast, no Spring)
+	./gradlew :backend:unitTest
+
+server-test-integration:  ## Backend integration tests only (Spring + DB)
+	./gradlew :backend:integrationTest
 
 server-run:  ## Start Spring Boot dev server (loads .env)
 	@set -a && source .env && set +a && ./gradlew :backend:bootRun

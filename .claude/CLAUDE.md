@@ -66,5 +66,7 @@ When introducing a new pattern or convention, update the relevant `.claude/rules
 ## Testing
 
 - After code changes: `make build` (or `make server-test` / `bun run lint && bun run test`)
+- Fast feedback: `make server-test-unit` (unit tests only, no Spring context)
 - Backend: `./gradlew check` = tests + Spotless + JaCoCo coverage (50% gate)
 - Frontend: `bun run lint` + `bun run test` (vitest + happy-dom)
+- Testing conventions: [rules/java.md](rules/java.md) ## Testing

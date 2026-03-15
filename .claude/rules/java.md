@@ -36,10 +36,24 @@
 
 ## Testing
 
-- Base test classes (enforced by ArchUnit):
-  - `BaseUnitTest` - pure unit tests (Mockito, no Spring)
-  - `BaseArchUnitTest` - architecture tests (no Spring)
-  - `BaseComponentTest` - single-module integration (Spring context)
-  - `BaseModuleTest` - multi-module integration (Spring Modulith)
-- Method names: `should_` + snake_case, `@Nested` for grouping
-- Mapper wiring: leaf mappers use `Mappers.getMapper()`, non-leaf (with `uses`): `new XxxMapperImpl(dep)` constructor
+### Base Classes (enforced by ArchUnit)
+
+| Base class | Tag | Spring | Use for |
+|------------|-----|--------|---------|
+| `BaseUnitTest` | `unit` | No | Services, mappers, domain logic (Mockito) |
+| `BaseArchUnitTest` | `arch` | No | Architecture rules, convention enforcement |
+| `BaseComponentTest` | `component` | `@SpringBootTest` + Testcontainers | Controller integration, repository |
+| `BaseModuleTest` | `module` | `@ApplicationModuleTest` + Testcontainers | Spring Modulith module interaction |
+
+### Conventions
+
+- Method names: `should_` + snake_case, `@Nested` + `@DisplayName` for grouping
+- BDDMockito: `given()` / `then()` - not `when()` / `verify()`
+- Final fields over `@BeforeEach` (JUnit 5 creates new instance per test)
+- Each test creates its own data - no shared mutable state between tests
+- Unit tests: `@Mock` + `@InjectMocks`, assert return values AND entity state after mutation
+- Integration tests: shared Testcontainers PostgreSQL, `@Transactional` (auto-rollback), `MockMvc`
+- Module tests: all in one class (`AllModulesIntegrationTest`), `@Nested` per module boundary
+- Mapper tests: leaf mappers use `Mappers.getMapper()`, non-leaf use `new XxxMapperImpl(dep)`
+- Never use `@DirtiesContext` - clean up state manually instead
+- Protect Spring context cache: `@MockBean`, `@SpyBean`, `@DynamicPropertySource` on individual test classes each force a new context. If you need a mock, add it to `BaseComponentTest` so all integration tests share it. If you need dynamic properties (e.g. embedded server port), accept a separate context but document why
