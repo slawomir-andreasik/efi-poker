@@ -2,6 +2,7 @@ package com.andreasik.efipoker.estimation.room;
 
 import com.andreasik.efipoker.api.model.RoundHistoryEntry;
 import com.andreasik.efipoker.api.model.RoundHistoryVote;
+import com.andreasik.efipoker.api.model.StoryPoints;
 import com.andreasik.efipoker.estimation.EstimationStats;
 import com.andreasik.efipoker.estimation.estimate.EstimateEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -105,8 +106,7 @@ public class RoundHistoryService {
               s ->
                   new RoundHistoryVote()
                       .nickname(s.nickname())
-                      .storyPoints(
-                          com.andreasik.efipoker.api.model.StoryPoints.fromValue(s.storyPoints())))
+                      .storyPoints(StoryPoints.fromValue(s.storyPoints())))
           .toList();
     } catch (JsonProcessingException e) {
       log.warn("Failed to deserialize votes: {}", e.getMessage());

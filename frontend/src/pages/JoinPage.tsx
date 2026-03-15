@@ -97,7 +97,7 @@ export function JoinPage() {
     return () => {
       cancelled = true;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- roomRedirect derived from roomParam, searchParams covers both
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- roomRedirect derived from roomParam (already in deps)
   }, [slug, searchParams, showToast, navigate, roomParam]);
 
   async function handleJoin(e: React.FormEvent) {

@@ -4,6 +4,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.andreasik.efipoker.shared.test.BaseArchUnitTest;
 import com.tngtech.archunit.core.domain.JavaCall;
@@ -15,6 +16,16 @@ import com.tngtech.archunit.core.domain.properties.HasOwner;
 import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -208,6 +219,113 @@ class ArchitectureTest extends BaseArchUnitTest {
           .beInterfaces()
           .because("module APIs define cross-module contracts and must be interfaces")
           .check(ArchTestUtils.importProductionClasses());
+    }
+  }
+
+  /**
+   * Source-level checks that ArchUnit can't do (ArchUnit operates on bytecode where all references
+   * are fully qualified regardless of source-level imports).
+   */
+  @Nested
+  @DisplayName("SourceCodeQuality")
+  class SourceCodeQuality {
+
+    private static final Path SRC_ROOT = Path.of(System.getProperty("user.dir"), "src");
+
+    private static final Pattern FQN_PATTERN =
+        Pattern.compile("com\\.andreasik\\.efipoker\\.[a-z]+(\\.[a-z]+)*\\.[A-Z]\\w+");
+
+    /**
+     * Per-file exceptions where FQN is unavoidable due to name collision (two classes with the same
+     * simple name from different packages used in one file).
+     *
+     * <p>Format: "SimpleFileName.java -> fqn.prefix" (the FQN that is allowed ONLY in that file).
+     *
+     * <p>If this test fails:
+     *
+     * <ul>
+     *   <li>Usually: add an {@code import} and use the simple class name
+     *   <li>Name collision: add an entry here for the specific file + the less-imported FQN
+     * </ul>
+     */
+    private static final List<String> ALLOWED_FQN_PER_FILE =
+        List.of(
+            // RoomMapper uses api.model.RoomType (imported) + domain RoomType (FQN for param)
+            "RoomMapper.java -> com.andreasik.efipoker.estimation.room.RoomType",
+            // RoomMapperTest uses domain RoomType (imported) + api.model.RoomType (FQN in asserts)
+            "RoomMapperTest.java -> com.andreasik.efipoker.api.model.RoomType");
+
+    @Test
+    void should_not_use_inline_fqn_when_import_is_possible() throws IOException {
+      assertThat(SRC_ROOT.toFile())
+          .as("SRC_ROOT must point to backend/src (check user.dir)")
+          .isDirectory();
+
+      List<String> violations = new ArrayList<>();
+      Set<String> usedExceptions = new HashSet<>();
+
+      try (Stream<Path> files = Files.walk(SRC_ROOT).filter(p -> p.toString().endsWith(".java"))) {
+        files.forEach(
+            path -> {
+              try {
+                List<String> lines = Files.readAllLines(path);
+                for (int i = 0; i < lines.size(); i++) {
+                  String line = lines.get(i).trim();
+                  if (line.startsWith("import ")
+                      || line.startsWith("package ")
+                      || line.startsWith("//")
+                      || line.startsWith("*")
+                      || line.startsWith("/*")
+                      || line.contains("\"")) {
+                    continue;
+                  }
+                  String fileName = path.getFileName().toString();
+                  Matcher matcher = FQN_PATTERN.matcher(line);
+                  while (matcher.find()) {
+                    String fqn = matcher.group();
+                    boolean allowed =
+                        ALLOWED_FQN_PER_FILE.stream()
+                            .anyMatch(
+                                entry -> {
+                                  String[] parts = entry.split(" -> ");
+                                  boolean matches =
+                                      fileName.equals(parts[0])
+                                          && (fqn.equals(parts[1])
+                                              || fqn.startsWith(parts[1] + "."));
+                                  if (matches) {
+                                    usedExceptions.add(entry);
+                                  }
+                                  return matches;
+                                });
+                    if (!allowed) {
+                      String relativePath =
+                          SRC_ROOT.getParent() != null
+                              ? SRC_ROOT.getParent().relativize(path).toString()
+                              : path.toString();
+                      violations.add(
+                          relativePath + ":" + (i + 1) + " -> " + fqn + " (use import instead)");
+                    }
+                  }
+                }
+              } catch (IOException e) {
+                throw new RuntimeException("Failed to read " + path, e);
+              }
+            });
+      }
+
+      assertThat(violations)
+          .as(
+              "Inline fully-qualified class names found. Fix: add an import statement and use "
+                  + "the simple class name. If two classes share the same name (e.g. domain "
+                  + "RoomType vs api.model.RoomType), add a per-file exception to "
+                  + "ALLOWED_FQN_PER_FILE in this test: \"File.java -> fqn.to.allow\"")
+          .isEmpty();
+
+      List<String> unusedExceptions =
+          ALLOWED_FQN_PER_FILE.stream().filter(e -> !usedExceptions.contains(e)).toList();
+      assertThat(unusedExceptions)
+          .as("Stale entries in ALLOWED_FQN_PER_FILE - the FQN is no longer used, remove them")
+          .isEmpty();
     }
   }
 }

@@ -6,6 +6,7 @@ import com.andreasik.efipoker.api.model.AdminResetPasswordRequest;
 import com.andreasik.efipoker.api.model.AdminUpdateUserRequest;
 import com.andreasik.efipoker.api.model.AdminUserResponse;
 import com.andreasik.efipoker.api.model.PagedUsersResponse;
+import com.andreasik.efipoker.shared.exception.ResourceNotFoundException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -65,10 +66,7 @@ public class AdminController implements AdminApi {
     User user =
         userService
             .findById(id)
-            .orElseThrow(
-                () ->
-                    new com.andreasik.efipoker.shared.exception.ResourceNotFoundException(
-                        "User not found: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
 
     return ResponseEntity.ok(userMapper.toAdminResponse(user));
   }

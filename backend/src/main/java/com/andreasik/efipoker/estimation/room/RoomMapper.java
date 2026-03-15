@@ -2,6 +2,7 @@ package com.andreasik.efipoker.estimation.room;
 
 import com.andreasik.efipoker.api.model.RoomResponse;
 import com.andreasik.efipoker.api.model.RoomSlugResponse;
+import com.andreasik.efipoker.api.model.RoomStatus;
 import com.andreasik.efipoker.api.model.RoomType;
 import com.andreasik.efipoker.shared.mapper.EfiMapperConfig;
 import java.util.List;
@@ -23,11 +24,11 @@ public interface RoomMapper {
   @Mapping(source = "project.name", target = "projectName")
   RoomSlugResponse toSlugResponse(Room room);
 
-  default com.andreasik.efipoker.api.model.RoomStatus mapStatus(String status) {
+  default RoomStatus mapStatus(String status) {
     if (status == null) {
       return null;
     }
-    return com.andreasik.efipoker.api.model.RoomStatus.fromValue(status);
+    return RoomStatus.fromValue(status);
   }
 
   default RoomType mapRoomType(com.andreasik.efipoker.estimation.room.RoomType roomType) {

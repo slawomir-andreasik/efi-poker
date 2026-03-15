@@ -8,6 +8,7 @@ import com.andreasik.efipoker.api.model.ProjectAnalyticsSummary;
 import com.andreasik.efipoker.api.model.RoomAnalyticsResponse;
 import com.andreasik.efipoker.api.model.RoomAnalyticsSummary;
 import com.andreasik.efipoker.api.model.RoomStatsEntry;
+import com.andreasik.efipoker.api.model.StoryPoints;
 import com.andreasik.efipoker.api.model.TaskAnalyticsEntry;
 import com.andreasik.efipoker.estimation.EstimationStats;
 import com.andreasik.efipoker.estimation.estimate.Estimate;
@@ -108,9 +109,7 @@ public class AnalyticsService {
       entry.setAveragePoints(average);
       entry.setMedianPoints(median);
       entry.setFinalEstimate(
-          task.finalEstimate() != null
-              ? com.andreasik.efipoker.api.model.StoryPoints.fromValue(task.finalEstimate())
-              : null);
+          task.finalEstimate() != null ? StoryPoints.fromValue(task.finalEstimate()) : null);
       entry.setSpread(spread);
       entry.setVoteDistribution(voteDistribution);
       taskAnalytics.add(entry);

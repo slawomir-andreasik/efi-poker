@@ -16,6 +16,7 @@ import com.andreasik.efipoker.api.model.RoomResponse;
 import com.andreasik.efipoker.api.model.RoomResultsResponse;
 import com.andreasik.efipoker.api.model.RoomSlugResponse;
 import com.andreasik.efipoker.api.model.RoundHistoryEntry;
+import com.andreasik.efipoker.api.model.StoryPoints;
 import com.andreasik.efipoker.api.model.TaskProgressResponse;
 import com.andreasik.efipoker.api.model.TaskResultResponse;
 import com.andreasik.efipoker.api.model.TaskWithAllEstimatesResponse;
@@ -318,7 +319,7 @@ public class RoomController implements RoomsApi {
               .medianPoints(EstimationStats.computeMedian(points))
               .finalEstimate(
                   task.finalEstimate() != null
-                      ? com.andreasik.efipoker.api.model.StoryPoints.fromValue(task.finalEstimate())
+                      ? StoryPoints.fromValue(task.finalEstimate())
                       : null));
     }
 

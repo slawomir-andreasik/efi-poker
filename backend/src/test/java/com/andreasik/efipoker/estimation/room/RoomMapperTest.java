@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 import com.andreasik.efipoker.api.model.RoomResponse;
 import com.andreasik.efipoker.api.model.RoomSlugResponse;
+import com.andreasik.efipoker.api.model.RoomStatus;
 import com.andreasik.efipoker.project.Project;
 import com.andreasik.efipoker.shared.test.BaseUnitTest;
 import java.time.Instant;
@@ -60,9 +61,7 @@ class RoomMapperTest extends BaseUnitTest {
               assertThat(response.getRoomType())
                   .isEqualTo(com.andreasik.efipoker.api.model.RoomType.ASYNC),
           () -> assertThat(response.getDeadline()).isEqualTo(deadline),
-          () ->
-              assertThat(response.getStatus())
-                  .isEqualTo(com.andreasik.efipoker.api.model.RoomStatus.OPEN),
+          () -> assertThat(response.getStatus()).isEqualTo(RoomStatus.OPEN),
           () -> assertThat(response.getCreatedAt()).isEqualTo(now));
     }
 
@@ -159,20 +158,17 @@ class RoomMapperTest extends BaseUnitTest {
 
     @Test
     void should_map_open_status() {
-      assertThat(mapper.mapStatus("OPEN"))
-          .isEqualTo(com.andreasik.efipoker.api.model.RoomStatus.OPEN);
+      assertThat(mapper.mapStatus("OPEN")).isEqualTo(RoomStatus.OPEN);
     }
 
     @Test
     void should_map_revealed_status() {
-      assertThat(mapper.mapStatus("REVEALED"))
-          .isEqualTo(com.andreasik.efipoker.api.model.RoomStatus.REVEALED);
+      assertThat(mapper.mapStatus("REVEALED")).isEqualTo(RoomStatus.REVEALED);
     }
 
     @Test
     void should_map_closed_status() {
-      assertThat(mapper.mapStatus("CLOSED"))
-          .isEqualTo(com.andreasik.efipoker.api.model.RoomStatus.CLOSED);
+      assertThat(mapper.mapStatus("CLOSED")).isEqualTo(RoomStatus.CLOSED);
     }
 
     @Test

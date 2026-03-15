@@ -1,6 +1,7 @@
 package com.andreasik.efipoker.estimation.estimate;
 
 import com.andreasik.efipoker.api.model.EstimateResponse;
+import com.andreasik.efipoker.api.model.StoryPoints;
 import com.andreasik.efipoker.shared.mapper.EfiMapperConfig;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -12,10 +13,10 @@ public interface EstimateMapper {
   @Mapping(source = "participant.nickname", target = "participantNickname")
   EstimateResponse toResponse(Estimate estimate);
 
-  default com.andreasik.efipoker.api.model.StoryPoints mapStoryPoints(String value) {
+  default StoryPoints mapStoryPoints(String value) {
     if (value == null) {
       return null;
     }
-    return com.andreasik.efipoker.api.model.StoryPoints.fromValue(value);
+    return StoryPoints.fromValue(value);
   }
 }
