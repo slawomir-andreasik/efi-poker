@@ -46,7 +46,7 @@ configure(subprojects.filter { it.name != "frontend" }) {
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
         jvmArgs("-Xmx512m", "-XX:+UseG1GC")
-        maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+        maxParallelForks = (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(1)
         testLogging {
             events("passed", "skipped", "failed")
         }

@@ -137,6 +137,21 @@ tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("boot
             "-Dspring.profiles.active=prod",
         ).joinToString(" "),
     ))
+    // Additional tags from CI (latest/latest-dev, sha) - pushed together with --publishImage
+    tags.set(providers.environmentVariable("BOOT_IMAGE_TAGS")
+        .map { it.split(",").filter(String::isNotBlank) }
+        .orElse(emptyList()))
+    // Bind mount cache for CI persistence (cached via actions/cache between runs)
+    buildCache {
+        bind {
+            source.set(providers.environmentVariable("BBI_CACHE_DIR").getOrElse("/tmp/cache-efi-poker.build"))
+        }
+    }
+    launchCache {
+        bind {
+            source.set(providers.environmentVariable("BBI_CACHE_DIR").map { "$it-launch" }.getOrElse("/tmp/cache-efi-poker.launch"))
+        }
+    }
     docker {
         publishRegistry {
             url.set("ghcr.io")
