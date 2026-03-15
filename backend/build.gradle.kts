@@ -119,7 +119,7 @@ tasks.bootRun {
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("bootBuildImage") {
     imageName.set("ghcr.io/slawomir-andreasik/efi-poker/backend:${project.version}")
-    builder.set("paketobuildpacks/ubuntu-noble-builder:latest")
+    builder.set("paketobuildpacks/ubuntu-noble-builder:0.0.91")
     buildpacks.set(listOf(
         "urn:cnb:builder:paketo-buildpacks/java",
         "docker://docker.io/paketobuildpacks/health-checker"
@@ -140,7 +140,7 @@ tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("boot
             "-Dspring.profiles.active=prod",
         ).joinToString(" "),
     ))
-    // Additional tags from CI (latest/latest-dev, sha) - pushed together with --publishImage
+    // Additional tags from CI (latest, sha) - pushed together with --publishImage
     tags.set(providers.environmentVariable("BOOT_IMAGE_TAGS")
         .map { it.split(",").filter(String::isNotBlank) }
         .orElse(emptyList()))
