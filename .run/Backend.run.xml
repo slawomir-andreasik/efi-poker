@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Backend" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="efi-poker.backend.main" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.andreasik.efipoker.EfiPokerApplication" />
+    <envs>
+      <env name="SPRING_PROFILES_ACTIVE" value="local" />
+    </envs>
+    <option name="ENV_FILE_PATH" value="$PROJECT_DIR$/.env" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
