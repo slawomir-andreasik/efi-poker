@@ -4,11 +4,14 @@ plugins {
 
 description = "React frontend application"
 
+val bunExecutable = file("${System.getenv("HOME")}/.bun/bin/bun")
+    .takeIf { it.exists() }?.absolutePath ?: "bun"
+
 val bunInstall = tasks.register<Exec>("bunInstall") {
     inputs.file("package.json")
     inputs.file("bun.lock")
     outputs.dir("node_modules")
-    commandLine("bun", "install")
+    commandLine(bunExecutable, "install")
 }
 
 val buildFrontend = tasks.register<Exec>("buildFrontend") {
@@ -20,7 +23,7 @@ val buildFrontend = tasks.register<Exec>("buildFrontend") {
     inputs.file("index.html")
     inputs.dir("public")
     outputs.dir("dist")
-    commandLine("bun", "run", "build")
+    commandLine(bunExecutable, "run", "build")
 }
 
 val testFrontend = tasks.register<Exec>("testFrontend") {
@@ -28,10 +31,11 @@ val testFrontend = tasks.register<Exec>("testFrontend") {
     inputs.dir("src")
     inputs.file("package.json")
     inputs.file("vitest.config.ts")
-    outputs.file(layout.buildDirectory.file("test-results/.frontend-tests-passed"))
-    commandLine("bun", "run", "test", "--run")
+    val markerFile = layout.buildDirectory.file("test-results/.frontend-tests-passed").get().asFile
+    outputs.file(markerFile)
+    commandLine(bunExecutable, "run", "test", "--run")
     doLast {
-        layout.buildDirectory.file("test-results/.frontend-tests-passed").get().asFile.apply {
+        markerFile.apply {
             parentFile.mkdirs()
             writeText("ok")
         }
