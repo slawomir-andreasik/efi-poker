@@ -222,8 +222,9 @@ describe('OpenAPI contract: request schemas', () => {
     const fields = getSchemaFields('SubmitEstimateRequest');
     expect(fields).toContain('storyPoints');
     expect(fields).not.toContain('value');
+    // storyPoints is optional (nullable) - allows saving comment draft without SP
     const required = getRequiredFields('SubmitEstimateRequest');
-    expect(required).toContain('storyPoints');
+    expect(required).not.toContain('storyPoints');
   });
 
   it('ImportTasksRequest requires titles array', () => {

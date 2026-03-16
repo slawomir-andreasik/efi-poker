@@ -14,4 +14,9 @@ public record Estimate(
     String storyPoints,
     String comment,
     Instant createdAt,
-    Instant updatedAt) {}
+    Instant updatedAt) {
+
+  public boolean hasVoted() {
+    return storyPoints != null;
+  }
+}

@@ -20,6 +20,7 @@ export const STORAGE_KEYS = {
   BOARDS_LEGACY: 'efi-boards',
   LAST_SLUG: 'efi-last-slug',
   IDENTITY: 'efi-identity',
+  DRAFT_COMMENTS: 'efi-draft-comments',
 } as const;
 
 const STORAGE_KEY = STORAGE_KEYS.PROJECTS;
@@ -173,12 +174,48 @@ export function removeIdentity(): void {
   localStorage.removeItem(IDENTITY_KEY);
 }
 
+function updateDrafts(fn: (drafts: Record<string, string>) => void): void {
+  try {
+    const drafts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DRAFT_COMMENTS) || '{}') as Record<string, string>;
+    fn(drafts);
+    localStorage.setItem(STORAGE_KEYS.DRAFT_COMMENTS, JSON.stringify(drafts));
+  } catch {
+    // ignore
+  }
+}
+
+export function saveDraftComment(taskId: string, comment: string): void {
+  updateDrafts((drafts) => {
+    if (comment.trim()) {
+      drafts[taskId] = comment;
+    } else {
+      delete drafts[taskId];
+    }
+  });
+}
+
+export function getDraftComment(taskId: string): string | null {
+  try {
+    const drafts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DRAFT_COMMENTS) || '{}') as Record<string, string>;
+    return drafts[taskId] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearDraftComment(taskId: string): void {
+  updateDrafts((drafts) => {
+    delete drafts[taskId];
+  });
+}
+
 export function clearAllStorage(): void {
   localStorage.removeItem(JWT_KEY);
   localStorage.removeItem(IDENTITY_KEY);
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(STORAGE_KEYS.LAST_SLUG);
   localStorage.removeItem(STORAGE_KEYS.BOARDS_LEGACY);
+  localStorage.removeItem(STORAGE_KEYS.DRAFT_COMMENTS);
   sessionStorage.clear();
 }
 

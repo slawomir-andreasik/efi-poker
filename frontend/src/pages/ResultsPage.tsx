@@ -54,6 +54,7 @@ export function ResultsPage() {
         const estimates: Record<string, number | string> = {};
         const comments: Record<string, string> = {};
         for (const est of task.estimates) {
+          if (!est.storyPoints) continue;
           const numeric = Number(est.storyPoints);
           estimates[est.participantNickname] = isNaN(numeric) ? est.storyPoints : numeric;
           if (est.comment) {

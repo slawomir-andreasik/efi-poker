@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TaskCard } from './TaskCard';
@@ -13,6 +13,10 @@ const baseProps = {
 } as const;
 
 describe('TaskCard - comment feature', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it('should not show comment textarea when no template and not required', () => {
     render(<TaskCard {...baseProps} />);
 
@@ -148,5 +152,62 @@ describe('TaskCard - comment feature', () => {
 
     const textarea = screen.getByRole('textbox');
     expect((textarea as HTMLTextAreaElement).value).toBe('Previously saved comment');
+  });
+
+  it('should save comment draft to localStorage on typing without SP', async () => {
+    const user = userEvent.setup();
+    const onEstimate = vi.fn();
+
+    render(
+      <TaskCard
+        {...baseProps}
+        onEstimate={onEstimate}
+        commentRequired
+      />,
+    );
+
+    const textarea = screen.getByPlaceholderText('Add your comment...');
+    await user.type(textarea, 'Draft comment');
+    await user.tab(); // blur
+
+    // Draft saved to localStorage
+    const drafts = JSON.parse(localStorage.getItem('efi-draft-comments') || '{}');
+    expect(drafts['task-1']).toBe('Draft comment');
+
+    // onEstimate called with null SP + comment (draft save via parent)
+    expect(onEstimate).toHaveBeenCalledWith('task-1', null, 'Draft comment');
+  });
+
+  it('should restore comment from localStorage draft', () => {
+    localStorage.setItem('efi-draft-comments', JSON.stringify({ 'task-1': 'Saved draft' }));
+
+    render(
+      <TaskCard
+        {...baseProps}
+        commentRequired
+        commentTemplate="Template text"
+      />,
+    );
+
+    const textarea = screen.getByRole('textbox');
+    expect((textarea as HTMLTextAreaElement).value).toBe('Saved draft');
+  });
+
+  it('should clear draft from localStorage when SP is selected', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem('efi-draft-comments', JSON.stringify({ 'task-1': 'My draft' }));
+
+    render(
+      <TaskCard
+        {...baseProps}
+        onEstimate={vi.fn()}
+        commentRequired
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: '5' }));
+
+    const drafts = JSON.parse(localStorage.getItem('efi-draft-comments') || '{}');
+    expect(drafts['task-1']).toBeUndefined();
   });
 });

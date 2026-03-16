@@ -235,7 +235,7 @@ export interface EstimateResponse {
   id: string;
   participantId: string;
   participantNickname: string;
-  storyPoints: string;
+  storyPoints?: string | null;
   comment?: string;
   createdAt: string;
 }
@@ -310,7 +310,7 @@ export interface ImportTasksRequest {
 }
 
 export interface SubmitEstimateRequest {
-  storyPoints: StoryPoints;
+  storyPoints?: StoryPoints | null;
   comment?: string;
 }
 

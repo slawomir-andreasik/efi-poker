@@ -204,8 +204,8 @@ export function useDeleteTask(slug: string) {
 export function useSubmitEstimate(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ taskId, storyPoints, comment }: { taskId: string; storyPoints: StoryPoints; comment?: string }) =>
-      api(`/tasks/${taskId}/estimates`, { method: 'POST', body: { storyPoints, comment: comment || undefined } }, slug),
+    mutationFn: ({ taskId, storyPoints, comment }: { taskId: string; storyPoints?: StoryPoints | null; comment?: string }) =>
+      api(`/tasks/${taskId}/estimates`, { method: 'POST', body: { storyPoints: storyPoints || undefined, comment: comment || undefined } }, slug),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['rooms'] });
     },

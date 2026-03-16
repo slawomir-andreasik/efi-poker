@@ -37,15 +37,19 @@ public class EstimateService {
   @Transactional
   public Estimate submitEstimate(
       UUID taskId, UUID participantId, String storyPoints, String comment) {
-    // Validate story points value
-    StoryPoints.fromValue(storyPoints);
+    // Validate story points value only if provided
+    if (storyPoints != null) {
+      StoryPoints.fromValue(storyPoints);
+    }
 
     Optional<EstimateEntity> existing =
         estimateRepository.findByTaskAndParticipant(taskId, participantId);
 
     if (existing.isPresent()) {
       EstimateEntity entity = existing.get();
-      validateCommentIfRequired(entity.getTask().getRoom(), comment, taskId, participantId);
+      if (storyPoints != null) {
+        validateCommentIfRequired(entity.getTask().getRoom(), comment, taskId, participantId);
+      }
       entity.setStoryPoints(storyPoints);
       entity.setComment(comment);
       EstimateEntity saved = estimateRepository.save(entity);
@@ -53,7 +57,7 @@ public class EstimateService {
           "Estimate updated: taskId={}, participantId={}, sp={}",
           taskId,
           participantId,
-          storyPoints);
+          formatSp(storyPoints));
       eventPublisher.publishEvent(new EstimateSubmittedEvent(taskId, participantId));
       return estimateEntityMapper.toDomain(saved);
     }
@@ -62,7 +66,9 @@ public class EstimateService {
         taskRepository
             .findById(taskId)
             .orElseThrow(() -> new ResourceNotFoundException("Task", taskId));
-    validateCommentIfRequired(task.getRoom(), comment, taskId, participantId);
+    if (storyPoints != null) {
+      validateCommentIfRequired(task.getRoom(), comment, taskId, participantId);
+    }
     participantApi.validateParticipantExists(participantId);
     participantApi.validateParticipantBelongsToProject(
         participantId, task.getRoom().getProject().getId());
@@ -82,7 +88,7 @@ public class EstimateService {
         "Estimate submitted: taskId={}, participantId={}, sp={}",
         taskId,
         participantId,
-        storyPoints);
+        formatSp(storyPoints));
     eventPublisher.publishEvent(new EstimateSubmittedEvent(taskId, participantId));
     return estimateEntityMapper.toDomain(saved);
   }
@@ -110,6 +116,10 @@ public class EstimateService {
         participantId, task.getRoom().getProject().getId());
     estimateRepository.deleteByTaskIdAndParticipantId(taskId, participantId);
     log.info("Estimate deleted: taskId={}, participantId={}", taskId, participantId);
+  }
+
+  private static String formatSp(String storyPoints) {
+    return storyPoints != null ? storyPoints : "(draft)";
   }
 
   private void validateCommentIfRequired(

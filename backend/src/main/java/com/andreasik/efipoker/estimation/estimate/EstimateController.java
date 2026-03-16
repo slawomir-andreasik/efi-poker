@@ -22,7 +22,10 @@ public class EstimateController implements EstimatesApi {
       UUID taskId, SubmitEstimateRequest submitEstimateRequest, UUID xParticipantId) {
     log.debug("PUT /tasks/{}/estimate participantId={}", taskId, xParticipantId);
 
-    String storyPoints = submitEstimateRequest.getStoryPoints().getValue();
+    String storyPoints =
+        submitEstimateRequest.getStoryPoints() != null
+            ? submitEstimateRequest.getStoryPoints().getValue()
+            : null;
     String comment = submitEstimateRequest.getComment();
 
     Estimate estimate =

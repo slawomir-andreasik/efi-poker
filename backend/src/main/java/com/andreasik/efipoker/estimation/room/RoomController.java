@@ -222,12 +222,13 @@ public class RoomController implements RoomsApi {
       List<Estimate> estimates = estimatesByTask.getOrDefault(task.id(), List.of());
       List<String> points = estimates.stream().map(Estimate::storyPoints).toList();
       long questionVotesCount = EstimationStats.countQuestionVotes(points);
+      long voted = estimates.stream().filter(Estimate::hasVoted).count();
 
       taskProgress.add(
           new TaskProgressResponse()
               .taskId(task.id())
               .title(task.title())
-              .votedCount(estimates.size())
+              .votedCount((int) voted)
               .questionVotesCount((int) questionVotesCount)
               .totalParticipants((int) totalParticipants));
     }
@@ -268,10 +269,11 @@ public class RoomController implements RoomsApi {
     for (Participant participant : participants) {
       List<Estimate> participantEstimates =
           estimatesByParticipant.getOrDefault(participant.id(), List.of());
-      int votedCount = participantEstimates.size();
+      int votedCount = (int) participantEstimates.stream().filter(Estimate::hasVoted).count();
       boolean hasCommentedAll =
           votedCount > 0
               && participantEstimates.stream()
+                  .filter(Estimate::hasVoted)
                   .allMatch(e -> e.comment() != null && !e.comment().isBlank());
 
       entries.add(
@@ -305,11 +307,14 @@ public class RoomController implements RoomsApi {
 
     List<TaskResultResponse> taskResults = new ArrayList<>();
     for (Task task : data.tasks()) {
-      List<Estimate> estimates = data.estimatesByTask().getOrDefault(task.id(), List.of());
+      List<Estimate> voted =
+          data.estimatesByTask().getOrDefault(task.id(), List.of()).stream()
+              .filter(Estimate::hasVoted)
+              .toList();
       List<EstimateResponse> estimateResponses =
-          estimates.stream().map(estimateMapper::toResponse).toList();
+          voted.stream().map(estimateMapper::toResponse).toList();
 
-      List<String> points = estimates.stream().map(Estimate::storyPoints).toList();
+      List<String> points = voted.stream().map(Estimate::storyPoints).toList();
       taskResults.add(
           new TaskResultResponse()
               .taskId(task.id())
@@ -369,7 +374,7 @@ public class RoomController implements RoomsApi {
           estimates.stream().collect(Collectors.toMap(e -> e.participant().id(), e -> e));
       for (Participant p : participants) {
         Estimate est = estimateByParticipant.get(p.id());
-        csv.append(",").append(est != null ? est.storyPoints() : "");
+        csv.append(",").append(est != null && est.storyPoints() != null ? est.storyPoints() : "");
         if (hasComments) {
           csv.append(",")
               .append(est != null && est.comment() != null ? escapeCsv(est.comment()) : "");
@@ -433,7 +438,10 @@ public class RoomController implements RoomsApi {
 
     List<Estimate> estimates = estimateService.getEstimatesForTask(phantom.id());
     Set<UUID> votedParticipantIds =
-        estimates.stream().map(e -> e.participant().id()).collect(Collectors.toSet());
+        estimates.stream()
+            .filter(Estimate::hasVoted)
+            .map(e -> e.participant().id())
+            .collect(Collectors.toSet());
 
     EstimateResponse myEstimate = null;
     if (participantId != null) {
@@ -456,9 +464,10 @@ public class RoomController implements RoomsApi {
 
     LiveRoomResults results = null;
     if (roomRevealed) {
+      List<Estimate> voted = estimates.stream().filter(Estimate::hasVoted).toList();
       List<EstimateResponse> estimateResponses =
-          estimates.stream().map(estimateMapper::toResponse).toList();
-      List<String> points = estimates.stream().map(Estimate::storyPoints).toList();
+          voted.stream().map(estimateMapper::toResponse).toList();
+      List<String> points = voted.stream().map(Estimate::storyPoints).toList();
       results =
           new LiveRoomResults()
               .estimates(estimateResponses)
@@ -520,11 +529,13 @@ public class RoomController implements RoomsApi {
 
       List<EstimateResponse> allEstimates = null;
       if (roomRevealed) {
-        allEstimates = estimates.stream().map(estimateMapper::toResponse).toList();
+        allEstimates =
+            estimates.stream().filter(Estimate::hasVoted).map(estimateMapper::toResponse).toList();
       }
 
       List<String> points = estimates.stream().map(Estimate::storyPoints).toList();
       long questionVotesCount = EstimationStats.countQuestionVotes(points);
+      int votedCount = (int) estimates.stream().filter(Estimate::hasVoted).count();
 
       TaskWithEstimateResponse taskResponse =
           new TaskWithEstimateResponse()
@@ -534,7 +545,7 @@ public class RoomController implements RoomsApi {
               .sortOrder(task.sortOrder())
               .myEstimate(myEstimate)
               .allEstimates(allEstimates)
-              .votedCount(estimates.size())
+              .votedCount(votedCount)
               .totalParticipants((int) totalParticipants)
               .finalEstimate(task.finalEstimate())
               .revealed(task.revealed())

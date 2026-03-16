@@ -1,8 +1,8 @@
 type: object
-required: [storyPoints]
 properties:
   storyPoints:
     $ref: '../enums/StoryPoints.yaml'
+    nullable: true
   comment:
     type: string
     maxLength: 500

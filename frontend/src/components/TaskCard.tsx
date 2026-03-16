@@ -6,6 +6,7 @@ import { SP_VALUES } from '@/api/types';
 import { TextArea } from '@/components/TextInput';
 import { CommentInput } from '@/components/CommentInput';
 import { useSaveIndicator } from '@/hooks/useSaveIndicator';
+import { getDraftComment, clearDraftComment, saveDraftComment } from '@/api/client';
 import type { StoryPoints, EstimateResponse } from '@/api/types';
 
 interface TaskCardProps {
@@ -55,7 +56,7 @@ export const TaskCard = memo(function TaskCard({
 }: TaskCardProps) {
   const hasVoted = selectedSp !== null;
   const showCommentBox = !revealed && !disabled && (commentTemplate || commentRequired);
-  const [comment, setComment] = useState(myComment ?? commentTemplate ?? '');
+  const [comment, setComment] = useState(() => getDraftComment(id) ?? myComment ?? commentTemplate ?? '');
   const { saving, showSaveIndicator } = useSaveIndicator();
 
   return (
@@ -97,7 +98,10 @@ export const TaskCard = memo(function TaskCard({
           selectedValue={selectedSp}
           onSelect={(value) => {
             onEstimate(id, value, value !== null ? (comment.trim() || undefined) : undefined);
-            if (value !== null) showSaveIndicator();
+            if (value !== null) {
+              clearDraftComment(id);
+              showSaveIndicator();
+            }
           }}
           disabled={disabled}
         />
@@ -107,13 +111,17 @@ export const TaskCard = memo(function TaskCard({
       {showCommentBox && (
         <CommentInput
           comment={comment}
-          onCommentChange={setComment}
+          onCommentChange={(value) => {
+            setComment(value);
+            saveDraftComment(id, value);
+          }}
           hasTemplate={Boolean(commentTemplate)}
-          selectedSp={selectedSp}
           onCommentSave={(newComment) => {
-            if (selectedSp === null) return;
             onEstimate(id, selectedSp, newComment || undefined);
-            showSaveIndicator();
+            if (selectedSp !== null) {
+              clearDraftComment(id);
+              showSaveIndicator();
+            }
           }}
           saving={saving}
         />
