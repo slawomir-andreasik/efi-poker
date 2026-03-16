@@ -45,6 +45,26 @@ Or run everything in Docker:
 make docker-dev
 ```
 
+### IntelliJ IDEA
+
+The project includes shared run configurations in `.run/`:
+
+| Configuration | Description |
+|---------------|-------------|
+| **Backend** | Spring Boot app with `local` profile |
+| **Frontend** | Vite dev server with HMR |
+
+Both configurations load environment variables from `.env` (requires the [EnvFile](https://plugins.jetbrains.com/plugin/7861-envfile) plugin).
+
+To get started:
+1. Copy `.env.example` to `.env`
+2. If port 5432 is already in use (e.g. system PostgreSQL), set a different port:
+   ```
+   POSTGRES_PORT=15432
+   ```
+   Docker Compose will bind to this port, and Spring Boot will auto-detect it.
+3. Run **Backend** and **Frontend** from the Run Configurations dropdown
+
 ### Key commands
 
 | Command | Description |
