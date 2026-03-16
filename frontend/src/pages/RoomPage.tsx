@@ -70,8 +70,19 @@ export function RoomPage() {
 
   const handleEstimate = useCallback(async (taskId: string, value: StoryPoints | null, comment?: string) => {
     if (!slug || !roomId) return;
-    logger.debug(`Estimate: task=${taskId} sp=${value}`);
 
+    // Draft save: no SP, only comment (blur without selecting SP)
+    if (value === null && comment) {
+      logger.debug(`Draft comment: task=${taskId}`);
+      try {
+        await submitEstimate.mutateAsync({ taskId, comment });
+      } catch (err) {
+        logger.warn('Failed to save draft comment:', getErrorMessage(err));
+      }
+      return;
+    }
+
+    logger.debug(`Estimate: task=${taskId} sp=${value}`);
     const previousValue = votes[taskId] ?? null;
 
     if (value === null) {

@@ -624,7 +624,7 @@ export function ProjectPage() {
                               return (
                                 <td key={name} className={`text-center py-2 px-2 font-medium ${isQuestion ? 'text-efi-warning bg-efi-warning/10' : 'text-efi-gold-light'
                                   }`}>
-                                  {est ? est.storyPoints : '-'}
+                                  {est?.storyPoints ?? '-'}
                                 </td>
                               );
                             })}

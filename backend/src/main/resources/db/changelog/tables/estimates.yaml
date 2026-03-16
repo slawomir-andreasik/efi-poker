@@ -25,3 +25,17 @@ databaseChangeLog:
               DROP INDEX IF EXISTS idx_estimates_participant;
               DROP INDEX IF EXISTS idx_estimates_task;
               DROP TABLE IF EXISTS estimates;
+
+  - changeSet:
+      id: "estimates-002-nullable-story-points"
+      author: "sandreasik"
+      comment: "Allow saving comment without story points (draft estimate)"
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE estimates ALTER COLUMN story_points DROP NOT NULL;
+      rollback:
+        - sql:
+            sql: |
+              UPDATE estimates SET story_points = '?' WHERE story_points IS NULL;
+              ALTER TABLE estimates ALTER COLUMN story_points SET NOT NULL;

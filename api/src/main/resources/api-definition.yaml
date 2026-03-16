@@ -2791,8 +2791,6 @@ components:
         comment:
           maxLength: 500
           type: string
-      required:
-      - storyPoints
       type: object
     EstimateResponse:
       example:
@@ -2824,7 +2822,6 @@ components:
       - id
       - participantId
       - participantNickname
-      - storyPoints
       type: object
     AuthConfigResponse:
       example:

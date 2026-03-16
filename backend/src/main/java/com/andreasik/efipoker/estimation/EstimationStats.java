@@ -68,6 +68,7 @@ public final class EstimationStats {
   public static List<Double> extractNumericPoints(List<String> storyPoints) {
     List<Double> numeric = new ArrayList<>();
     for (String sp : storyPoints) {
+      if (sp == null) continue;
       try {
         numeric.add(Double.parseDouble(sp));
       } catch (NumberFormatException ignored) {

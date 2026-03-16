@@ -29,10 +29,13 @@ public class RoundHistoryService {
   @Transactional
   public void saveRoundSnapshot(RoomEntity room, List<EstimateEntity> estimates) {
     log.debug("saveRoundSnapshot: roomId={}, round={}", room.getId(), room.getRoundNumber());
-    List<VoteSnapshot> votes = buildVoteSnapshots(estimates);
+    // Exclude draft estimates (no SP) from round snapshot
+    List<EstimateEntity> voted =
+        estimates.stream().filter(e -> e.getStoryPoints() != null).toList();
+    List<VoteSnapshot> votes = buildVoteSnapshots(voted);
     String votesJson = serializeVotes(votes);
 
-    List<String> points = estimates.stream().map(EstimateEntity::getStoryPoints).toList();
+    List<String> points = voted.stream().map(EstimateEntity::getStoryPoints).toList();
     Double average = EstimationStats.computeAverage(points);
     Double median = EstimationStats.computeMedian(points);
 
@@ -49,7 +52,7 @@ public class RoundHistoryService {
                 median != null
                     ? BigDecimal.valueOf(median).setScale(2, RoundingMode.HALF_UP)
                     : null)
-            .voteCount(estimates.size())
+            .voteCount(voted.size())
             .votesJson(votesJson)
             .build();
 
@@ -58,7 +61,7 @@ public class RoundHistoryService {
         "Round snapshot saved: roomId={}, round={}, votes={}",
         room.getId(),
         room.getRoundNumber(),
-        estimates.size());
+        voted.size());
   }
 
   public List<RoundHistoryEntry> getHistory(UUID roomId) {
@@ -106,7 +109,8 @@ public class RoundHistoryService {
               s ->
                   new RoundHistoryVote()
                       .nickname(s.nickname())
-                      .storyPoints(StoryPoints.fromValue(s.storyPoints())))
+                      .storyPoints(
+                          s.storyPoints() != null ? StoryPoints.fromValue(s.storyPoints()) : null))
           .toList();
     } catch (JsonProcessingException e) {
       log.warn("Failed to deserialize votes: {}", e.getMessage());

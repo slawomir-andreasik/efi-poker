@@ -256,6 +256,30 @@ class ArchitectureTest extends BaseArchUnitTest {
             "RoomMapperTest.java -> com.andreasik.efipoker.api.model.RoomType");
 
     @Test
+    void entities_should_use_toString_onlyExplicitlyIncluded() throws IOException {
+      List<String> violations = new ArrayList<>();
+      try (Stream<Path> files =
+          Files.walk(SRC_ROOT.resolve("main")).filter(p -> p.toString().endsWith("Entity.java"))) {
+        files.forEach(
+            path -> {
+              try {
+                String content = Files.readString(path);
+                if (content.contains("@Entity")
+                    && !content.contains("@ToString(onlyExplicitlyIncluded = true)")) {
+                  violations.add(path.getFileName().toString());
+                }
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
+      }
+      assertThat(violations)
+          .as(
+              "JPA entities must use @ToString(onlyExplicitlyIncluded = true) to prevent lazy-loading")
+          .isEmpty();
+    }
+
+    @Test
     void should_not_use_inline_fqn_when_import_is_possible() throws IOException {
       assertThat(SRC_ROOT.toFile())
           .as("SRC_ROOT must point to backend/src (check user.dir)")

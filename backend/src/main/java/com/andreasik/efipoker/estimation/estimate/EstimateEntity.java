@@ -46,7 +46,7 @@ public class EstimateEntity {
   @JoinColumn(name = "participant_id", nullable = false)
   private ParticipantEntity participant;
 
-  @Column(name = "story_points", nullable = false, length = 10)
+  @Column(name = "story_points", length = 10)
   @ToString.Include
   private String storyPoints;
 

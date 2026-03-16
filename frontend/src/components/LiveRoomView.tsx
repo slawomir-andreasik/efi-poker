@@ -21,6 +21,7 @@ import { TextInput } from '@/components/TextInput';
 import { CommentInput } from '@/components/CommentInput';
 import { RoomSettings } from '@/components/RoomSettings';
 import { ShareButton } from '@/components/ShareButton';
+import { getDraftComment, clearDraftComment, saveDraftComment } from '@/api/client';
 
 interface LiveRoomViewProps {
   slug: string;
@@ -91,18 +92,24 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
     }
   }, [liveState?.myEstimate]);
 
-  // Initialize comment from server or template (once)
+  // Initialize comment from server, localStorage draft, or template (once)
   const commentInitializedRef = useRef(false);
   useEffect(() => {
     if (commentInitializedRef.current) return;
     if (liveState?.myEstimate?.comment) {
       setComment(liveState.myEstimate.comment);
       commentInitializedRef.current = true;
-    } else if (liveState?.commentTemplate) {
-      setComment(liveState.commentTemplate);
-      commentInitializedRef.current = true;
+    } else {
+      const draft = liveState?.taskId ? getDraftComment(liveState.taskId) : null;
+      if (draft) {
+        setComment(draft);
+        commentInitializedRef.current = true;
+      } else if (liveState?.commentTemplate) {
+        setComment(liveState.commentTemplate);
+        commentInitializedRef.current = true;
+      }
     }
-  }, [liveState?.myEstimate?.comment, liveState?.commentTemplate]);
+  }, [liveState?.myEstimate?.comment, liveState?.commentTemplate, liveState?.taskId]);
 
   async function handleEstimateSubmit(value: StoryPoints) {
     if (!liveState?.taskId) return;
@@ -118,6 +125,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
         await deleteEstimate.mutateAsync(liveState.taskId);
       } else {
         await submitEstimate.mutateAsync({ taskId: liveState.taskId, storyPoints: value, comment: comment.trim() || undefined });
+        clearDraftComment(liveState.taskId);
         showSaveIndicator();
       }
     } catch (err) {
@@ -165,6 +173,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
     try {
       const body = topicInput.trim() ? { topic: topicInput.trim() } : {};
       await newRound.mutateAsync(body);
+      if (liveState?.taskId) clearDraftComment(liveState.taskId);
       setTopicInput('');
       setSelectedEstimate(null);
       setComment(liveState?.commentTemplate ?? '');
@@ -330,16 +339,19 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
               {showCommentBox && hasParticipant && (
                 <CommentInput
                   comment={comment}
-                  onCommentChange={setComment}
+                  onCommentChange={(value) => {
+                    setComment(value);
+                    if (liveState?.taskId) saveDraftComment(liveState.taskId, value);
+                  }}
                   hasTemplate={Boolean(liveState?.commentTemplate)}
-                  selectedSp={selectedEstimate}
                   onCommentSave={(newComment) => {
-                    if (selectedEstimate && liveState?.taskId) {
+                    if (liveState?.taskId) {
                       void submitEstimate.mutateAsync({
                         taskId: liveState.taskId,
-                        storyPoints: selectedEstimate,
+                        storyPoints: selectedEstimate || undefined,
                         comment: newComment || undefined,
                       }).then(() => {
+                        clearDraftComment(liveState.taskId!);
                         showSaveIndicator();
                       }).catch((err) => {
                         showToast(getErrorMessage(err));

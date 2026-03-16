@@ -3,7 +3,6 @@ required:
   - id
   - participantId
   - participantNickname
-  - storyPoints
   - createdAt
 properties:
   id:
@@ -16,6 +15,7 @@ properties:
     type: string
   storyPoints:
     $ref: '../enums/StoryPoints.yaml'
+    nullable: true
   comment:
     type: string
     nullable: true

@@ -71,11 +71,13 @@ public class AnalyticsService {
     Map<UUID, Map<String, String>> votesByParticipant = new HashMap<>();
     estimatesByTask.forEach(
         (taskId, ests) ->
-            ests.forEach(
-                e ->
-                    votesByParticipant
-                        .computeIfAbsent(e.participant().id(), k -> new HashMap<>())
-                        .put(taskId.toString(), e.storyPoints())));
+            ests.stream()
+                .filter(Estimate::hasVoted)
+                .forEach(
+                    e ->
+                        votesByParticipant
+                            .computeIfAbsent(e.participant().id(), k -> new HashMap<>())
+                            .put(taskId.toString(), e.storyPoints())));
 
     // Build task analytics entries
     List<TaskAnalyticsEntry> taskAnalytics = new ArrayList<>();
