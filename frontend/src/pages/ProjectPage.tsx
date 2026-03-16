@@ -61,7 +61,7 @@ export function ProjectPage() {
   const [deadline, setDeadline] = useState(getDefaultDeadline(3));
   const [roomType, setRoomType] = useState<RoomType>('LIVE');
   const [autoRevealOnDeadline, setAutoRevealOnDeadline] = useState(true);
-  const [commentTemplate, setCommentTemplate] = useState(DEFAULT_COMMENT_TEMPLATE);
+  const [commentTemplate, setCommentTemplate] = useState('');
   const [commentRequired, setCommentRequired] = useState(false);
 
   // Queries
@@ -155,7 +155,7 @@ export function ProjectPage() {
       setDeadline(getDefaultDeadline(3));
       setRoomType('LIVE');
       setAutoRevealOnDeadline(true);
-      setCommentTemplate(DEFAULT_COMMENT_TEMPLATE);
+      setCommentTemplate('');
       setCommentRequired(false);
       setShowForm(false);
     } catch (err) {
@@ -741,7 +741,7 @@ export function ProjectPage() {
                     <div className="flex-1 flex flex-col">
                       <button
                         type="button"
-                        onClick={() => setRoomType('LIVE')}
+                        onClick={() => { setRoomType('LIVE'); setCommentTemplate(''); }}
                         className={`w-full px-3 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none ${roomType === 'LIVE'
                           ? roomTypeBadge('LIVE')
                           : 'border-white/12 text-efi-text-secondary hover:text-efi-text-primary hover:border-white/20'
@@ -754,7 +754,7 @@ export function ProjectPage() {
                     <div className="flex-1 flex flex-col">
                       <button
                         type="button"
-                        onClick={() => setRoomType('ASYNC')}
+                        onClick={() => { setRoomType('ASYNC'); setCommentTemplate(DEFAULT_COMMENT_TEMPLATE); }}
                         className={`w-full px-3 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none ${roomType === 'ASYNC'
                           ? 'bg-efi-info/20 border-efi-info/40 text-efi-info'
                           : 'border-white/12 text-efi-text-secondary hover:text-efi-text-primary hover:border-white/20'
