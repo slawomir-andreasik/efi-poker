@@ -39,14 +39,12 @@ configure(subprojects.filter { it.name != "frontend" }) {
     tasks.withType<JavaCompile>().configureEach {
         options.encoding = "UTF-8"
         options.compilerArgs.addAll(listOf("-parameters"))
-        options.isFork = true
-        options.forkOptions.memoryMaximumSize = "512m"
     }
 
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
         jvmArgs("-Xmx512m", "-XX:+UseG1GC")
-        maxParallelForks = (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(1)
+        maxParallelForks = 2
         testLogging {
             events("passed", "skipped", "failed")
         }
@@ -61,7 +59,6 @@ configure(subprojects.filter { it.name != "frontend" }) {
         classpath = testTask.get().classpath
         useJUnitPlatform { includeTags("unit") }
         jvmArgs("-Xmx256m", "-XX:+UseG1GC")
-        maxParallelForks = (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(1)
     }
 
     tasks.register<Test>("integrationTest") {
@@ -71,6 +68,7 @@ configure(subprojects.filter { it.name != "frontend" }) {
         classpath = testTask.get().classpath
         useJUnitPlatform { includeTags("component", "module") }
         jvmArgs("-Xmx512m", "-XX:+UseG1GC")
+        maxParallelForks = 1
         shouldRunAfter("unitTest")
     }
 
