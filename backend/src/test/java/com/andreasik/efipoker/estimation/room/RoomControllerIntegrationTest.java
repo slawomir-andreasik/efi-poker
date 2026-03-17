@@ -460,6 +460,29 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
     }
 
     @Test
+    void should_escape_carriage_returns_in_csv_comments() throws Exception {
+      RoomEntity room = roomRepository.save(Fixtures.revealedRoomEntity(project));
+      ParticipantEntity participant =
+          participantRepository.save(Fixtures.participantEntity(project, "Bob"));
+      TaskEntity task = taskRepository.save(Fixtures.taskEntity(room));
+      EstimateEntity estimate = Fixtures.estimateEntity(task, participant, "8");
+      estimate.setComment("line1\r\nline2");
+      estimateRepository.save(estimate);
+
+      String csv =
+          mockMvc
+              .perform(
+                  get("/api/v1/rooms/{roomId}/results/export", room.getId())
+                      .header("X-Admin-Code", project.getAdminCode()))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      assertThat(csv).contains("\"line1\r\nline2\"");
+    }
+
+    @Test
     void should_reject_not_revealed_403() throws Exception {
       RoomEntity room = roomRepository.save(Fixtures.roomEntity(project));
 

@@ -1,11 +1,14 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { Copy } from 'lucide-react';
 import { getAuth, ApiError } from '@/api/client';
 import { queryKeys } from '@/api/queryKeys';
 import { roomApi } from '@/api/queries';
 import { getErrorMessage } from '@/utils/error';
+import { formatResultsAsMarkdown } from '@/utils/markdown';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useToast } from '@/components/Toast';
 import { PageSpinner } from '@/components/PageSpinner';
 import { NotFoundState } from '@/components/NotFoundState';
 import { TraceCopyButton } from '@/components/TraceCopyButton';
@@ -23,6 +26,7 @@ function getTaskSp(task: TaskEstimate): number {
 export function ResultsPage() {
   const { slug, roomId } = useParams<{ slug: string; roomId: string }>();
   const projectName = slug ? getAuth(slug).projectName ?? slug : slug ?? '';
+  const { showToast } = useToast();
 
   const { data: results, isLoading, error } = useQuery({
     queryKey: queryKeys.rooms.results(roomId!),
@@ -74,6 +78,16 @@ export function ResultsPage() {
     [results],
   );
 
+  const handleCopyMarkdown = useCallback(async () => {
+    const md = formatResultsAsMarkdown(results?.title ?? '', tableData, participantNames);
+    try {
+      await navigator.clipboard.writeText(md);
+      showToast('Results copied as Markdown!', 'success');
+    } catch (err) {
+      showToast(getErrorMessage(err));
+    }
+  }, [results?.title, tableData, participantNames, showToast]);
+
   if (isLoading && !results) {
     return <PageSpinner />;
   }
@@ -109,6 +123,15 @@ export function ResultsPage() {
           </div>
         </div>
         <div className="mt-3 sm:mt-0 flex gap-2">
+          {tableData.length > 0 && (
+            <button
+              onClick={handleCopyMarkdown}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold rounded-lg transition-colors active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none cursor-pointer"
+            >
+              <Copy className="w-4 h-4" />
+              Copy Markdown
+            </button>
+          )}
           <Link
             to={`/p/${slug}/r/${roomId}/analytics`}
             className="px-3 py-1.5 text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold rounded-lg transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none cursor-pointer"

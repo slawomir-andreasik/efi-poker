@@ -127,7 +127,7 @@ tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("boot
     environment.set(mapOf(
         "BP_JVM_CDS_ENABLED" to "true",
         "BP_JVM_VERSION" to "25",
-        "BPL_JVM_THREAD_COUNT" to "50", // CDS training run only; runtime set in docker-compose.prod.yml
+        "BPL_JVM_THREAD_COUNT" to "50",
         "BP_HEALTH_CHECKER_ENABLED" to "true",
         "THC_PORT" to "9091",
         "THC_PATH" to "/actuator/health",

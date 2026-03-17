@@ -576,7 +576,10 @@ public class RoomController implements RoomsApi {
   }
 
   private String escapeCsv(String value) {
-    if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+    if (value.contains(",")
+        || value.contains("\"")
+        || value.contains("\n")
+        || value.contains("\r")) {
       return "\"" + value.replace("\"", "\"\"") + "\"";
     }
     return value;
