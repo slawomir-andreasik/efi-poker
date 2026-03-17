@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 interface TaskEstimate {
   taskId: string;
   taskTitle: string;
@@ -35,6 +37,8 @@ function consensusColor(level: 'consensus' | 'close' | 'divergent'): string {
 }
 
 export function ResultsTable({ tasks, participants }: ResultsTableProps) {
+  const [showComments, setShowComments] = useState(false);
+
   if (tasks.length === 0) {
     return (
       <p className="text-efi-text-secondary text-center py-8">No results to display yet.</p>
@@ -42,9 +46,21 @@ export function ResultsTable({ tasks, participants }: ResultsTableProps) {
   }
 
   const hasFinalEstimates = tasks.some((t) => t.finalEstimate);
+  const hasAnyComments = tasks.some((t) => Object.keys(t.comments).length > 0);
 
   return (
     <div className="relative">
+      {hasAnyComments && (
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={() => setShowComments((v) => !v)}
+            aria-pressed={showComments}
+            className="text-xs text-efi-text-tertiary hover:text-efi-text-secondary transition-colors cursor-pointer"
+          >
+            {showComments ? 'Hide comments' : 'Show comments'}
+          </button>
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[600px]">
         <thead>
@@ -78,11 +94,14 @@ export function ResultsTable({ tasks, participants }: ResultsTableProps) {
                   return (
                     <td
                       key={name}
-                      title={taskComment || undefined}
-                      className={`text-center py-2 px-2 font-medium ${isQuestion ? 'text-efi-warning bg-efi-warning/10 rounded' : 'text-efi-text-secondary'} ${taskComment ? 'cursor-help underline decoration-dotted decoration-efi-text-secondary/60' : ''}`}
+                      className={`text-center py-2 px-2 font-medium ${isQuestion ? 'text-efi-warning bg-efi-warning/10 rounded' : 'text-efi-text-secondary'}`}
                     >
                       {value ?? '-'}
-                      {taskComment && <span className="text-[10px] text-efi-text-tertiary align-super ml-0.5" aria-label="Has comment">*</span>}
+                      {showComments && taskComment && (
+                        <p className="text-[10px] text-efi-text-tertiary font-normal mt-0.5 whitespace-pre-line break-words max-w-[150px] mx-auto">
+                          {taskComment}
+                        </p>
+                      )}
                     </td>
                   );
                 })}

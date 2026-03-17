@@ -16,11 +16,11 @@ function task(overrides: Partial<TaskEstimate> = {}): TaskEstimate {
 }
 
 describe('formatResultsAsMarkdown', () => {
-  it('should render room title as H1 and tasks as H2', () => {
+  it('should render room title as H1 and tasks as H3', () => {
     const md = formatResultsAsMarkdown('Sprint 42', [task()], ['Alice', 'Bob']);
 
     expect(md).toContain('# Results: Sprint 42');
-    expect(md).toContain('## Login Page');
+    expect(md).toContain('### Login Page');
   });
 
   it('should render participants with story points', () => {
@@ -118,6 +118,27 @@ describe('formatResultsAsMarkdown', () => {
     );
 
     expect(md).toContain('Consensus: 1/1');
+  });
+
+  it('should group tasks by consensus when mixed', () => {
+    const agreed = task({ taskTitle: 'Easy', estimates: { Alice: 3, Bob: 3 } });
+    const divergent = task({ taskTitle: 'Hard', estimates: { Alice: 5, Bob: 13 } });
+    const md = formatResultsAsMarkdown('Sprint', [agreed, divergent], ['Alice', 'Bob']);
+
+    expect(md).toContain('## Agreed (1)');
+    expect(md).toContain('## Needs Discussion (1)');
+    expect(md).toMatch(/Agreed[\s\S]*Easy[\s\S]*Needs Discussion[\s\S]*Hard/);
+  });
+
+  it('should skip group headers when all tasks have same consensus', () => {
+    const t1 = task({ taskTitle: 'A', estimates: { Alice: 5, Bob: 3 } });
+    const t2 = task({ taskTitle: 'B', estimates: { Alice: 8, Bob: 2 } });
+    const md = formatResultsAsMarkdown('Sprint', [t1, t2], ['Alice', 'Bob']);
+
+    expect(md).not.toContain('## Agreed');
+    expect(md).not.toContain('## Needs Discussion');
+    expect(md).toContain('### A');
+    expect(md).toContain('### B');
   });
 
   it('should handle question mark votes', () => {
