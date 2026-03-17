@@ -19,20 +19,24 @@ properties:
     type: string
   description:
     type: string
+    nullable: true
   roomType:
     $ref: '../enums/RoomType.yaml'
   deadline:
     type: string
     format: date-time
+    nullable: true
   status:
     $ref: '../enums/RoomStatus.yaml'
   topic:
     type: string
+    nullable: true
   roundNumber:
     type: integer
   autoRevealOnDeadline:
     type: boolean
   commentTemplate:
     type: string
+    nullable: true
   commentRequired:
     type: boolean

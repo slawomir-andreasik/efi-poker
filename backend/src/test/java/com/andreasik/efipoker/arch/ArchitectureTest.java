@@ -256,16 +256,15 @@ class ArchitectureTest extends BaseArchUnitTest {
             "RoomMapperTest.java -> com.andreasik.efipoker.api.model.RoomType");
 
     @Test
-    void entities_should_use_toString_onlyExplicitlyIncluded() throws IOException {
+    void should_not_use_lombok_experimental() throws IOException {
       List<String> violations = new ArrayList<>();
       try (Stream<Path> files =
-          Files.walk(SRC_ROOT.resolve("main")).filter(p -> p.toString().endsWith("Entity.java"))) {
+          Files.walk(SRC_ROOT.resolve("main")).filter(p -> p.toString().endsWith(".java"))) {
         files.forEach(
             path -> {
               try {
                 String content = Files.readString(path);
-                if (content.contains("@Entity")
-                    && !content.contains("@ToString(onlyExplicitlyIncluded = true)")) {
+                if (content.contains("lombok.experimental")) {
                   violations.add(path.getFileName().toString());
                 }
               } catch (IOException e) {
@@ -275,7 +274,41 @@ class ArchitectureTest extends BaseArchUnitTest {
       }
       assertThat(violations)
           .as(
-              "JPA entities must use @ToString(onlyExplicitlyIncluded = true) to prevent lazy-loading")
+              "No lombok.experimental imports - use stable Lombok API only (lombok.config also blocks this)")
+          .isEmpty();
+    }
+
+    @Test
+    void entities_should_follow_lombok_conventions() throws IOException {
+      List<String> violations = new ArrayList<>();
+      try (Stream<Path> files =
+          Files.walk(SRC_ROOT.resolve("main")).filter(p -> p.toString().endsWith("Entity.java"))) {
+        files.forEach(
+            path -> {
+              try {
+                String content = Files.readString(path);
+                String filename = path.getFileName().toString();
+                if (!content.contains("@Entity")) return;
+
+                if (!content.contains("@ToString(onlyExplicitlyIncluded = true)")) {
+                  violations.add(filename + ": missing @ToString(onlyExplicitlyIncluded = true)");
+                }
+                if (content.contains("@Data")) {
+                  violations.add(filename + ": @Data forbidden on entities");
+                }
+                if (content.contains("@EqualsAndHashCode")) {
+                  violations.add(
+                      filename + ": @EqualsAndHashCode forbidden on entities (use manual impl)");
+                }
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
+      }
+      assertThat(violations)
+          .as(
+              "JPA entities must follow Lombok conventions (no @Data, no @EqualsAndHashCode,"
+                  + " @ToString(onlyExplicitlyIncluded = true) required)")
           .isEmpty();
     }
 

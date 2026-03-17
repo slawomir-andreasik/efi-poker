@@ -84,7 +84,7 @@ class AllModulesIntegrationTest extends BaseModuleTest {
       Participant alice = participantService.joinProject(project.id(), "Alice", null, null);
       Participant bob = participantService.joinProject(project.id(), "Bob", null, null);
 
-      var participants = participantService.listParticipants(project.id());
+      List<Participant> participants = participantService.listParticipants(project.id());
       assertThat(participants).hasSize(2);
       assertThat(participants)
           .extracting(Participant::nickname)
@@ -172,7 +172,7 @@ class AllModulesIntegrationTest extends BaseModuleTest {
         participantService.joinProject(project.id(), "Alice", null, roomId);
         participantService.joinProject(project.id(), "Bob", null, null);
 
-        var participants = participantService.listParticipants(project.id());
+        List<Participant> participants = participantService.listParticipants(project.id());
 
         Participant alice =
             participants.stream()
