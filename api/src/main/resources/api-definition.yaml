@@ -3224,21 +3224,25 @@ components:
         title:
           type: string
         description:
+          nullable: true
           type: string
         roomType:
           $ref: "#/components/schemas/RoomType"
         deadline:
           format: date-time
+          nullable: true
           type: string
         status:
           $ref: "#/components/schemas/RoomStatus"
         topic:
+          nullable: true
           type: string
         roundNumber:
           type: integer
         autoRevealOnDeadline:
           type: boolean
         commentTemplate:
+          nullable: true
           type: string
         commentRequired:
           type: boolean
