@@ -2128,7 +2128,7 @@ components:
           type: string
         description:
           maxLength: 2000
-          pattern: "^(?!.*<[a-zA-Z/]).*$"
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         roomType:
           $ref: "#/components/schemas/RoomType"
@@ -2140,7 +2140,7 @@ components:
           type: boolean
         commentTemplate:
           maxLength: 2000
-          pattern: "^(?!.*<[a-zA-Z/]).*$"
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         commentRequired:
           default: false
@@ -2340,18 +2340,18 @@ components:
           type: string
         description:
           maxLength: 2000
-          pattern: "^(?!.*<[a-zA-Z/]).*$"
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         deadline:
           format: date-time
           type: string
         topic:
           maxLength: 500
-          pattern: "^(?!.*<[a-zA-Z/]).*$"
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         commentTemplate:
           maxLength: 2000
-          pattern: "^(?!.*<[a-zA-Z/]).*$"
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         commentRequired:
           type: boolean
@@ -2590,7 +2590,7 @@ components:
           type: string
         description:
           maxLength: 2000
-          pattern: "^(?!.*<[a-zA-Z/]).*$"
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         sortOrder:
           default: 0
@@ -2794,7 +2794,7 @@ components:
           type: string
         description:
           maxLength: 2000
-          pattern: "^(?!.*<[a-zA-Z/]).*$"
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         sortOrder:
           type: integer
@@ -2817,7 +2817,7 @@ components:
           $ref: "#/components/schemas/StoryPoints"
         comment:
           maxLength: 500
-          pattern: "^(?!.*<[a-zA-Z/]).*$"
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
       type: object
     EstimateResponse:

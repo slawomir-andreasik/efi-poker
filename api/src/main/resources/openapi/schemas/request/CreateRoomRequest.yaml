@@ -9,7 +9,7 @@ properties:
   description:
     type: string
     maxLength: 2000
-    pattern: '^(?!.*<[a-zA-Z/]).*$'
+    pattern: '^(?![\s\S]*<[a-zA-Z/])[\s\S]*$'
   roomType:
     $ref: '../enums/RoomType.yaml'
   deadline:
@@ -21,7 +21,7 @@ properties:
   commentTemplate:
     type: string
     maxLength: 2000
-    pattern: '^(?!.*<[a-zA-Z/]).*$'
+    pattern: '^(?![\s\S]*<[a-zA-Z/])[\s\S]*$'
   commentRequired:
     type: boolean
     default: false

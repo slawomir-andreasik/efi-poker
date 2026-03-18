@@ -8,6 +8,6 @@ properties:
   description:
     type: string
     maxLength: 2000
-    pattern: '^(?!.*<[a-zA-Z/]).*$'
+    pattern: '^(?![\s\S]*<[a-zA-Z/])[\s\S]*$'
   sortOrder:
     type: integer
