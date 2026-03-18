@@ -155,7 +155,7 @@ class LdapLoginIntegrationTest extends BaseComponentTest {
 
       mockMvc
           .perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content(body))
-          .andExpect(status().isForbidden());
+          .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -228,7 +228,7 @@ class LdapLoginIntegrationTest extends BaseComponentTest {
       // language=JSON
       String body =
           """
-          {"username":"newuser","password":"password123"}
+          {"username":"newuser","password":"Password123"}
           """;
 
       mockMvc
@@ -249,7 +249,7 @@ class LdapLoginIntegrationTest extends BaseComponentTest {
       // language=JSON
       String body =
           """
-          {"newPassword":"newpass123"}
+          {"newPassword":"NewPass123"}
           """;
 
       // Act & Assert

@@ -278,7 +278,6 @@ public class RoomController implements RoomsApi {
 
       entries.add(
           new ParticipantProgressEntry()
-              .participantId(participant.id())
               .nickname(participant.nickname())
               .votedCount(votedCount)
               .totalTasks(totalTasks)
@@ -385,6 +384,7 @@ public class RoomController implements RoomsApi {
     }
 
     return ResponseEntity.ok()
+        .header("Content-Type", "text/csv; charset=UTF-8")
         .header("Content-Disposition", "attachment; filename=\"room-" + roomId + ".csv\"")
         .body(csv.toString());
   }

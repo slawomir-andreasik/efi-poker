@@ -1843,6 +1843,12 @@ paths:
         schema:
           format: uuid
           type: string
+      - description: Admin code for project authorization
+        in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
       responses:
         "200":
           content:
@@ -1873,6 +1879,12 @@ paths:
         in: path
         name: slug
         required: true
+        schema:
+          type: string
+      - description: Admin code for project authorization
+        in: header
+        name: X-Admin-Code
+        required: false
         schema:
           type: string
       responses:
@@ -1978,6 +1990,7 @@ components:
         name:
           maxLength: 255
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
       required:
       - name
@@ -2066,6 +2079,7 @@ components:
         name:
           maxLength: 255
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
       type: object
     RoomResponse:
@@ -2110,9 +2124,11 @@ components:
         title:
           maxLength: 255
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         description:
           maxLength: 2000
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         roomType:
           $ref: "#/components/schemas/RoomType"
@@ -2124,6 +2140,7 @@ components:
           type: boolean
         commentTemplate:
           maxLength: 2000
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         commentRequired:
           default: false
@@ -2169,6 +2186,7 @@ components:
         nickname:
           maxLength: 100
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         roomId:
           description: "When provided, adds access to this room. Multiple room joins\
@@ -2185,6 +2203,7 @@ components:
         nickname:
           maxLength: 100
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
       required:
       - nickname
@@ -2317,18 +2336,22 @@ components:
         title:
           maxLength: 255
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         description:
           maxLength: 2000
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         deadline:
           format: date-time
           type: string
         topic:
           maxLength: 500
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         commentTemplate:
           maxLength: 2000
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         commentRequired:
           type: boolean
@@ -2463,13 +2486,11 @@ components:
         roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         slug: slug
         participants:
-        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-          hasCommentedAll: true
+        - hasCommentedAll: true
           nickname: nickname
           votedCount: 6
           totalTasks: 1
-        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-          hasCommentedAll: true
+        - hasCommentedAll: true
           nickname: nickname
           votedCount: 6
           totalTasks: 1
@@ -2565,9 +2586,11 @@ components:
         title:
           maxLength: 255
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         description:
           maxLength: 2000
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         sortOrder:
           default: 0
@@ -2612,6 +2635,7 @@ components:
           items:
             maxLength: 255
             minLength: 1
+            pattern: "^(?!.*<[a-zA-Z/]).*$"
             type: string
           maxItems: 200
           minItems: 1
@@ -2713,6 +2737,7 @@ components:
         topic:
           maxLength: 500
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
       type: object
     RoundHistoryEntry:
@@ -2765,9 +2790,11 @@ components:
         title:
           maxLength: 255
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         description:
           maxLength: 2000
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         sortOrder:
           type: integer
@@ -2790,6 +2817,7 @@ components:
           $ref: "#/components/schemas/StoryPoints"
         comment:
           maxLength: 500
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
       type: object
     EstimateResponse:
@@ -2853,11 +2881,13 @@ components:
           description: Unique username for the new account
           maxLength: 100
           minLength: 3
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         password:
           description: Password (8-128 characters)
           maxLength: 128
           minLength: 8
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$"
           type: string
         email:
           description: Optional email address
@@ -2890,6 +2920,7 @@ components:
         username:
           maxLength: 100
           minLength: 3
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         password:
           maxLength: 128
@@ -2944,6 +2975,7 @@ components:
         newPassword:
           maxLength: 128
           minLength: 8
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$"
           type: string
       required:
       - newPassword
@@ -3000,10 +3032,12 @@ components:
         username:
           maxLength: 100
           minLength: 3
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         password:
           maxLength: 128
           minLength: 8
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$"
           type: string
         email:
           format: email
@@ -3070,6 +3104,7 @@ components:
         newPassword:
           maxLength: 128
           minLength: 8
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$"
           type: string
       required:
       - newPassword
@@ -3382,15 +3417,11 @@ components:
       type: object
     ParticipantProgressEntry:
       example:
-        participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         hasCommentedAll: true
         nickname: nickname
         votedCount: 6
         totalTasks: 1
       properties:
-        participantId:
-          format: uuid
-          type: string
         nickname:
           type: string
         votedCount:
@@ -3402,7 +3433,6 @@ components:
           type: boolean
       required:
       - nickname
-      - participantId
       - totalTasks
       - votedCount
       type: object

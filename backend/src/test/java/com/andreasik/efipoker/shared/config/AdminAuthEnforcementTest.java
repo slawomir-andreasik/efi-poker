@@ -87,6 +87,21 @@ class AdminAuthEnforcementTest extends BaseComponentTest {
                   .content(body))
           .andExpect(status().isForbidden());
     }
+
+    @Test
+    void should_reject_room_analytics() throws Exception {
+      RoomEntity revealedRoom = roomRepository.save(Fixtures.revealedRoomEntity(project));
+      mockMvc
+          .perform(get("/api/v1/rooms/{id}/analytics", revealedRoom.getId()))
+          .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void should_reject_project_analytics() throws Exception {
+      mockMvc
+          .perform(get("/api/v1/projects/{slug}/analytics", project.getSlug()))
+          .andExpect(status().isForbidden());
+    }
   }
 
   @Nested

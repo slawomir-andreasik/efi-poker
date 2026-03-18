@@ -5,11 +5,13 @@ properties:
     type: string
     minLength: 3
     maxLength: 100
+    pattern: '^(?!.*<[a-zA-Z/]).*$'
     description: Unique username for the new account
   password:
     type: string
     minLength: 8
     maxLength: 128
+    pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$'
     description: Password (8-128 characters)
   email:
     type: string

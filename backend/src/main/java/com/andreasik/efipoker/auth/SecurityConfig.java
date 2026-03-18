@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,10 @@ public class SecurityConfig {
   private final Auth0Properties auth0Properties;
   private final JwtAuthenticationConverter jwtAuthenticationConverter;
 
+  /** When {@code true}, disables Spring Security default headers (proxy provides them in prod). */
+  @Value("${app.security.proxy-managed-headers:false}")
+  private boolean proxyManagedHeaders;
+
   public SecurityConfig(
       ObjectMapper objectMapper,
       Optional<Auth0SuccessHandler> auth0SuccessHandler,
@@ -45,8 +50,19 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http.csrf(AbstractHttpConfigurer::disable)
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+    http.csrf(AbstractHttpConfigurer::disable);
+
+    if (proxyManagedHeaders) {
+      // Proxy provides security headers in prod - disable Spring defaults to avoid duplicates
+      http.headers(
+          headers ->
+              headers
+                  .frameOptions(frame -> frame.disable())
+                  .httpStrictTransportSecurity(hsts -> hsts.disable())
+                  .contentTypeOptions(ct -> ct.disable()));
+    }
+
+    http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .sessionManagement(
             session ->
                 session.sessionCreationPolicy(

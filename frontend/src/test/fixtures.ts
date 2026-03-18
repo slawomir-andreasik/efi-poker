@@ -78,9 +78,9 @@ export function mockParticipantProgress(overrides?: Partial<ParticipantProgressR
     slug: 'A3X-K7B',
     totalTasks: 5,
     participants: [
-      { participantId: 'p1', nickname: 'Alice', votedCount: 5, totalTasks: 5, hasCommentedAll: true },
-      { participantId: 'p2', nickname: 'Bob', votedCount: 2, totalTasks: 5, hasCommentedAll: false },
-      { participantId: 'p3', nickname: 'Charlie', votedCount: 0, totalTasks: 5 },
+      { nickname: 'Alice', votedCount: 5, totalTasks: 5, hasCommentedAll: true },
+      { nickname: 'Bob', votedCount: 2, totalTasks: 5, hasCommentedAll: false },
+      { nickname: 'Charlie', votedCount: 0, totalTasks: 5 },
     ],
     ...overrides,
   };

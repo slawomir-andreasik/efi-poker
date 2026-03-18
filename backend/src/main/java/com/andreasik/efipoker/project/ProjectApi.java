@@ -8,4 +8,6 @@ public interface ProjectApi {
   void validateProjectExists(UUID projectId);
 
   void validateAdminCodeForProject(UUID projectId, String adminCode);
+
+  void validateAdminCodeBySlug(String slug, String adminCode);
 }

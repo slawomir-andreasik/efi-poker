@@ -410,7 +410,6 @@ export interface ParticipantProgressResponse {
 }
 
 export interface ParticipantProgressEntry {
-  participantId: string;
   nickname: string;
   votedCount: number;
   totalTasks: number;

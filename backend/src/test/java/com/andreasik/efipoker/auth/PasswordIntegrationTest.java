@@ -24,7 +24,7 @@ class PasswordIntegrationTest extends BaseComponentTest {
       // language=JSON
       String body =
           """
-          {"currentPassword":"testpassword","newPassword":"newpassword123"}
+          {"currentPassword":"testpassword","newPassword":"NewPassword1"}
           """;
 
       mockMvc
@@ -42,7 +42,7 @@ class PasswordIntegrationTest extends BaseComponentTest {
       // language=JSON
       String body =
           """
-          {"currentPassword":"wrongpassword","newPassword":"newpassword123"}
+          {"currentPassword":"wrongpassword","newPassword":"NewPassword1"}
           """;
 
       mockMvc
@@ -77,7 +77,7 @@ class PasswordIntegrationTest extends BaseComponentTest {
       // language=JSON
       String body =
           """
-          {"currentPassword":"testpassword","newPassword":"newpassword123"}
+          {"currentPassword":"testpassword","newPassword":"NewPassword1"}
           """;
 
       mockMvc
@@ -141,7 +141,7 @@ class PasswordIntegrationTest extends BaseComponentTest {
       // language=JSON
       String body =
           """
-          {"newPassword":"adminreset1"}
+          {"newPassword":"AdminReset1"}
           """;
 
       mockMvc
@@ -159,7 +159,7 @@ class PasswordIntegrationTest extends BaseComponentTest {
       // language=JSON
       String body =
           """
-          {"newPassword":"adminreset1"}
+          {"newPassword":"AdminReset1"}
           """;
 
       mockMvc
@@ -176,7 +176,7 @@ class PasswordIntegrationTest extends BaseComponentTest {
       // language=JSON
       String body =
           """
-          {"newPassword":"adminreset1"}
+          {"newPassword":"AdminReset1"}
           """;
 
       mockMvc

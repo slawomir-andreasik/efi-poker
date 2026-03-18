@@ -1,13 +1,9 @@
 type: object
 required:
-  - participantId
   - nickname
   - votedCount
   - totalTasks
 properties:
-  participantId:
-    type: string
-    format: uuid
   nickname:
     type: string
   votedCount:

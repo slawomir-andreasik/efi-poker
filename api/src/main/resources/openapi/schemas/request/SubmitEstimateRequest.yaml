@@ -6,3 +6,4 @@ properties:
   comment:
     type: string
     maxLength: 500
+    pattern: '^(?!.*<[a-zA-Z/]).*$'

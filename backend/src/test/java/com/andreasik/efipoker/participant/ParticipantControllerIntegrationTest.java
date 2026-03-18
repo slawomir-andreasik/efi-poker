@@ -128,7 +128,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               get("/api/v1/projects/{slug}/participants", project.getSlug())
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.length()").value(2))
           .andExpect(jsonPath("$[0].nickname").isNotEmpty())
@@ -140,7 +140,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               get("/api/v1/projects/{slug}/participants", project.getSlug())
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.length()").value(0));
     }
@@ -166,7 +166,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               get("/api/v1/projects/{slug}/participants", "nonexistent")
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isNotFound());
     }
   }
@@ -398,7 +398,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
                       "/api/v1/projects/{slug}/participants/{participantId}",
                       project.getSlug(),
                       participant.getId())
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isNoContent());
 
       assertThat(participantRepository.findByIdAndProjectId(participant.getId(), project.getId()))
@@ -442,7 +442,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
                       "/api/v1/projects/{slug}/participants/{participantId}",
                       project.getSlug(),
                       UUID.randomUUID())
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isNotFound());
     }
   }

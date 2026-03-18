@@ -28,12 +28,22 @@ public class GlobalExceptionHandler {
     return withTraceId(problem);
   }
 
-  @ExceptionHandler(UnauthorizedException.class)
-  public ProblemDetail handleUnauthorized(UnauthorizedException ex) {
-    log.warn("Unauthorized access: {}", ex.getMessage());
-    ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+  @ExceptionHandler(AuthenticationFailedException.class)
+  public ProblemDetail handleAuthenticationFailed(AuthenticationFailedException ex) {
+    log.warn("Authentication failed: {}", ex.getMessage());
+    ProblemDetail problem =
+        ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     problem.setTitle("Unauthorized");
     problem.setType(ErrorType.UNAUTHORIZED.uri());
+    return withTraceId(problem);
+  }
+
+  @ExceptionHandler(UnauthorizedException.class)
+  public ProblemDetail handleUnauthorized(UnauthorizedException ex) {
+    log.warn("Access denied: {}", ex.getMessage());
+    ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+    problem.setTitle("Forbidden");
+    problem.setType(ErrorType.FORBIDDEN.uri());
     return withTraceId(problem);
   }
 
@@ -134,7 +144,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(NoResourceFoundException.class)
   public ProblemDetail handleNoResourceFound(NoResourceFoundException ex) {
     log.debug("No resource found: {}", ex.getMessage());
-    ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Not found");
     problem.setTitle("Not Found");
     problem.setType(ErrorType.NOT_FOUND.uri());
     return withTraceId(problem);

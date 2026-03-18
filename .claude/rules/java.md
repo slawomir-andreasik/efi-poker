@@ -27,6 +27,14 @@
 - Combine fetch + validate into one method when controllers always do both (e.g. `validateAdminAndGetRoom(id, code)` replaces `getRoom()` + `validateAdmin()` - single DB fetch instead of two)
 - Delete: `findById()` + `delete(entity)`, never `existsById()` + `deleteById()` (TOCTOU race + double query)
 
+## Exception Patterns
+
+- `AuthenticationFailedException` → 401 Unauthorized (bad credentials, expired token) - for login/auth failures
+- `UnauthorizedException` → 403 Forbidden (wrong admin code, insufficient permissions) - for authorization failures
+- `ResourceNotFoundException` → 404 Not Found
+- Never reuse the same exception for 401 and 403 - HTTP status codes must be distinguishable
+- `NoResourceFoundException` (Spring's) → generic `"Not found"` - never expose framework internals
+
 ## MapStruct Gotchas
 
 - `EfiMapperConfig` as shared `@MapperConfig` - all project mappers reference it via `config = EfiMapperConfig.class`
@@ -57,3 +65,17 @@
 - Mapper tests: leaf mappers use `Mappers.getMapper()`, non-leaf use `new XxxMapperImpl(dep)`
 - Never use `@DirtiesContext` - clean up state manually instead
 - Protect Spring context cache: `@MockBean`, `@SpyBean`, `@DynamicPropertySource` on individual test classes each force a new context. If you need a mock, add it to `BaseComponentTest` so all integration tests share it. If you need dynamic properties (e.g. embedded server port), accept a separate context but document why
+
+### Fixtures
+
+- `Fixtures.java` in `shared/test/` - factory methods for domain objects and entity objects
+- Domain fixtures: `Fixtures.project()`, `Fixtures.room(project)`, `Fixtures.task(room)`, `Fixtures.participant(project)`, `Fixtures.estimate(task, participant)`
+- Entity fixtures: `Fixtures.projectEntity()`, `Fixtures.roomEntity(project)`, `Fixtures.revealedRoomEntity(project)`, etc. - use with `repository.save()` in component tests
+- Always use fixtures over manual builder calls - keeps test data consistent
+
+### Security Tests
+
+- `SecurityArchitectureTest` (arch) - scans source files and OpenAPI YAML schemas for security patterns: password complexity, HTML input validation, admin code hashing, HSTS in Nginx, startup validator checks
+- `SecurityAuditTest` (component) - behavioral tests: endpoint auth enforcement, participant ID exposure, CSV Content-Type, health version leak, error message details, login status codes
+- `ProdSecurityValidatorTest` (unit) - validates all startup security checks: admin password, JWT secret, DB password, LDAP config, Auth0 config
+- When adding new endpoints or schemas, verify security tests still pass - they catch missing auth and missing patterns

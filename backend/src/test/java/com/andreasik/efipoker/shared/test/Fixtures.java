@@ -16,8 +16,16 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 public final class Fixtures {
+
+  private static final BCryptPasswordEncoder ENCODER = new BCryptPasswordEncoder();
+
+  /** Well-known raw admin code for integration tests. Use in X-Admin-Code headers. */
+  public static final String TEST_ADMIN_CODE = "test-admin-code-for-integration-tests";
+
+  private static final String TEST_ADMIN_CODE_HASH = ENCODER.encode(TEST_ADMIN_CODE);
 
   private static final String SLUG_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   private static final SecureRandom RANDOM = new SecureRandom();
@@ -117,11 +125,7 @@ public final class Fixtures {
   }
 
   public static ProjectEntity projectEntity(String name, String slug) {
-    return ProjectEntity.builder()
-        .name(name)
-        .slug(slug)
-        .adminCode(UUID.randomUUID().toString())
-        .build();
+    return ProjectEntity.builder().name(name).slug(slug).adminCode(TEST_ADMIN_CODE_HASH).build();
   }
 
   public static RoomEntity roomEntity(ProjectEntity project) {

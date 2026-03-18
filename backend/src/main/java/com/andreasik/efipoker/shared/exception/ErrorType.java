@@ -5,6 +5,7 @@ import java.net.URI;
 public enum ErrorType {
   NOT_FOUND("not-found"),
   UNAUTHORIZED("unauthorized"),
+  FORBIDDEN("forbidden"),
   VALIDATION("validation"),
   BAD_REQUEST("bad-request"),
   CONFLICT("conflict"),

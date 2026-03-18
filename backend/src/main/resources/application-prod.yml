@@ -35,6 +35,10 @@ management:
       export:
         endpoint: ${OTLP_ENDPOINT:http://tempo:4318/v1/traces}
 
+app:
+  security:
+    proxy-managed-headers: true
+
 server:
   shutdown: graceful
   tomcat:

@@ -101,9 +101,8 @@ class GlobalExceptionHandlerTest extends BaseUnitTest {
       ProblemDetail problem =
           handler.handleUnauthorized(new UnauthorizedException("Access denied"));
 
-      assertThat(problem.getTitle()).isEqualTo("Unauthorized");
-      assertThat(problem.getType())
-          .isEqualTo(URI.create("https://efipoker.com/errors/unauthorized"));
+      assertThat(problem.getTitle()).isEqualTo("Forbidden");
+      assertThat(problem.getType()).isEqualTo(URI.create("https://efipoker.com/errors/forbidden"));
     }
 
     @Test

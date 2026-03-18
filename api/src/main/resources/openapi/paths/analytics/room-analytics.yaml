@@ -4,6 +4,7 @@ get:
   summary: Get analytics for a revealed/closed room
   parameters:
     - $ref: '../../parameters/RoomIdPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
   responses:
     '200':
       description: Room analytics

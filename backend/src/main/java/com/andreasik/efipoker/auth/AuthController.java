@@ -7,6 +7,7 @@ import com.andreasik.efipoker.api.model.ChangePasswordRequest;
 import com.andreasik.efipoker.api.model.LoginRequest;
 import com.andreasik.efipoker.api.model.RegisterRequest;
 import com.andreasik.efipoker.api.model.UserResponse;
+import com.andreasik.efipoker.shared.exception.AuthenticationFailedException;
 import com.andreasik.efipoker.shared.exception.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -93,7 +94,7 @@ public class AuthController implements AuthApi {
         // LOCAL/AUTH0 user - bcrypt check
         if (found.passwordHash() == null
             || !passwordEncoder.matches(password, found.passwordHash())) {
-          throw new UnauthorizedException("Invalid credentials");
+          throw new AuthenticationFailedException("Invalid credentials");
         }
         user = found;
       }
@@ -101,7 +102,7 @@ public class AuthController implements AuthApi {
       // User not found, LDAP enabled - try LDAP bind + provision
       user = authenticateViaLdap(username, password);
     } else {
-      throw new UnauthorizedException("Invalid credentials");
+      throw new AuthenticationFailedException("Invalid credentials");
     }
 
     userService.updateLastLogin(username);
@@ -115,11 +116,11 @@ public class AuthController implements AuthApi {
 
   private User authenticateViaLdap(String username, String password) {
     LdapAuthService ldap =
-        ldapAuthService.orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
+        ldapAuthService.orElseThrow(() -> new AuthenticationFailedException("Invalid credentials"));
 
     LdapAuthService.LdapUserInfo ldapUser =
         ldap.authenticate(username, password)
-            .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
+            .orElseThrow(() -> new AuthenticationFailedException("Invalid credentials"));
 
     return userService.findOrCreateLdapUser(ldapUser.uid(), ldapUser.mail(), ldapUser.isAdmin());
   }
