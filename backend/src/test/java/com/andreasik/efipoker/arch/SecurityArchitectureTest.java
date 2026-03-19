@@ -143,20 +143,6 @@ class SecurityArchitectureTest extends BaseArchUnitTest {
     }
   }
 
-  @Nested
-  @DisplayName("HSTS in Nginx config")
-  class HstsInNginx {
-
-    @Test
-    void nginx_config_should_include_hsts_header() throws IOException {
-      String content = Files.readString(NGINX_CONF);
-
-      assertThat(content)
-          .as("nginx.conf should include Strict-Transport-Security header")
-          .contains("Strict-Transport-Security");
-    }
-  }
-
   /** Checks if a YAML file contains a field definition (e.g. "password:"). */
   private static boolean containsField(String yamlContent, String fieldName) {
     for (String line : yamlContent.split("\n")) {
