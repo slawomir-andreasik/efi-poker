@@ -50,7 +50,7 @@ public class EstimateEntity {
   @ToString.Include
   private String storyPoints;
 
-  @Column(length = 500)
+  @Column(length = 2000)
   private String comment;
 
   @Column(name = "created_at", nullable = false, updatable = false)

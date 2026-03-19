@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: increase-comment-topic-limits
+      author: readability
+      comment: Increase comment and topic column limits from 500 to 2000 characters
+      changes:
+        - modifyDataType:
+            tableName: estimates
+            columnName: comment
+            newDataType: VARCHAR(2000)
+        - modifyDataType:
+            tableName: round_history
+            columnName: topic
+            newDataType: VARCHAR(2000)
+        - modifyDataType:
+            tableName: rooms
+            columnName: topic
+            newDataType: VARCHAR(2000)

@@ -14,7 +14,7 @@ properties:
     format: date-time
   topic:
     type: string
-    maxLength: 500
+    maxLength: 2000
     pattern: '^(?![\s\S]*<[a-zA-Z/])[\s\S]*$'
   commentTemplate:
     type: string

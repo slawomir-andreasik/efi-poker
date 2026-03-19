@@ -2346,7 +2346,7 @@ components:
           format: date-time
           type: string
         topic:
-          maxLength: 500
+          maxLength: 2000
           pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         commentTemplate:
@@ -2735,7 +2735,7 @@ components:
         topic: topic
       properties:
         topic:
-          maxLength: 500
+          maxLength: 2000
           minLength: 1
           pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
@@ -2816,7 +2816,7 @@ components:
         storyPoints:
           $ref: "#/components/schemas/StoryPoints"
         comment:
-          maxLength: 500
+          maxLength: 2000
           pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
       type: object

@@ -44,7 +44,7 @@ public class RoundHistoryEntity {
   @ToString.Include
   private int roundNumber;
 
-  @Column(length = 500)
+  @Column(length = 2000)
   @ToString.Include
   private String topic;
 

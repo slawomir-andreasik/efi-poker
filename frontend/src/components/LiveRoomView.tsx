@@ -267,7 +267,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                   }
                 }}
                 placeholder="Topic for this round (optional)"
-                maxLength={500}
+                maxLength={2000}
                 className="flex-1 rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
               />
               <button

@@ -63,7 +63,7 @@ public class RoomEntity {
   @ToString.Include
   private String status;
 
-  @Column(length = 500)
+  @Column(length = 2000)
   private String topic;
 
   @Column(name = "round_number", nullable = false)
