@@ -9,7 +9,7 @@ export function ProgressBar({ voted, total }: ProgressBarProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <div className="w-16 h-1.5 bg-efi-well rounded-full overflow-hidden">
+      <div className="w-20 h-2 bg-efi-well rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-500 ${allVoted ? 'bg-efi-success' : 'bg-gradient-to-r from-efi-gold to-efi-gold-light'}`}
           style={{ width: `${percentage}%` }}

@@ -63,7 +63,7 @@ export const TaskCard = memo(function TaskCard({
     <div
       className={`
         rounded-xl p-2.5 sm:p-3 transition-all
-        ${hasVoted ? 'glass-gold border-efi-gold/30' : 'glass-frost hover:border-efi-gold-light/20'}
+        ${hasVoted ? 'glass-gold border-l-2 border-l-efi-gold border-efi-gold/30' : 'glass-frost hover:border-efi-gold-light/20'}
       `}
     >
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3">
@@ -167,7 +167,7 @@ export const TaskCard = memo(function TaskCard({
                       <span className={`font-bold ${isQuestion ? 'text-efi-warning' : 'text-efi-text-primary'}`}>{est.storyPoints}</span>
                     </div>
                     {est.comment && (
-                      <p className="text-efi-text-tertiary mt-1 whitespace-pre-line break-words">{est.comment}</p>
+                      <p className="text-efi-text-secondary mt-1 whitespace-pre-line break-words">{est.comment}</p>
                     )}
                   </div>
                 );

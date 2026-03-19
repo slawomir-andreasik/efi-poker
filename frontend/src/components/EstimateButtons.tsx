@@ -10,7 +10,7 @@ interface EstimateButtonsProps {
 
 export const EstimateButtons = memo(function EstimateButtons({ selectedValue, onSelect, disabled = false }: EstimateButtonsProps) {
   return (
-    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+    <div className="flex flex-wrap gap-2">
       {SP_VALUES.map((value) => {
         const isSelected = selectedValue === value;
         return (
@@ -20,7 +20,7 @@ export const EstimateButtons = memo(function EstimateButtons({ selectedValue, on
             disabled={disabled}
             aria-pressed={isSelected}
             className={`
-              w-11 h-11 rounded-lg font-bold text-sm transition-all
+              w-12 h-12 rounded-lg font-bold text-sm transition-all
               ${
                 isSelected
                   ? 'bg-gradient-to-br from-efi-gold to-efi-gold-muted text-efi-void shadow-lg shadow-efi-gold/30 scale-105'

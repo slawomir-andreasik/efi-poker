@@ -373,13 +373,13 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                 <div className="flex gap-6">
                   {results.averagePoints != null && (
                     <div>
-                      <p className="text-xs text-efi-text-tertiary">Average</p>
+                      <p className="text-xs text-efi-text-secondary">Average</p>
                       <p className="text-2xl font-bold text-efi-gold">{results.averagePoints.toFixed(1)}</p>
                     </div>
                   )}
                   {results.medianPoints != null && (
                     <div>
-                      <p className="text-xs text-efi-text-tertiary">Median</p>
+                      <p className="text-xs text-efi-text-secondary">Median</p>
                       <p className="text-2xl font-bold text-efi-text-primary">{results.medianPoints.toFixed(1)}</p>
                     </div>
                   )}
@@ -391,7 +391,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                       const isQuestion = est.storyPoints === '?';
                       return (
                         <div key={est.id} className="flex flex-col items-center gap-1 max-w-[140px]">
-                          <span className={`text-xs truncate max-w-full ${isQuestion ? 'text-efi-warning/70' : 'text-efi-text-tertiary'}`}>{est.participantNickname}</span>
+                          <span className={`text-xs truncate max-w-full ${isQuestion ? 'text-efi-warning/70' : 'text-efi-text-secondary'}`}>{est.participantNickname}</span>
                           <span className={`text-lg font-bold rounded-lg w-12 h-12 flex items-center justify-center ${isQuestion
                               ? 'text-efi-warning bg-efi-warning/20 border border-efi-warning/40'
                               : 'text-efi-gold bg-efi-gold/10 border border-efi-gold/30'
@@ -399,7 +399,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                             {est.storyPoints}
                           </span>
                           {est.comment && (
-                            <p className="text-xs text-efi-text-tertiary mt-1 text-center max-w-[140px] break-words line-clamp-3">{est.comment}</p>
+                            <p className="text-xs text-efi-text-secondary mt-1 text-center max-w-[140px] break-words line-clamp-3">{est.comment}</p>
                           )}
                         </div>
                       );
