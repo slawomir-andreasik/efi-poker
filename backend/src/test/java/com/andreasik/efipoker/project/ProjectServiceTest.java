@@ -29,7 +29,7 @@ class ProjectServiceTest extends BaseUnitTest {
   @Mock private ProjectRepository projectRepository;
   @Mock private ProjectEntityMapper projectEntityMapper;
   @Mock private ApplicationEventPublisher eventPublisher;
-  @Mock private PasswordEncoder passwordEncoder;
+  @Mock private PasswordEncoder adminCodeEncoder;
   @InjectMocks private ProjectService projectService;
 
   @AfterEach
@@ -68,7 +68,7 @@ class ProjectServiceTest extends BaseUnitTest {
               .build();
       given(projectRepository.findBySlug(slug)).willReturn(Optional.of(entity));
       given(projectEntityMapper.toDomain(entity)).willReturn(expectedProject);
-      given(passwordEncoder.matches(adminCode, adminCode)).willReturn(true);
+      given(adminCodeEncoder.matches(adminCode, adminCode)).willReturn(true);
 
       // Act
       Project result = projectService.validateAdminCode(slug, adminCode);
@@ -89,7 +89,7 @@ class ProjectServiceTest extends BaseUnitTest {
               .name("Test Project")
               .build();
       given(projectRepository.findBySlug(slug)).willReturn(Optional.of(entity));
-      given(passwordEncoder.matches("wrong-code", adminCode)).willReturn(false);
+      given(adminCodeEncoder.matches("wrong-code", adminCode)).willReturn(false);
 
       // Act & Assert
       assertThatThrownBy(() -> projectService.validateAdminCode(slug, "wrong-code"))
@@ -246,7 +246,7 @@ class ProjectServiceTest extends BaseUnitTest {
               .createdBy(owner)
               .build();
       given(projectRepository.findBySlug(slug)).willReturn(Optional.of(entity));
-      given(passwordEncoder.matches("wrong-code", adminCode)).willReturn(false);
+      given(adminCodeEncoder.matches("wrong-code", adminCode)).willReturn(false);
 
       // Act & Assert - different user ID, wrong admin code -> isOwner must return false
       assertThatThrownBy(
@@ -268,7 +268,7 @@ class ProjectServiceTest extends BaseUnitTest {
               .createdBy(owner)
               .build();
       given(projectRepository.findBySlug(slug)).willReturn(Optional.of(entity));
-      given(passwordEncoder.matches("wrong-code", adminCode)).willReturn(false);
+      given(adminCodeEncoder.matches("wrong-code", adminCode)).willReturn(false);
 
       // Act & Assert
       assertThatThrownBy(() -> projectService.validateAdminAccess(slug, "wrong-code", null))
@@ -287,7 +287,7 @@ class ProjectServiceTest extends BaseUnitTest {
               .name("Anonymous Project")
               .build(); // no createdBy
       given(projectRepository.findBySlug(slug)).willReturn(Optional.of(entity));
-      given(passwordEncoder.matches("wrong-code", adminCode)).willReturn(false);
+      given(adminCodeEncoder.matches("wrong-code", adminCode)).willReturn(false);
 
       // Act & Assert
       assertThatThrownBy(() -> projectService.validateAdminAccess(slug, "wrong-code", userId))
@@ -313,7 +313,7 @@ class ProjectServiceTest extends BaseUnitTest {
               .name("Test")
               .build();
       given(projectRepository.findById(projectId)).willReturn(Optional.of(entity));
-      given(passwordEncoder.matches(adminCode, adminCode)).willReturn(true);
+      given(adminCodeEncoder.matches(adminCode, adminCode)).willReturn(true);
 
       // Act & Assert
       assertThatCode(() -> projectService.validateAdminCodeForProject(projectId, adminCode))
@@ -331,7 +331,7 @@ class ProjectServiceTest extends BaseUnitTest {
               .name("Test")
               .build();
       given(projectRepository.findById(projectId)).willReturn(Optional.of(entity));
-      given(passwordEncoder.matches("wrong-code", adminCode)).willReturn(false);
+      given(adminCodeEncoder.matches("wrong-code", adminCode)).willReturn(false);
 
       // Act & Assert
       assertThatThrownBy(() -> projectService.validateAdminCodeForProject(projectId, "wrong-code"))

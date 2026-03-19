@@ -7,9 +7,8 @@ import com.andreasik.efipoker.shared.exception.UnauthorizedException;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.UUID;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Transactional(readOnly = true)
 public class ProjectService implements ProjectApi {
 
@@ -30,7 +28,18 @@ public class ProjectService implements ProjectApi {
   private final ProjectRepository projectRepository;
   private final ProjectEntityMapper projectEntityMapper;
   private final ApplicationEventPublisher eventPublisher;
-  private final PasswordEncoder passwordEncoder;
+  private final PasswordEncoder adminCodeEncoder;
+
+  ProjectService(
+      ProjectRepository projectRepository,
+      ProjectEntityMapper projectEntityMapper,
+      ApplicationEventPublisher eventPublisher,
+      @Qualifier("adminCodeEncoder") PasswordEncoder adminCodeEncoder) {
+    this.projectRepository = projectRepository;
+    this.projectEntityMapper = projectEntityMapper;
+    this.eventPublisher = eventPublisher;
+    this.adminCodeEncoder = adminCodeEncoder;
+  }
 
   @Transactional
   public Project createProject(String name) {
@@ -41,7 +50,7 @@ public class ProjectService implements ProjectApi {
   public Project createProject(String name, UUID ownerId) {
     String slug = generateSlug();
     String rawAdminCode = UUID.randomUUID().toString();
-    String adminCode = passwordEncoder.encode(rawAdminCode);
+    String adminCode = adminCodeEncoder.encode(rawAdminCode);
 
     ProjectEntity.ProjectEntityBuilder builder =
         ProjectEntity.builder().name(name).slug(slug).adminCode(adminCode);
@@ -180,7 +189,7 @@ public class ProjectService implements ProjectApi {
     if (provided == null) {
       return false;
     }
-    return passwordEncoder.matches(provided, stored);
+    return adminCodeEncoder.matches(provided, stored);
   }
 
   private String generateSlug() {

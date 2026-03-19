@@ -138,8 +138,8 @@ class SecurityArchitectureTest extends BaseArchUnitTest {
       String content = Files.readString(servicePath);
 
       assertThat(content)
-          .as("ProjectService should use passwordEncoder for admin code comparison")
-          .contains("passwordEncoder");
+          .as("ProjectService should use adminCodeEncoder for admin code comparison")
+          .contains("adminCodeEncoder");
     }
   }
 

@@ -26,7 +26,7 @@ public class AdminCodeHashMigration implements CustomTaskChange, CustomTaskRollb
 
   @Override
   public void execute(Database database) throws CustomChangeException {
-    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     try {
       JdbcConnection conn = (JdbcConnection) database.getConnection();
