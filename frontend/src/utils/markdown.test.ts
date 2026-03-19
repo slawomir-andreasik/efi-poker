@@ -120,25 +120,14 @@ describe('formatResultsAsMarkdown', () => {
     expect(md).toContain('Consensus: 1/1');
   });
 
-  it('should group tasks by consensus when mixed', () => {
+  it('should preserve original task order without grouping', () => {
     const agreed = task({ taskTitle: 'Easy', estimates: { Alice: 3, Bob: 3 } });
     const divergent = task({ taskTitle: 'Hard', estimates: { Alice: 5, Bob: 13 } });
     const md = formatResultsAsMarkdown('Sprint', [agreed, divergent], ['Alice', 'Bob']);
 
-    expect(md).toContain('## Agreed (1)');
-    expect(md).toContain('## Needs Discussion (1)');
-    expect(md).toMatch(/Agreed[\s\S]*Easy[\s\S]*Needs Discussion[\s\S]*Hard/);
-  });
-
-  it('should skip group headers when all tasks have same consensus', () => {
-    const t1 = task({ taskTitle: 'A', estimates: { Alice: 5, Bob: 3 } });
-    const t2 = task({ taskTitle: 'B', estimates: { Alice: 8, Bob: 2 } });
-    const md = formatResultsAsMarkdown('Sprint', [t1, t2], ['Alice', 'Bob']);
-
     expect(md).not.toContain('## Agreed');
     expect(md).not.toContain('## Needs Discussion');
-    expect(md).toContain('### A');
-    expect(md).toContain('### B');
+    expect(md.indexOf('### Easy')).toBeLessThan(md.indexOf('### Hard'));
   });
 
   it('should handle question mark votes', () => {

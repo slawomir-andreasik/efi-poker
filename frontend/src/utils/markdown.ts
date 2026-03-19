@@ -57,19 +57,9 @@ export function formatResultsAsMarkdown(
     return lines.join('\n').trimEnd() + '\n';
   }
 
+  for (const task of tasks) renderTask(task, participants, lines);
+
   const agreed = tasks.filter((t) => isConsensus(t));
-  const needsDiscussion = tasks.filter((t) => !isConsensus(t));
-
-  if (agreed.length > 0 && needsDiscussion.length > 0) {
-    lines.push(`## Agreed (${agreed.length})`, '');
-    for (const task of agreed) renderTask(task, participants, lines);
-
-    lines.push(`## Needs Discussion (${needsDiscussion.length})`, '');
-    for (const task of needsDiscussion) renderTask(task, participants, lines);
-  } else {
-    for (const task of tasks) renderTask(task, participants, lines);
-  }
-
   const totalSp = tasks.reduce((sum, t) => sum + getTaskSp(t), 0);
   lines.push('---');
   lines.push(`**Summary:** ${tasks.length} tasks | ${totalSp} SP | Consensus: ${agreed.length}/${tasks.length}`);
