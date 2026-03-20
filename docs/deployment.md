@@ -221,13 +221,13 @@ spec:
           readinessProbe:
             httpGet:
               path: /actuator/health
-              port: 8080
+              port: 8080    # use 9091 with prod profile (see Notes below)
             initialDelaySeconds: 30
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /actuator/health
-              port: 8080
+              port: 8080    # use 9091 with prod profile (see Notes below)
             initialDelaySeconds: 60
             periodSeconds: 30
 ---
@@ -292,7 +292,15 @@ spec:
 
 ### Ingress
 
-Example using nginx-ingress controller:
+The backend uses `forward-headers-strategy: NATIVE`, so the reverse proxy **must** pass `X-Forwarded-Proto: https` to backend pods - otherwise Spring Boot thinks requests are HTTP and generates a redirect loop.
+
+#### SSL redirect and external load balancers
+
+If an external load balancer (e.g. AWS ALB, Cloudflare, HAProxy) terminates TLS before the ingress controller, set `ssl-redirect` to `"false"` - otherwise you get a redirect loop (LB strips TLS, ingress sees HTTP, redirects to HTTPS, LB strips TLS again, repeat).
+
+**How to diagnose:** `curl -D - https://your-domain/` returns `302` with `location: https://your-domain:443/`.
+
+#### Nginx
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -302,6 +310,7 @@ metadata:
   namespace: efi-poker
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
@@ -327,6 +336,20 @@ spec:
         - poker.example.com
       secretName: efi-poker-tls
 ```
+
+> Nginx ingress controller passes `X-Forwarded-Proto` to backends by default - no extra annotation needed.
+
+#### HAProxy
+
+Same ingress spec as above, but with HAProxy-specific annotations:
+
+```yaml
+annotations:
+  haproxy.org/ssl-redirect: "true"  # "false" if external LB terminates TLS
+  ingress.kubernetes.io/config-backend: "http-request set-header X-Forwarded-Proto https"
+```
+
+Use `ingressClassName: haproxy`. Note: `ssl-redirect` fires in the HAProxy frontend (before backend), so `config-backend` alone does not prevent the redirect loop.
 
 ## Notes
 
