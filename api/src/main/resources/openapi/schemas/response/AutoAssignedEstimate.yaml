@@ -1,0 +1,13 @@
+type: object
+required:
+  - taskId
+  - taskTitle
+  - finalEstimate
+properties:
+  taskId:
+    type: string
+    format: uuid
+  taskTitle:
+    type: string
+  finalEstimate:
+    type: string

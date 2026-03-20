@@ -54,6 +54,8 @@ paths:
     $ref: './paths/rooms/reveal.yaml'
   /rooms/{roomId}/reopen:
     $ref: './paths/rooms/reopen.yaml'
+  /rooms/{roomId}/finish:
+    $ref: './paths/rooms/finish.yaml'
   /rooms/{roomId}/progress:
     $ref: './paths/rooms/progress.yaml'
   /rooms/{roomId}/participant-progress:

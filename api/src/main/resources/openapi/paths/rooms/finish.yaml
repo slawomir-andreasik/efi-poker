@@ -1,0 +1,32 @@
+post:
+  operationId: finishSession
+  tags: [rooms]
+  summary: Finish session and optionally reveal votes
+  parameters:
+    - $ref: '../../parameters/RoomIdPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
+    - name: revealVotes
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: true
+  responses:
+    '200':
+      description: Session finished
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/FinishSessionResponse.yaml'
+    '403':
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '404':
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

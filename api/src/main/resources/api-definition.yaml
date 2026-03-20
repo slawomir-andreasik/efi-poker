@@ -782,6 +782,51 @@ paths:
       summary: Reopen a revealed or closed room
       tags:
       - rooms
+  /rooms/{roomId}/finish:
+    post:
+      operationId: finishSession
+      parameters:
+      - description: UUID of the room
+        in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - description: Admin code for project authorization
+        in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: revealVotes
+        required: false
+        schema:
+          default: true
+          type: boolean
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinishSessionResponse"
+          description: Session finished
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Resource not found
+      summary: Finish session and optionally reveal votes
+      tags:
+      - rooms
   /rooms/{roomId}/progress:
     get:
       operationId: getRoomProgress
@@ -2441,6 +2486,27 @@ components:
           - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+    FinishSessionResponse:
+      example:
+        autoAssignedEstimates:
+        - taskTitle: taskTitle
+          finalEstimate: finalEstimate
+          taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - taskTitle: taskTitle
+          finalEstimate: finalEstimate
+          taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        status: OPEN
+      properties:
+        status:
+          $ref: "#/components/schemas/RoomStatus"
+        autoAssignedEstimates:
+          items:
+            $ref: "#/components/schemas/AutoAssignedEstimate"
+          type: array
+      required:
+      - autoAssignedEstimates
+      - status
+      type: object
     RoomProgressResponse:
       example:
         totalParticipants: 0
@@ -3390,6 +3456,24 @@ components:
       - REVEALED
       - CLOSED
       type: string
+    AutoAssignedEstimate:
+      example:
+        taskTitle: taskTitle
+        finalEstimate: finalEstimate
+        taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        taskId:
+          format: uuid
+          type: string
+        taskTitle:
+          type: string
+        finalEstimate:
+          type: string
+      required:
+      - finalEstimate
+      - taskId
+      - taskTitle
+      type: object
     TaskProgressResponse:
       example:
         questionVotesCount: 1

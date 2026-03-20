@@ -325,6 +325,19 @@ export interface SetFinalEstimateRequest {
   storyPoints: StoryPoints;
 }
 
+// Finish session
+
+export interface FinishSessionResponse {
+  status: RoomStatus;
+  autoAssignedEstimates: AutoAssignedEstimate[];
+}
+
+export interface AutoAssignedEstimate {
+  taskId: string;
+  taskTitle: string;
+  finalEstimate: string;
+}
+
 // Analytics
 
 export interface RoomAnalyticsResponse {

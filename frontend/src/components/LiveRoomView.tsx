@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Check, Trash2, Eye, RotateCw } from 'lucide-react';
+import { Check, Trash2, Eye, RotateCw, Square } from 'lucide-react';
 import { InlineConfirmAction } from '@/components/InlineConfirmAction';
 import { getAuth } from '@/api/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { queryKeys } from '@/api/queryKeys';
 import { roomApi } from '@/api/queries';
-import { useRevealRoom, useNewRound, useSubmitEstimate, useDeleteEstimate, useUpdateRoom } from '@/api/mutations';
+import { useRevealRoom, useNewRound, useSubmitEstimate, useDeleteEstimate, useUpdateRoom, useFinishSession } from '@/api/mutations';
 import { logger } from '@/utils/logger';
 import { useToast } from '@/components/Toast';
 import { Spinner, ButtonSpinner } from '@/components/Spinner';
@@ -14,7 +14,8 @@ import { RoundHistoryPanel } from '@/components/RoundHistoryPanel';
 import { EstimateButtons } from '@/components/EstimateButtons';
 import { AdminJoinBanner } from '@/components/AdminJoinBanner';
 import { SP_NOT_APPLICABLE } from '@/api/types';
-import type { StoryPoints, RoomDetailResponse } from '@/api/types';
+import type { StoryPoints, RoomDetailResponse, AutoAssignedEstimate } from '@/api/types';
+import { FinishSessionDialog } from '@/components/FinishSessionDialog';
 import { getErrorMessage } from '@/utils/error';
 import { useSaveIndicator } from '@/hooks/useSaveIndicator';
 import { useDeleteRoomAction } from '@/hooks/useDeleteRoomAction';
@@ -42,6 +43,9 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
   const [comment, setComment] = useState('');
   const { saving, showSaveIndicator, resetSaving } = useSaveIndicator();
   const { handleDeleteRoom, isPending: deleteRoomPending } = useDeleteRoomAction(slug, roomId);
+  const [showFinishDialog, setShowFinishDialog] = useState(false);
+  const [autoAssigned, setAutoAssigned] = useState<AutoAssignedEstimate[] | null>(null);
+  const finishSession = useFinishSession(slug);
 
   const { data: liveState, isLoading: loading } = useQuery({
     queryKey: queryKeys.rooms.live(roomId),
@@ -186,6 +190,19 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
     }
   }
 
+  async function handleFinishSession(revealVotes: boolean) {
+    try {
+      const result = await finishSession.mutateAsync({ roomId, revealVotes });
+      if (result.autoAssignedEstimates.length > 0) {
+        setAutoAssigned(result.autoAssignedEstimates);
+      } else {
+        setShowFinishDialog(false);
+      }
+    } catch (err) {
+      showToast(getErrorMessage(err));
+    }
+  }
+
   if (loading && !liveState) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -203,6 +220,16 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
   const participants = liveState?.participants ?? [];
   const results = liveState?.results;
   const votedCount = participants.filter((p) => p.hasVoted).length;
+
+  const finishButton = (
+    <button
+      type="button"
+      onClick={() => setShowFinishDialog(true)}
+      className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-error/30 text-efi-error hover:bg-efi-error/10 transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+    >
+      <Square className="w-4 h-4" /> Finish
+    </button>
+  );
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
@@ -279,6 +306,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
               >
                 {revealRoom.isPending ? <><ButtonSpinner /> Revealing...</> : <><Eye className="w-4 h-4" /> Reveal</>}
               </button>
+              {finishButton}
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row gap-3">
@@ -298,6 +326,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
               >
                 {newRound.isPending ? <><ButtonSpinner /> Starting...</> : <><RotateCw className="w-4 h-4" /> New Round</>}
               </button>
+              {finishButton}
             </div>
           )}
         </div>
@@ -307,6 +336,14 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
       {isAdmin && (
         <div className="mb-6">
           <RoomSettings slug={slug} room={initialRoom} />
+        </div>
+      )}
+
+      {status === 'CLOSED' && (
+        <div className="glass-frost rounded-xl p-4 mb-6 border border-efi-ash/20 text-center">
+          <p className="text-efi-text-secondary font-medium">
+            This session has ended. {isRevealed ? 'View results below.' : ''}
+          </p>
         </div>
       )}
 
@@ -456,6 +493,15 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
           <RoundHistoryPanel history={history} />
         )}
       </div>
+
+      <FinishSessionDialog
+        isOpen={showFinishDialog}
+        isPending={finishSession.isPending}
+        onFinish={(revealVotes) => void handleFinishSession(revealVotes)}
+        onCancel={() => setShowFinishDialog(false)}
+        autoAssigned={autoAssigned}
+        onDismissAutoAssigned={() => { setAutoAssigned(null); setShowFinishDialog(false); }}
+      />
     </div>
   );
 }

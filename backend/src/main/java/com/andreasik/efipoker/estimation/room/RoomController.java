@@ -1,8 +1,10 @@
 package com.andreasik.efipoker.estimation.room;
 
 import com.andreasik.efipoker.api.RoomsApi;
+import com.andreasik.efipoker.api.model.AutoAssignedEstimate;
 import com.andreasik.efipoker.api.model.CreateRoomRequest;
 import com.andreasik.efipoker.api.model.EstimateResponse;
+import com.andreasik.efipoker.api.model.FinishSessionResponse;
 import com.andreasik.efipoker.api.model.LiveParticipantStatus;
 import com.andreasik.efipoker.api.model.LiveRoomResults;
 import com.andreasik.efipoker.api.model.LiveRoomStateResponse;
@@ -205,6 +207,32 @@ public class RoomController implements RoomsApi {
     roomService.validateAdminAndGetRoom(roomId, xAdminCode);
     Room reopened = roomService.reopenRoom(roomId);
     return ResponseEntity.ok(buildDetailResponse(reopened, null));
+  }
+
+  @Override
+  public ResponseEntity<FinishSessionResponse> finishSession(
+      UUID roomId, String xAdminCode, Boolean revealVotes) {
+    log.debug("POST /rooms/{}/finish revealVotes={}", roomId, revealVotes);
+    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
+    boolean reveal = revealVotes == null || revealVotes;
+    RoomService.FinishSessionResult result = roomService.finishSession(roomId, reveal);
+
+    List<AutoAssignedEstimate> autoAssigned =
+        result.autoAssigned().stream()
+            .map(
+                a ->
+                    new AutoAssignedEstimate()
+                        .taskId(a.taskId())
+                        .taskTitle(a.taskTitle())
+                        .finalEstimate(a.finalEstimate()))
+            .toList();
+
+    FinishSessionResponse response =
+        new FinishSessionResponse()
+            .status(roomMapper.mapStatus(result.room().status()))
+            .autoAssignedEstimates(autoAssigned);
+
+    return ResponseEntity.ok(response);
   }
 
   @Override

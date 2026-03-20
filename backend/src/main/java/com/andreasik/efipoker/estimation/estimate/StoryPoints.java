@@ -21,6 +21,18 @@ public enum StoryPoints {
 
   private final String value;
 
+  private static final double[] NUMERIC_SCALE = {0, 0.5, 1, 2, 3, 5, 8, 13, 21};
+
+  public static StoryPoints nearestUp(double median) {
+    for (double scale : NUMERIC_SCALE) {
+      if (median <= scale) {
+        return fromValue(
+            scale == (long) scale ? String.valueOf((long) scale) : String.valueOf(scale));
+      }
+    }
+    return SP_21;
+  }
+
   public static StoryPoints fromValue(String value) {
     return Arrays.stream(values())
         .filter(sp -> sp.value.equals(value))
