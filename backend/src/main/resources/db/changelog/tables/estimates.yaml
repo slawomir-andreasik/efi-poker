@@ -39,3 +39,13 @@ databaseChangeLog:
             sql: |
               UPDATE estimates SET story_points = '?' WHERE story_points IS NULL;
               ALTER TABLE estimates ALTER COLUMN story_points SET NOT NULL;
+
+  - changeSet:
+      id: "estimates-003-increase-comment-limit"
+      author: "sandreasik"
+      comment: "Increase comment limit from 500 to 2000 characters"
+      changes:
+        - modifyDataType:
+            tableName: estimates
+            columnName: comment
+            newDataType: VARCHAR(2000)

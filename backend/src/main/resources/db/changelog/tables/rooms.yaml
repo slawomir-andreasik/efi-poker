@@ -93,3 +93,13 @@ databaseChangeLog:
             sql: |
               ALTER TABLE rooms DROP COLUMN comment_required;
               ALTER TABLE rooms DROP COLUMN comment_template;
+
+  - changeSet:
+      id: "rooms-008-increase-topic-limit"
+      author: "sandreasik"
+      comment: "Increase topic limit from 500 to 2000 characters"
+      changes:
+        - modifyDataType:
+            tableName: rooms
+            columnName: topic
+            newDataType: VARCHAR(2000)

@@ -13,7 +13,3 @@ databaseChangeLog:
       file: db/changelog/tables/estimates.yaml
   - include:
       file: db/changelog/tables/round_history.yaml
-  - include:
-      file: db/changelog/tables/admin-code-hash.yaml
-  - include:
-      file: db/changelog/tables/increase-text-limits.yaml
