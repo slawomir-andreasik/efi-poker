@@ -9,5 +9,7 @@ properties:
     format: uuid
   taskTitle:
     type: string
+    maxLength: 2000
   finalEstimate:
     type: string
+    maxLength: 10

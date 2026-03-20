@@ -3466,8 +3466,10 @@ components:
           format: uuid
           type: string
         taskTitle:
+          maxLength: 2000
           type: string
         finalEstimate:
+          maxLength: 10
           type: string
       required:
       - finalEstimate

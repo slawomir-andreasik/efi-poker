@@ -235,6 +235,10 @@ public class RoomService {
             .findById(roomId)
             .orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
 
+    if (RoomStatus.CLOSED.name().equals(entity.getStatus())) {
+      throw new IllegalStateException("Room is already finished");
+    }
+
     // LIVE rooms: save current round snapshot before finishing
     if (RoomType.LIVE.name().equals(entity.getRoomType())
         && RoomStatus.OPEN.name().equals(entity.getStatus())) {
