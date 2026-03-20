@@ -15,6 +15,14 @@ interface ResultsTableProps {
   participants: string[];
 }
 
+export function getTaskSp(task: TaskEstimate): number {
+  if (task.finalEstimate != null) {
+    const n = Number(task.finalEstimate);
+    return isNaN(n) ? 0 : n;
+  }
+  return task.median ?? 0;
+}
+
 export function getConsensusLevel(estimates: Record<string, number | string>): 'consensus' | 'close' | 'divergent' {
   const numericValues = Object.values(estimates).filter((v): v is number => typeof v === 'number');
   if (numericValues.length === 0) return 'divergent';

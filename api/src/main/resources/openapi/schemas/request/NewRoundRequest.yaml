@@ -4,4 +4,4 @@ properties:
     type: string
     minLength: 1
     maxLength: 2000
-    pattern: '^(?!.*<[a-zA-Z/]).*$'
+    pattern: '^(?![\s\S]*<[a-zA-Z/])[\s\S]*$'

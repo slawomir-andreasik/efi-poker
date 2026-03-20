@@ -1,15 +1,7 @@
-import type { TaskEstimate } from '@/components/ResultsTable';
+import { getTaskSp, type TaskEstimate } from '@/components/ResultsTable';
 
 function escapeMarkdown(text: string): string {
   return text.replace(/\|/g, '\\|');
-}
-
-function getTaskSp(task: TaskEstimate): number {
-  if (task.finalEstimate != null) {
-    const n = Number(task.finalEstimate);
-    return isNaN(n) ? 0 : n;
-  }
-  return task.median ?? 0;
 }
 
 function isConsensus(task: TaskEstimate): boolean {
