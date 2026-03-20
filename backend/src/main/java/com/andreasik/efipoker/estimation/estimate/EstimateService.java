@@ -42,16 +42,21 @@ public class EstimateService {
       StoryPoints.fromValue(storyPoints);
     }
 
+    // N/A = not applicable: clear comment, skip comment requirement
+    boolean isNA = StoryPoints.NOT_APPLICABLE.getValue().equals(storyPoints);
+    String effectiveComment = isNA ? null : comment;
+
     Optional<EstimateEntity> existing =
         estimateRepository.findByTaskAndParticipant(taskId, participantId);
 
     if (existing.isPresent()) {
       EstimateEntity entity = existing.get();
-      if (storyPoints != null) {
-        validateCommentIfRequired(entity.getTask().getRoom(), comment, taskId, participantId);
+      if (storyPoints != null && !isNA) {
+        validateCommentIfRequired(
+            entity.getTask().getRoom(), effectiveComment, taskId, participantId);
       }
       entity.setStoryPoints(storyPoints);
-      entity.setComment(comment);
+      entity.setComment(effectiveComment);
       EstimateEntity saved = estimateRepository.save(entity);
       log.info(
           "Estimate updated: taskId={}, participantId={}, sp={}",
@@ -66,8 +71,8 @@ public class EstimateService {
         taskRepository
             .findById(taskId)
             .orElseThrow(() -> new ResourceNotFoundException("Task", taskId));
-    if (storyPoints != null) {
-      validateCommentIfRequired(task.getRoom(), comment, taskId, participantId);
+    if (storyPoints != null && !isNA) {
+      validateCommentIfRequired(task.getRoom(), effectiveComment, taskId, participantId);
     }
     participantApi.validateParticipantExists(participantId);
     participantApi.validateParticipantBelongsToProject(
@@ -81,7 +86,7 @@ public class EstimateService {
             .task(task)
             .participant(participant)
             .storyPoints(storyPoints)
-            .comment(comment)
+            .comment(effectiveComment)
             .build();
 
     EstimateEntity saved = estimateRepository.save(entity);

@@ -75,9 +75,11 @@ export interface AdminResetPasswordRequest {
 
 // Enums
 
-export type StoryPoints = '0' | '0.5' | '1' | '2' | '3' | '5' | '8' | '13' | '21' | '?';
+export type StoryPoints = '0' | '0.5' | '1' | '2' | '3' | '5' | '8' | '13' | '21' | '?' | 'N/A';
 
-export const SP_VALUES: StoryPoints[] = ['0', '0.5', '1', '2', '3', '5', '8', '13', '21', '?'];
+export const SP_VALUES: StoryPoints[] = ['0', '0.5', '1', '2', '3', '5', '8', '13', '21', '?', 'N/A'];
+
+export const SP_NOT_APPLICABLE: StoryPoints = 'N/A';
 
 export type RoomStatus = 'OPEN' | 'REVEALED' | 'CLOSED';
 

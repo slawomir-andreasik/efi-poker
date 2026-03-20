@@ -13,6 +13,7 @@ import { Spinner, ButtonSpinner } from '@/components/Spinner';
 import { RoundHistoryPanel } from '@/components/RoundHistoryPanel';
 import { EstimateButtons } from '@/components/EstimateButtons';
 import { AdminJoinBanner } from '@/components/AdminJoinBanner';
+import { SP_NOT_APPLICABLE } from '@/api/types';
 import type { StoryPoints, RoomDetailResponse } from '@/api/types';
 import { getErrorMessage } from '@/utils/error';
 import { useSaveIndicator } from '@/hooks/useSaveIndicator';
@@ -389,11 +390,13 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                   <div className="flex flex-wrap gap-2 pt-2 border-t border-white/8">
                     {results.estimates.map((est) => {
                       const isQuestion = est.storyPoints === '?';
+                      const estIsNA = est.storyPoints === SP_NOT_APPLICABLE;
                       return (
                         <div key={est.id} className="flex flex-col items-center gap-1 max-w-[140px]">
-                          <span className={`text-xs truncate max-w-full ${isQuestion ? 'text-efi-warning/70' : 'text-efi-text-secondary'}`}>{est.participantNickname}</span>
+                          <span className={`text-xs truncate max-w-full ${isQuestion ? 'text-efi-warning/70' : estIsNA ? 'text-efi-text-tertiary' : 'text-efi-text-secondary'}`}>{est.participantNickname}</span>
                           <span className={`text-lg font-bold rounded-lg w-12 h-12 flex items-center justify-center ${isQuestion
                               ? 'text-efi-warning bg-efi-warning/20 border border-efi-warning/40'
+                              : estIsNA ? 'text-efi-text-tertiary bg-white/4 border border-white/8'
                               : 'text-efi-gold bg-efi-gold/10 border border-efi-gold/30'
                             }`}>
                             {est.storyPoints}

@@ -16,7 +16,8 @@ public enum StoryPoints {
   SP_8("8"),
   SP_13("13"),
   SP_21("21"),
-  UNSURE("?");
+  UNSURE("?"),
+  NOT_APPLICABLE("N/A");
 
   private final String value;
 
