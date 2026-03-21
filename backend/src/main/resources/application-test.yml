@@ -17,6 +17,9 @@ app:
   jwt:
     secret: test-secret-for-jwt-signing-must-be-at-least-64-characters-long-for-hs512-algorithm
     expiration: 3600
+    guest-expiration: 7776000
+    refresh-expiration: 600
+    refresh-remember-expiration: 1200
   registration:
     enabled: true
   admin:

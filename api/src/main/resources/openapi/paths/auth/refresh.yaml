@@ -1,0 +1,21 @@
+post:
+  operationId: refreshToken
+  tags: [auth]
+  summary: Refresh access token using httpOnly cookie
+  description: >
+    Uses the httpOnly refresh cookie to issue a new access token
+    with a rotated refresh cookie. No Authorization header needed.
+  security: []
+  responses:
+    '200':
+      description: New JWT access token
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/AuthResponse.yaml'
+    '401':
+      description: Invalid or expired refresh token
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

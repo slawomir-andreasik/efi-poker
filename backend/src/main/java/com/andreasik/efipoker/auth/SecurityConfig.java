@@ -79,6 +79,8 @@ public class SecurityConfig {
                     .hasRole("ADMIN")
                     .requestMatchers("/api/v1/auth/me", "/api/v1/auth/me/**")
                     .authenticated()
+                    .requestMatchers("/api/v1/auth/refresh")
+                    .permitAll()
                     .anyRequest()
                     .permitAll())
         .oauth2ResourceServer(

@@ -143,6 +143,39 @@ class SecurityArchitectureTest extends BaseArchUnitTest {
     }
   }
 
+  @Nested
+  @DisplayName("Security headers in all nginx location blocks")
+  class NginxLocationHeaders {
+
+    @Test
+    void all_location_blocks_should_have_security_headers() throws IOException {
+      String content = Files.readString(NGINX_CONF);
+      List<String> requiredHeaders =
+          List.of("X-Frame-Options", "X-Content-Type-Options", "Content-Security-Policy");
+      List<String> violations = new ArrayList<>();
+
+      // Split by location directives (line starts with whitespace + "location")
+      String[] blocks = content.split("(?m)(?=^\\s+location )");
+      for (String block : blocks) {
+        if (!block.stripLeading().startsWith("location ")) continue;
+        String locationName = block.stripLeading().lines().findFirst().orElse("").trim();
+        // Skip try_files-only blocks (no add_header needed - inherits from server)
+        if (!block.contains("add_header") && !block.contains("proxy_pass")) continue;
+        // Blocks with proxy_pass or add_header MUST have all security headers
+        for (String header : requiredHeaders) {
+          if (!block.contains(header)) {
+            violations.add(locationName + ": missing " + header);
+          }
+        }
+      }
+
+      assertThat(violations)
+          .as(
+              "All nginx location blocks with add_header or proxy_pass must include security headers")
+          .isEmpty();
+    }
+  }
+
   /// Checks if a YAML file contains a field definition (e.g. "password:").
   private static boolean containsField(String yamlContent, String fieldName) {
     for (String line : yamlContent.split("\n")) {

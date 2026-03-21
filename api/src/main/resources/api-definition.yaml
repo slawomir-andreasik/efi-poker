@@ -1518,6 +1518,28 @@ paths:
       summary: Logout and clear session
       tags:
       - auth
+  /auth/refresh:
+    post:
+      description: |
+        Uses the httpOnly refresh cookie to issue a new access token with a rotated refresh cookie. No Authorization header needed.
+      operationId: refreshToken
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+          description: New JWT access token
+        "401":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Invalid or expired refresh token
+      security: []
+      summary: Refresh access token using httpOnly cookie
+      tags:
+      - auth
   /auth/guest/refresh:
     post:
       operationId: refreshGuestToken
@@ -2940,6 +2962,7 @@ components:
     LoginRequest:
       example:
         password: password
+        rememberMe: false
         username: username
       properties:
         username:
@@ -2951,6 +2974,9 @@ components:
           maxLength: 128
           minLength: 8
           type: string
+        rememberMe:
+          default: false
+          type: boolean
       required:
       - password
       - username

@@ -25,6 +25,46 @@ describe('ApiError class', () => {
   });
 });
 
+describe('api() silent refresh on 401', () => {
+  it('should attempt refresh when user JWT returns 401', async () => {
+    localStorage.setItem('efi-jwt', 'expired-token');
+
+    const refreshResponse = new Response(
+      JSON.stringify({ token: 'new-token', expiresAt: '2026-12-31T00:00:00Z' }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    );
+    const retryResponse = new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response('{}', { status: 401, headers: { 'content-type': 'application/json' } }))
+      .mockResolvedValueOnce(refreshResponse)
+      .mockResolvedValueOnce(retryResponse);
+    globalThis.fetch = fetchMock;
+
+    const result = await api<{ ok: boolean }>('/test');
+    expect(result.ok).toBe(true);
+    expect(localStorage.getItem('efi-jwt')).toBe('new-token');
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('should clear auth when refresh fails', async () => {
+    localStorage.setItem('efi-jwt', 'expired-token');
+    localStorage.setItem('efi-identity', 'testuser');
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response('{}', { status: 401, headers: { 'content-type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response('{}', { status: 403, headers: { 'content-type': 'application/json' } }));
+    globalThis.fetch = fetchMock;
+
+    await expect(api('/test')).rejects.toThrow();
+    expect(localStorage.getItem('efi-jwt')).toBeNull();
+    expect(localStorage.getItem('efi-identity')).toBeNull();
+  });
+});
+
 describe('api() error handling', () => {
   it('should throw ApiError with traceId from X-Trace-Id header', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue(

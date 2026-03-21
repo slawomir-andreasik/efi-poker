@@ -26,6 +26,9 @@ export const STORAGE_KEYS = {
 const STORAGE_KEY = STORAGE_KEYS.PROJECTS;
 const JWT_KEY = STORAGE_KEYS.JWT;
 
+// Security: user JWT in localStorage is by design (short-lived 24h, refreshed via httpOnly cookie).
+// Guest tokens in localStorage per project (no server-side session).
+// XSS mitigated by CSP + backend input validation + React escaping.
 export function getJwt(): string | null {
   return localStorage.getItem(JWT_KEY);
 }
@@ -95,6 +98,29 @@ export function getAuth(slug: string): ProjectAuth {
   }
 }
 
+// Deduplicates concurrent refresh attempts - only one refresh call at a time
+let refreshPromise: Promise<string | null> | null = null;
+
+async function silentRefresh(): Promise<string | null> {
+  try {
+    const res = await fetch(`${BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (res.ok) {
+      const data = await res.json() as { token: string; expiresAt: string };
+      setJwt(data.token);
+      return data.token;
+    }
+    logger.warn('Refresh token expired or invalid, clearing auth');
+  } catch {
+    logger.warn('Refresh request failed, clearing auth');
+  }
+  removeJwt();
+  removeIdentity();
+  return null;
+}
+
 export async function api<T>(path: string, options: RequestOptions = {}, slug?: string): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -117,36 +143,41 @@ export async function api<T>(path: string, options: RequestOptions = {}, slug?: 
   logger.debug(`API ${method} ${path}`);
   Object.assign(headers, getTracingHeaders());
 
+  const doFetch = () => fetch(`${BASE_URL}${path}`, {
+    method,
+    headers,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+    signal: AbortSignal.timeout(30_000),
+  });
+
   let response: Response;
   try {
-    response = await fetch(`${BASE_URL}${path}`, {
-      method,
-      headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
-      signal: AbortSignal.timeout(30_000),
-    });
+    response = await doFetch();
   } catch (err) {
     logger.error(`API network error ${method} ${path}`);
     throw err;
   }
 
-  // If 401 with auth, token is expired/invalid - clear and retry without auth
-  if (response.status === 401 && headers['Authorization']) {
-    if (jwt) {
-      logger.warn(`User JWT expired/invalid, clearing and retrying ${method} ${path}`);
-      removeJwt();
-    } else if (slug) {
-      logger.warn(`Guest JWT expired/invalid, clearing and retrying ${method} ${path}`);
-      saveAuth(slug, { guestToken: undefined });
+  // If 401 with user JWT, attempt silent refresh via httpOnly cookie
+  if (response.status === 401 && jwt) {
+    logger.info(`User JWT expired, attempting silent refresh for ${method} ${path}`);
+    if (!refreshPromise) {
+      refreshPromise = silentRefresh().finally(() => { refreshPromise = null; });
     }
+    const newToken = await refreshPromise;
+    if (newToken) {
+      headers['Authorization'] = `Bearer ${newToken}`;
+      response = await doFetch();
+    } else {
+      delete headers['Authorization'];
+    }
+  } else if (response.status === 401 && !jwt && slug) {
+    // Guest JWT expired - clear per-project auth and retry without auth
+    logger.warn(`Guest JWT expired/invalid, clearing and retrying ${method} ${path}`);
+    saveAuth(slug, { guestToken: undefined });
     delete headers['Authorization'];
     try {
-      response = await fetch(`${BASE_URL}${path}`, {
-        method,
-        headers,
-        body: options.body ? JSON.stringify(options.body) : undefined,
-        signal: AbortSignal.timeout(30_000),
-      });
+      response = await doFetch();
     } catch (err) {
       logger.error(`API network error on retry ${method} ${path}`);
       throw err;

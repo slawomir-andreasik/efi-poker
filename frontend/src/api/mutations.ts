@@ -21,7 +21,7 @@ import type {
 
 export function useLogin() {
   return useMutation({
-    mutationFn: async (body: { username: string; password: string }) => {
+    mutationFn: async (body: { username: string; password: string; rememberMe?: boolean }) => {
       const res = await api<AuthResponse>('/auth/login', { method: 'POST', body });
       setJwt(res.token);
       setIdentity(body.username);

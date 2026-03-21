@@ -2,6 +2,7 @@ package com.andreasik.efipoker.auth;
 
 import jakarta.annotation.Nullable;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -26,6 +27,7 @@ public class JwtService {
   public static final String CLAIM_NICKNAME = "nickname";
   public static final String CLAIM_PARTICIPANT_ID = "participantId";
   public static final String TOKEN_TYPE_GUEST = "guest";
+  public static final String ISSUER = "https://efi-poker";
 
   private final JwtEncoder jwtEncoder;
   private final long expirationMs;
@@ -43,6 +45,8 @@ public class JwtService {
 
     JwtClaimsSet claims =
         JwtClaimsSet.builder()
+            .issuer(ISSUER)
+            .audience(List.of(ISSUER))
             .subject(user.id().toString())
             .claim(CLAIM_USERNAME, user.username())
             .claim(CLAIM_ROLE, user.role())
@@ -63,8 +67,12 @@ public class JwtService {
     String subject =
         participantId != null ? participantId.toString() : UUID.randomUUID().toString();
 
+    // Security: 90-day guest TTL is by design - matches "Remember me" refresh token TTL.
+    // Guest tokens are stateless (no revocation). Mitigated by 3-layer XSS prevention.
     JwtClaimsSet.Builder builder =
         JwtClaimsSet.builder()
+            .issuer(ISSUER)
+            .audience(List.of(ISSUER))
             .subject(subject)
             .claim(CLAIM_TYPE, TOKEN_TYPE_GUEST)
             .claim(CLAIM_PROJECT_ID, projectId.toString())
@@ -89,12 +97,16 @@ public class JwtService {
   }
 
   /// Refresh a guest JWT with the same claims but a fresh expiry.
+  /// Security: copying claims from current token is safe - JWT is HS512-signed, tampering fails
+  /// signature validation in Spring Security before reaching this method.
   public String refreshGuestToken(Jwt currentToken) {
     Instant now = Instant.now();
     Instant expiration = now.plusMillis(guestExpirationMs);
 
     JwtClaimsSet.Builder builder =
         JwtClaimsSet.builder()
+            .issuer(ISSUER)
+            .audience(List.of(ISSUER))
             .subject(currentToken.getSubject())
             .claim(CLAIM_TYPE, TOKEN_TYPE_GUEST)
             .claim(CLAIM_PROJECT_ID, currentToken.getClaimAsString(CLAIM_PROJECT_ID))

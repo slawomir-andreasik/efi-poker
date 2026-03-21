@@ -8,6 +8,8 @@ import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -21,6 +23,8 @@ public class Auth0SuccessHandler implements AuthenticationSuccessHandler {
 
   private final UserService userService;
   private final JwtService jwtService;
+  private final RefreshTokenService refreshTokenService;
+  private final JwtProperties jwtProperties;
   private final AppProperties appProperties;
 
   @Override
@@ -42,6 +46,13 @@ public class Auth0SuccessHandler implements AuthenticationSuccessHandler {
     userService.updateLastLogin(user.username());
 
     String token = jwtService.generateToken(user);
+
+    // Set refresh token as httpOnly cookie (default TTL, no "remember me" for OAuth2)
+    String refreshToken = refreshTokenService.createRefreshToken(user.id(), false);
+    ResponseCookie cookie =
+        CookieHelper.createRefreshCookie(refreshToken, jwtProperties.refreshExpiration());
+    response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
     // Pass the display name so the frontend can pre-fill identity without asking the user
     String displayName = (name != null && !name.isBlank()) ? name : user.username();
     String encodedName = URLEncoder.encode(displayName, StandardCharsets.UTF_8);

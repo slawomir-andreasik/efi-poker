@@ -25,7 +25,7 @@ export function Header() {
   const roomId = roomMatch?.params.roomId;
   const navigate = useNavigate();
   const jwt = getJwt(); // synchronous read, fresh on every render (re-renders on useLocation)
-  const { auth0Enabled, registrationEnabled } = useAuthConfig();
+  const { registrationEnabled } = useAuthConfig();
   const { user: currentUser, isAdmin: isAppAdmin } = useCurrentUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
@@ -64,11 +64,8 @@ export function Header() {
   function handleLogout() {
     clearAllStorage();
     queryClient.clear();
-    if (auth0Enabled) {
-      window.location.href = '/api/v1/auth/logout';
-    } else {
-      navigate('/');
-    }
+    // Always go through server to clear httpOnly refresh cookie
+    window.location.href = '/api/v1/auth/logout';
   }
 
   function handleGuestLogout() {

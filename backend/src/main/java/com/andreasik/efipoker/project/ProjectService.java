@@ -107,7 +107,11 @@ public class ProjectService implements ProjectApi {
         || adminCodeMatches(entity.getAdminCode(), adminCode)) {
       return projectEntityMapper.toDomain(entity);
     }
-    log.warn("Invalid admin access for project: slug={}", slug);
+    log.warn(
+        "Invalid admin access: slug={}, userId={}, hasCode={}",
+        slug,
+        currentUserId,
+        adminCode != null);
     throw new UnauthorizedException("Invalid admin code for project: " + slug);
   }
 
@@ -130,7 +134,11 @@ public class ProjectService implements ProjectApi {
         || adminCodeMatches(entity.getAdminCode(), adminCode)) {
       return;
     }
-    log.warn("Invalid admin code for project: id={}", projectId);
+    log.warn(
+        "Invalid admin access: projectId={}, userId={}, hasCode={}",
+        projectId,
+        currentUserId,
+        adminCode != null);
     throw new UnauthorizedException("Invalid admin code");
   }
 

@@ -10,3 +10,6 @@ properties:
     type: string
     minLength: 8
     maxLength: 128
+  rememberMe:
+    type: boolean
+    default: false

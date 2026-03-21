@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.Authentication;
@@ -40,6 +41,8 @@ public class AuthController implements AuthApi {
   private final UserService userService;
   private final UserMapper userMapper;
   private final JwtService jwtService;
+  private final RefreshTokenService refreshTokenService;
+  private final JwtProperties jwtProperties;
   private final PasswordEncoder passwordEncoder;
   private final Auth0Properties auth0Properties;
   private final LdapProperties ldapProperties;
@@ -75,7 +78,12 @@ public class AuthController implements AuthApi {
     String token = jwtService.generateToken(user);
     Instant expiresAt = jwtService.getTokenExpiresAt();
 
+    String refreshToken = refreshTokenService.createRefreshToken(user.id(), false);
+    ResponseCookie cookie =
+        CookieHelper.createRefreshCookie(refreshToken, jwtProperties.refreshExpiration());
+
     return ResponseEntity.status(HttpStatus.CREATED)
+        .header(HttpHeaders.SET_COOKIE, cookie.toString())
         .body(new AuthResponse().token(token).expiresAt(expiresAt));
   }
 
@@ -113,8 +121,20 @@ public class AuthController implements AuthApi {
     String token = jwtService.generateToken(user);
     Instant expiresAt = jwtService.getTokenExpiresAt();
 
-    log.info("User logged in: username={}, authProvider={}", username, user.authProvider());
-    return ResponseEntity.ok(new AuthResponse().token(token).expiresAt(expiresAt));
+    boolean rememberMe = Boolean.TRUE.equals(loginRequest.getRememberMe());
+    String refreshToken = refreshTokenService.createRefreshToken(user.id(), rememberMe);
+    long cookieTtl =
+        rememberMe ? jwtProperties.refreshRememberExpiration() : jwtProperties.refreshExpiration();
+    ResponseCookie cookie = CookieHelper.createRefreshCookie(refreshToken, cookieTtl);
+
+    log.info(
+        "User logged in: username={}, authProvider={}, rememberMe={}",
+        username,
+        user.authProvider(),
+        rememberMe);
+    return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, cookie.toString())
+        .body(new AuthResponse().token(token).expiresAt(expiresAt));
   }
 
   private User authenticateViaLdap(String username, String password) {
@@ -138,6 +158,28 @@ public class AuthController implements AuthApi {
         userId, changePasswordRequest.getCurrentPassword(), changePasswordRequest.getNewPassword());
 
     return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  public ResponseEntity<AuthResponse> refreshToken() {
+    log.debug("POST /auth/refresh");
+    HttpServletRequest request =
+        ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+
+    String rawToken = CookieHelper.extractCookie(request, CookieHelper.REFRESH_COOKIE_NAME);
+    if (rawToken == null || rawToken.isBlank()) {
+      throw new UnauthorizedException("No refresh token");
+    }
+
+    RefreshTokenService.RotationResult result = refreshTokenService.rotateRefreshToken(rawToken);
+    String accessToken = jwtService.generateToken(result.user());
+    Instant expiresAt = jwtService.getTokenExpiresAt();
+    ResponseCookie cookie =
+        CookieHelper.createRefreshCookie(result.newRawToken(), result.ttlSeconds());
+
+    return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, cookie.toString())
+        .body(new AuthResponse().token(accessToken).expiresAt(expiresAt));
   }
 
   @Override
@@ -197,6 +239,16 @@ public class AuthController implements AuthApi {
       session.invalidate();
     }
 
+    // Revoke refresh tokens for the authenticated user
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth != null && auth.getName() != null && !SecurityUtils.isGuestToken()) {
+      try {
+        refreshTokenService.revokeAllForUser(UUID.fromString(auth.getName()));
+      } catch (Exception e) {
+        log.debug("Could not revoke refresh tokens on logout: {}", e.getMessage());
+      }
+    }
+
     String redirectUrl;
     if (auth0Properties.enabled()) {
       String returnTo = URLEncoder.encode(appProperties.url(), StandardCharsets.UTF_8);
@@ -213,7 +265,9 @@ public class AuthController implements AuthApi {
       log.info("Local logout: redirecting to frontend");
     }
 
+    ResponseCookie clearCookie = CookieHelper.clearRefreshCookie();
     return ResponseEntity.status(HttpStatus.FOUND)
+        .header(HttpHeaders.SET_COOKIE, clearCookie.toString())
         .header(HttpHeaders.LOCATION, redirectUrl)
         .build();
   }

@@ -17,13 +17,14 @@ export function LoginPage() {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!username.trim() || !password) return;
 
     try {
-      await login.mutateAsync({ username: username.trim(), password });
+      await login.mutateAsync({ username: username.trim(), password, rememberMe });
       navigate('/', { replace: true });
     } catch (err) {
       showToast(getErrorMessage(err));
@@ -81,6 +82,16 @@ export function LoginPage() {
                 className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
               />
             </div>
+
+            <label className="flex items-center gap-2 text-sm text-efi-text-secondary cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="rounded border-efi-gold-light/20 bg-efi-well text-efi-gold focus:ring-efi-gold cursor-pointer"
+              />
+              Remember me
+            </label>
 
             <button
               type="submit"
