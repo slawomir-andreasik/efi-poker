@@ -26,6 +26,9 @@ export const STORAGE_KEYS = {
 const STORAGE_KEY = STORAGE_KEYS.PROJECTS;
 const JWT_KEY = STORAGE_KEYS.JWT;
 
+// Security: user JWT in localStorage is by design (short-lived 24h, refreshed via httpOnly cookie).
+// Guest tokens in localStorage per project (no server-side session).
+// XSS mitigated by CSP + backend input validation + React escaping.
 export function getJwt(): string | null {
   return localStorage.getItem(JWT_KEY);
 }

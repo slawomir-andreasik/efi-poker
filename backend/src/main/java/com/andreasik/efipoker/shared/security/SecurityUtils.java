@@ -17,7 +17,7 @@ public final class SecurityUtils {
   public static UUID getCurrentUserId() {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     if (auth instanceof JwtAuthenticationToken jwtAuth && !isGuestToken(jwtAuth)) {
-      return UUID.fromString(auth.getName());
+      return parseUuid(auth.getName());
     }
     return null;
   }
@@ -30,7 +30,7 @@ public final class SecurityUtils {
       return null;
     }
     String participantId = jwt.getClaimAsString(JwtService.CLAIM_PARTICIPANT_ID);
-    return participantId != null ? UUID.fromString(participantId) : null;
+    return participantId != null ? parseUuid(participantId) : null;
   }
 
   /// Returns the project ID from a guest JWT, or null if not a guest JWT.
@@ -41,7 +41,16 @@ public final class SecurityUtils {
       return null;
     }
     String projectId = jwt.getClaimAsString(JwtService.CLAIM_PROJECT_ID);
-    return projectId != null ? UUID.fromString(projectId) : null;
+    return projectId != null ? parseUuid(projectId) : null;
+  }
+
+  @Nullable
+  private static UUID parseUuid(String value) {
+    try {
+      return UUID.fromString(value);
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
   }
 
   /// Returns true if the current authentication is a guest JWT.

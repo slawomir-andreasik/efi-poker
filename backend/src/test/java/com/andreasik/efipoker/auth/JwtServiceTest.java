@@ -53,21 +53,20 @@ class JwtServiceTest extends BaseUnitTest {
 
     @Test
     void should_generate_decodable_token_with_correct_claims() {
-      // Arrange
       UUID userId = UUID.randomUUID();
       User user = User.builder().id(userId).username("testuser").role("USER").build();
 
-      // Act
       String token = jwtService.generateToken(user);
 
-      // Assert
       Jwt decoded = jwtDecoder.decode(token);
       assertAll(
           () -> assertThat(decoded.getSubject()).isEqualTo(userId.toString()),
           () -> assertThat(decoded.getClaimAsString("username")).isEqualTo("testuser"),
           () -> assertThat(decoded.getClaimAsString("role")).isEqualTo("USER"),
           () -> assertThat(decoded.getIssuedAt()).isNotNull(),
-          () -> assertThat(decoded.getExpiresAt()).isAfter(Instant.now()));
+          () -> assertThat(decoded.getExpiresAt()).isAfter(Instant.now()),
+          () -> assertThat(decoded.getIssuer().toString()).isEqualTo(JwtService.ISSUER),
+          () -> assertThat(decoded.getAudience()).containsExactly(JwtService.ISSUER));
     }
 
     @Test
@@ -101,7 +100,9 @@ class JwtServiceTest extends BaseUnitTest {
           () -> assertThat(decoded.<Boolean>getClaim("admin")).isTrue(),
           () -> assertThat(decoded.getClaimAsString("participantId")).isNull(),
           () -> assertThat(decoded.getSubject()).isNotBlank(),
-          () -> assertThat(decoded.getExpiresAt()).isAfter(Instant.now()));
+          () -> assertThat(decoded.getExpiresAt()).isAfter(Instant.now()),
+          () -> assertThat(decoded.getIssuer().toString()).isEqualTo(JwtService.ISSUER),
+          () -> assertThat(decoded.getAudience()).containsExactly(JwtService.ISSUER));
     }
 
     @Test
@@ -146,8 +147,9 @@ class JwtServiceTest extends BaseUnitTest {
               assertThat(decoded.getClaimAsString("participantId"))
                   .isEqualTo(participantId.toString()),
           () -> assertThat(decoded.getClaimAsString("nickname")).isEqualTo("Bob"),
-          () ->
-              assertThat(decoded.getExpiresAt()).isAfterOrEqualTo(originalDecoded.getExpiresAt()));
+          () -> assertThat(decoded.getExpiresAt()).isAfterOrEqualTo(originalDecoded.getExpiresAt()),
+          () -> assertThat(decoded.getIssuer().toString()).isEqualTo(JwtService.ISSUER),
+          () -> assertThat(decoded.getAudience()).containsExactly(JwtService.ISSUER));
     }
   }
 

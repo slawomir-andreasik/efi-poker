@@ -36,8 +36,8 @@ Security rules for Spring Boot + React + Nginx stack. Based on OWASP Top 10:2025
 - Admin/API codes: hash before storage, return raw value only at creation time. BCrypt default strength (10) is acceptable for high-entropy codes like UUIDs (128-bit) where brute-force is infeasible
 - Timing-safe comparison: `passwordEncoder.matches()` or `MessageDigest.isEqual()` - never `String.equals()`
 - TLS everywhere: enforce HTTPS in production, HSTS with `preload`
-- JWT: HS512 or RS256 minimum, enforce expiration, rotate secrets periodically
-- Refresh tokens: httpOnly/Secure/SameSite=Strict cookies, SHA-256 hash before DB storage, rotate on every use, revoke all on logout
+- JWT: HS512 or RS256 minimum, enforce expiration, rotate secrets periodically. MUST include `iss` (issuer) and `aud` (audience) standard claims for defense-in-depth
+- Refresh tokens: httpOnly/Secure/SameSite=Strict cookies, SHA-256 hash before DB storage, rotate on every use, revoke all on logout. DB lookup for rotation MUST use pessimistic locking (`@Lock(PESSIMISTIC_WRITE)`) to prevent concurrent rotation race conditions
 - Never log or include secrets, tokens, or password hashes in API responses or error messages
 
 ## A05: Injection
@@ -70,7 +70,9 @@ Security rules for Spring Boot + React + Nginx stack. Based on OWASP Top 10:2025
 - Session management: stateless JWT for APIs, short expiration, no sensitive data in token payload
 - Refresh token flow: access token (24h) in localStorage + refresh token (30/90 days) in httpOnly cookie. Silent refresh on 401. POST /auth/refresh requires no Authorization header (cookie-based)
 - Guest tokens: project-scoped JWT (90 days) with minimal claims (projectId, participantId, admin flag). Stored in localStorage per project, no refresh cookie
+- All `UUID.fromString()` calls on JWT claims MUST be wrapped in try-catch - return null on `IllegalArgumentException` (defense against malformed token payloads)
 - Account lockout or progressive delay after repeated failed login attempts
+- Admin code validation failures: log with context (slug/projectId, userId, hasCode flag) for brute-force detection
 - Production startup: reject default passwords, secrets, and placeholder OAuth/LDAP config
 
 ## A08: Software or Data Integrity Failures
@@ -88,7 +90,7 @@ Security rules for Spring Boot + React + Nginx stack. Based on OWASP Top 10:2025
 - Never expose framework internals in errors (class names, SQL, stack traces, file paths)
 - Generic 404 for unmapped paths (`"Not found"`) - not Spring's `"No static resource..."` message
 - Health endpoint: status only, no version field (prevents fingerprinting)
-- Log security-relevant events: failed login attempts, access denied, admin operations, password changes
+- Log security-relevant events: failed login attempts, access denied, admin operations, password changes. Include actor identity (userId or "anonymous") and action context
 - Never log passwords, tokens, secrets, or full request bodies containing sensitive data
 - Structured logging (JSON) for machine parsing, correlation IDs across services
 

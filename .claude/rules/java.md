@@ -33,6 +33,7 @@ paths:
 - Filter in memory when collection is already loaded (`stream().filter()` over extra DB query)
 - Combine fetch + validate into one method when controllers always do both (e.g. `validateAdminAndGetRoom(id, code)` replaces `getRoom()` + `validateAdmin()` - single DB fetch instead of two)
 - Delete: `findById()` + `delete(entity)`, never `existsById()` + `deleteById()` (TOCTOU race + double query)
+- Repository methods that serve as concurrency gates (e.g., token lookup for rotation) MUST use `@Lock(LockModeType.PESSIMISTIC_WRITE)` to prevent TOCTOU race conditions
 
 ## Exception Patterns
 
@@ -86,3 +87,4 @@ paths:
 - `SecurityAuditTest` (component) - behavioral tests: endpoint auth enforcement, participant ID exposure, CSV Content-Type, health version leak, error message details, login status codes
 - `ProdSecurityValidatorTest` (unit) - validates all startup security checks: admin password, JWT secret, DB password, LDAP config, Auth0 config
 - When adding new endpoints or schemas, verify security tests still pass - they catch missing auth and missing patterns
+- New security-critical features (auth flows, token management, access control) MUST have both unit tests AND integration tests. Architecture tests should verify key patterns (e.g., JWT claims, cookie flags, lock annotations)

@@ -222,6 +222,46 @@ class ArchitectureTest extends BaseArchUnitTest {
     }
   }
 
+  @Nested
+  @DisplayName("SecurityPatterns")
+  class SecurityPatterns {
+
+    private static final Path SRC_MAIN = Path.of(System.getProperty("user.dir"), "src", "main");
+
+    @Test
+    void jwt_tokens_should_include_issuer_and_audience_claims() throws IOException {
+      Path jwtServicePath = SRC_MAIN.resolve("java/com/andreasik/efipoker/auth/JwtService.java");
+      String content = Files.readString(jwtServicePath);
+
+      assertThat(content)
+          .as("JwtService must set issuer on all token builders")
+          .contains(".issuer(");
+      assertThat(content)
+          .as("JwtService must set audience on all token builders")
+          .contains(".audience(");
+
+      long issuerCount = content.lines().filter(l -> l.contains(".issuer(")).count();
+      long audienceCount = content.lines().filter(l -> l.contains(".audience(")).count();
+      assertThat(issuerCount)
+          .as("All 3 token builders (user, guest, refresh) must set issuer")
+          .isGreaterThanOrEqualTo(3);
+      assertThat(audienceCount)
+          .as("All 3 token builders (user, guest, refresh) must set audience")
+          .isGreaterThanOrEqualTo(3);
+    }
+
+    @Test
+    void refresh_token_lookup_should_use_pessimistic_lock() throws IOException {
+      Path repoPath =
+          SRC_MAIN.resolve("java/com/andreasik/efipoker/auth/RefreshTokenRepository.java");
+      String content = Files.readString(repoPath);
+
+      assertThat(content)
+          .as("findByTokenHash must use @Lock(PESSIMISTIC_WRITE) to prevent rotation race")
+          .contains("@Lock(LockModeType.PESSIMISTIC_WRITE)");
+    }
+  }
+
   /// Source-level checks that ArchUnit can't do (ArchUnit operates on bytecode where all references
   /// are fully qualified regardless of source-level imports).
   @Nested

@@ -93,6 +93,12 @@ class SecurityUtilsTest extends BaseUnitTest {
     void should_return_null_when_not_authenticated() {
       assertThat(SecurityUtils.getCurrentUserId()).isNull();
     }
+
+    @Test
+    void should_return_null_for_malformed_uuid_in_subject() {
+      setJwtAuth(Map.of("sub", "not-a-uuid", "role", "USER"), "ROLE_USER");
+      assertThat(SecurityUtils.getCurrentUserId()).isNull();
+    }
   }
 
   @Nested
@@ -117,6 +123,24 @@ class SecurityUtilsTest extends BaseUnitTest {
       setUserJwt(UUID.randomUUID(), "USER");
       assertThat(SecurityUtils.getCurrentParticipantId()).isNull();
     }
+
+    @Test
+    void should_return_null_for_malformed_participant_id() {
+      setJwtAuth(
+          Map.of(
+              "sub",
+              UUID.randomUUID().toString(),
+              JwtService.CLAIM_TYPE,
+              JwtService.TOKEN_TYPE_GUEST,
+              JwtService.CLAIM_PROJECT_ID,
+              UUID.randomUUID().toString(),
+              JwtService.CLAIM_ADMIN,
+              false,
+              JwtService.CLAIM_PARTICIPANT_ID,
+              "not-a-uuid"),
+          "ROLE_GUEST");
+      assertThat(SecurityUtils.getCurrentParticipantId()).isNull();
+    }
   }
 
   @Nested
@@ -133,6 +157,22 @@ class SecurityUtilsTest extends BaseUnitTest {
     @Test
     void should_return_null_for_user_jwt() {
       setUserJwt(UUID.randomUUID(), "USER");
+      assertThat(SecurityUtils.getProjectIdFromToken()).isNull();
+    }
+
+    @Test
+    void should_return_null_for_malformed_project_id() {
+      setJwtAuth(
+          Map.of(
+              "sub",
+              UUID.randomUUID().toString(),
+              JwtService.CLAIM_TYPE,
+              JwtService.TOKEN_TYPE_GUEST,
+              JwtService.CLAIM_PROJECT_ID,
+              "not-a-uuid",
+              JwtService.CLAIM_ADMIN,
+              false),
+          "ROLE_GUEST");
       assertThat(SecurityUtils.getProjectIdFromToken()).isNull();
     }
   }

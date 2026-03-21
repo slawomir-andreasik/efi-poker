@@ -36,7 +36,8 @@ public class ProjectController implements ProjectsApi {
 
     ProjectAdminResponse response = projectMapper.toAdminResponse(project);
 
-    // For unauthenticated (guest) callers, generate a guest admin JWT
+    // Security: unauthenticated project creation is by design - allows anonymous planning sessions.
+    // Protected by rate limiting (60 POST/10s per IP).
     if (ownerId == null) {
       String token = jwtService.generateGuestToken(project.id(), null, true, null);
       response.token(token).tokenExpiresAt(jwtService.getGuestTokenExpiresAt());
