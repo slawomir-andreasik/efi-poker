@@ -47,7 +47,7 @@ export function CommentInput({
         onChange={(e) => onCommentChange(e.target.value)}
         onBlur={handleBlur}
         placeholder={hasTemplate ? undefined : 'Add your comment...'}
-        maxLength={500}
+        maxLength={2000}
         rows={3}
         className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold resize-y max-h-80 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
       />

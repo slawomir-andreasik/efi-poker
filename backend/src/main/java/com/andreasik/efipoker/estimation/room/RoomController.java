@@ -1,8 +1,10 @@
 package com.andreasik.efipoker.estimation.room;
 
 import com.andreasik.efipoker.api.RoomsApi;
+import com.andreasik.efipoker.api.model.AutoAssignedEstimate;
 import com.andreasik.efipoker.api.model.CreateRoomRequest;
 import com.andreasik.efipoker.api.model.EstimateResponse;
+import com.andreasik.efipoker.api.model.FinishSessionResponse;
 import com.andreasik.efipoker.api.model.LiveParticipantStatus;
 import com.andreasik.efipoker.api.model.LiveRoomResults;
 import com.andreasik.efipoker.api.model.LiveRoomStateResponse;
@@ -208,6 +210,32 @@ public class RoomController implements RoomsApi {
   }
 
   @Override
+  public ResponseEntity<FinishSessionResponse> finishSession(
+      UUID roomId, String xAdminCode, Boolean revealVotes) {
+    log.debug("POST /rooms/{}/finish revealVotes={}", roomId, revealVotes);
+    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
+    boolean reveal = revealVotes == null || revealVotes;
+    RoomService.FinishSessionResult result = roomService.finishSession(roomId, reveal);
+
+    List<AutoAssignedEstimate> autoAssigned =
+        result.autoAssigned().stream()
+            .map(
+                a ->
+                    new AutoAssignedEstimate()
+                        .taskId(a.taskId())
+                        .taskTitle(a.taskTitle())
+                        .finalEstimate(a.finalEstimate()))
+            .toList();
+
+    FinishSessionResponse response =
+        new FinishSessionResponse()
+            .status(roomMapper.mapStatus(result.room().status()))
+            .autoAssignedEstimates(autoAssigned);
+
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
   public ResponseEntity<RoomProgressResponse> getRoomProgress(UUID roomId) {
     log.debug("GET /rooms/{}/progress", roomId);
     Room room = roomService.getRoom(roomId);
@@ -278,7 +306,6 @@ public class RoomController implements RoomsApi {
 
       entries.add(
           new ParticipantProgressEntry()
-              .participantId(participant.id())
               .nickname(participant.nickname())
               .votedCount(votedCount)
               .totalTasks(totalTasks)
@@ -385,6 +412,7 @@ public class RoomController implements RoomsApi {
     }
 
     return ResponseEntity.ok()
+        .header("Content-Type", "text/csv; charset=UTF-8")
         .header("Content-Disposition", "attachment; filename=\"room-" + roomId + ".csv\"")
         .body(csv.toString());
   }

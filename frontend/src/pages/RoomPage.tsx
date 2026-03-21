@@ -226,6 +226,15 @@ export function RoomPage() {
         <AdminJoinBanner slug={slug!} onJoined={() => {}} />
       )}
 
+      {/* Session ended banner (non-admin participants) */}
+      {room?.status === 'CLOSED' && !isAdmin && (
+        <div className="glass-frost rounded-xl p-4 mb-6 border border-efi-ash/20 text-center">
+          <p className="text-efi-text-secondary font-medium">
+            This session has ended. View results below.
+          </p>
+        </div>
+      )}
+
       {/* Room settings (admin only) */}
       {isAdmin && room && (
         <div className="mb-6">

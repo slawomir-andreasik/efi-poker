@@ -111,9 +111,9 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               get("/api/v1/projects/{slug}/admin", project.getSlug())
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.adminCode").value(project.getAdminCode()));
+          .andExpect(jsonPath("$.adminCode").isNotEmpty());
     }
 
     @Test
@@ -146,7 +146,7 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
               .perform(
                   patch("/api/v1/projects/{slug}", project.getSlug())
                       .contentType(MediaType.APPLICATION_JSON)
-                      .header("X-Admin-Code", project.getAdminCode())
+                      .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                       .content(body))
               .andExpect(status().isOk())
               .andReturn()
@@ -155,9 +155,7 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
 
       assertAll(
           () -> assertThat(JsonPath.<String>read(json, "$.name")).isEqualTo("Updated Name"),
-          () ->
-              assertThat(JsonPath.<String>read(json, "$.adminCode"))
-                  .isEqualTo(project.getAdminCode()));
+          () -> assertThat(JsonPath.<String>read(json, "$.adminCode")).isNotBlank());
     }
 
     @Test
@@ -226,7 +224,7 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
               .perform(
                   patch("/api/v1/projects/{slug}", project.getSlug())
                       .contentType(MediaType.APPLICATION_JSON)
-                      .header("X-Admin-Code", project.getAdminCode())
+                      .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                       .content(body))
               .andExpect(status().isOk())
               .andReturn()
@@ -248,7 +246,7 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               delete("/api/v1/projects/{slug}", project.getSlug())
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isNoContent());
 
       // Verify project is gone

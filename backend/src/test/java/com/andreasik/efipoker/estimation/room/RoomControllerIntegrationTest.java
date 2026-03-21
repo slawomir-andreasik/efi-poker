@@ -47,7 +47,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/projects/{slug}/rooms", project.getSlug())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isCreated())
@@ -68,7 +68,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/projects/{slug}/rooms", project.getSlug())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isCreated())
@@ -105,7 +105,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/projects/{slug}/rooms", project.getSlug())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isCreated())
@@ -123,7 +123,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/projects/{slug}/rooms", project.getSlug())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isCreated())
@@ -143,7 +143,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/projects/{slug}/rooms", project.getSlug())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isBadRequest());
@@ -220,7 +220,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               get("/api/v1/rooms/{roomId}/admin", room.getId())
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.title").value(room.getTitle()))
           .andExpect(jsonPath("$.tasks").isArray())
@@ -255,7 +255,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               patch("/api/v1/rooms/{roomId}", room.getId())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk())
@@ -292,7 +292,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{roomId}/reveal", room.getId())
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.status").value("REVEALED"));
     }
@@ -320,7 +320,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{roomId}/reopen", room.getId())
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.status").value("OPEN"));
     }
@@ -447,7 +447,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
           mockMvc
               .perform(
                   get("/api/v1/rooms/{roomId}/results/export", room.getId())
-                      .header("X-Admin-Code", project.getAdminCode()))
+                      .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
               .andExpect(status().isOk())
               .andReturn()
               .getResponse()
@@ -473,7 +473,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
           mockMvc
               .perform(
                   get("/api/v1/rooms/{roomId}/results/export", room.getId())
-                      .header("X-Admin-Code", project.getAdminCode()))
+                      .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
               .andExpect(status().isOk())
               .andReturn()
               .getResponse()
@@ -489,7 +489,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               get("/api/v1/rooms/{roomId}/results/export", room.getId())
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isForbidden());
     }
   }
@@ -510,7 +510,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
           mockMvc
               .perform(
                   post("/api/v1/projects/{slug}/rooms", project.getSlug())
-                      .header("X-Admin-Code", project.getAdminCode())
+                      .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                       .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                       .content(body))
               .andExpect(status().isCreated())
@@ -541,7 +541,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
           mockMvc
               .perform(
                   post("/api/v1/projects/{slug}/rooms", project.getSlug())
-                      .header("X-Admin-Code", project.getAdminCode())
+                      .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                       .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                       .content(body))
               .andExpect(status().isCreated())
@@ -608,7 +608,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               delete("/api/v1/rooms/{roomId}", room.getId())
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isNoContent());
 
       assertThat(roomRepository.findById(room.getId())).isEmpty();
@@ -631,7 +631,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               delete("/api/v1/rooms/{roomId}", UUID.randomUUID())
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isNotFound());
     }
   }
@@ -652,7 +652,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
           mockMvc
               .perform(
                   post("/api/v1/projects/{slug}/rooms", project.getSlug())
-                      .header("X-Admin-Code", project.getAdminCode())
+                      .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                       .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                       .content(body))
               .andExpect(status().isCreated())
@@ -671,7 +671,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{roomId}/new-round", roomId)
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                   .content(newRoundBody))
           .andExpect(status().isOk())
@@ -687,7 +687,7 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{roomId}/new-round", asyncRoom.getId())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(org.springframework.http.MediaType.APPLICATION_JSON))
           .andExpect(status().isConflict());
     }

@@ -184,6 +184,18 @@ public class ParticipantService implements ParticipantApi {
         .orElse(null);
   }
 
+  @Override
+  public void validateParticipantHasRoomAccess(UUID participantId, UUID roomId) {
+    Set<UUID> roomIds = participantRepository.findInvitedRoomIds(participantId);
+    if (!roomIds.isEmpty() && !roomIds.contains(roomId)) {
+      log.warn(
+          "Participant does not have room access: participantId={}, roomId={}",
+          participantId,
+          roomId);
+      throw new UnauthorizedException("Participant does not have access to this room");
+    }
+  }
+
   public Participant getParticipantByProjectAndUser(UUID projectId, UUID userId) {
     ParticipantEntity entity =
         participantRepository

@@ -30,16 +30,13 @@ class HealthControllerTest extends BaseUnitTest {
 
     @Test
     void should_return_up_status_and_version() throws SQLException {
-      // Arrange
       given(buildProperties.getVersion()).willReturn("1.2.3");
       given(dataSource.getConnection()).willReturn(connection);
       given(connection.isValid(2)).willReturn(true);
       HealthController controller = new HealthController(buildProperties, dataSource);
 
-      // Act
       ResponseEntity<HealthResponse> response = controller.healthCheck();
 
-      // Assert
       assertAll(
           () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
           () -> assertThat(response.getBody()).isNotNull(),
@@ -54,16 +51,13 @@ class HealthControllerTest extends BaseUnitTest {
 
     @Test
     void should_return_down_when_connection_invalid() throws SQLException {
-      // Arrange
       given(buildProperties.getVersion()).willReturn("1.2.3");
       given(dataSource.getConnection()).willReturn(connection);
       given(connection.isValid(2)).willReturn(false);
       HealthController controller = new HealthController(buildProperties, dataSource);
 
-      // Act
       ResponseEntity<HealthResponse> response = controller.healthCheck();
 
-      // Assert
       assertAll(
           () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE),
           () -> assertThat(response.getBody()).isNotNull(),
@@ -72,15 +66,12 @@ class HealthControllerTest extends BaseUnitTest {
 
     @Test
     void should_return_down_when_connection_throws() throws SQLException {
-      // Arrange
       given(buildProperties.getVersion()).willReturn("1.2.3");
       given(dataSource.getConnection()).willThrow(new SQLException("Connection refused"));
       HealthController controller = new HealthController(buildProperties, dataSource);
 
-      // Act
       ResponseEntity<HealthResponse> response = controller.healthCheck();
 
-      // Assert
       assertAll(
           () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE),
           () -> assertThat(response.getBody()).isNotNull(),

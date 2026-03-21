@@ -1,7 +1,9 @@
 package com.andreasik.efipoker.estimation.room;
 
+import com.andreasik.efipoker.estimation.EstimationStats;
 import com.andreasik.efipoker.estimation.estimate.EstimateEntity;
 import com.andreasik.efipoker.estimation.estimate.EstimateRepository;
+import com.andreasik.efipoker.estimation.estimate.StoryPoints;
 import com.andreasik.efipoker.estimation.task.TaskEntity;
 import com.andreasik.efipoker.estimation.task.TaskRepository;
 import com.andreasik.efipoker.project.ProjectApi;
@@ -12,8 +14,11 @@ import com.andreasik.efipoker.shared.exception.ResourceNotFoundException;
 import jakarta.persistence.EntityManager;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -219,6 +224,87 @@ public class RoomService {
         "New round started: roomId={}, round={}, topic={}", roomId, saved.getRoundNumber(), topic);
     eventPublisher.publishEvent(new RoundStartedEvent(roomId, saved.getRoundNumber()));
     return roomEntityMapper.toDomain(saved);
+  }
+
+  public record AutoAssignedEstimate(UUID taskId, String taskTitle, String finalEstimate) {}
+
+  @Transactional
+  public FinishSessionResult finishSession(UUID roomId, boolean revealVotes) {
+    RoomEntity entity =
+        roomRepository
+            .findById(roomId)
+            .orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
+
+    if (RoomStatus.CLOSED.name().equals(entity.getStatus())) {
+      throw new IllegalStateException("Room is already finished");
+    }
+
+    // LIVE rooms: save current round snapshot before finishing
+    if (RoomType.LIVE.name().equals(entity.getRoomType())
+        && RoomStatus.OPEN.name().equals(entity.getStatus())) {
+      TaskEntity phantom =
+          taskRepository
+              .findByRoomIdAndTitle(roomId, PHANTOM_TASK_TITLE)
+              .orElseThrow(() -> new ResourceNotFoundException("Phantom task for room", roomId));
+      List<EstimateEntity> estimates = estimateRepository.findByTaskId(phantom.getId());
+      roundHistoryService.saveRoundSnapshot(entity, estimates);
+      log.info(
+          "Round snapshot saved on finish: roomId={}, round={}", roomId, entity.getRoundNumber());
+    }
+
+    // Auto-assign final estimates for tasks without one
+    List<AutoAssignedEstimate> autoAssigned = autoAssignFinalEstimates(roomId);
+
+    entity.setStatus(RoomStatus.CLOSED.name());
+    RoomEntity saved = roomRepository.save(entity);
+    log.info(
+        "Session finished: id={}, revealVotes={}, autoAssigned={}",
+        roomId,
+        revealVotes,
+        autoAssigned.size());
+    return new FinishSessionResult(roomEntityMapper.toDomain(saved), autoAssigned);
+  }
+
+  public record FinishSessionResult(Room room, List<AutoAssignedEstimate> autoAssigned) {}
+
+  private List<AutoAssignedEstimate> autoAssignFinalEstimates(UUID roomId) {
+    List<TaskEntity> tasks =
+        taskRepository.findByRoomId(roomId).stream()
+            .filter(t -> !PHANTOM_TASK_TITLE.equals(t.getTitle()))
+            .filter(t -> t.getFinalEstimate() == null)
+            .toList();
+
+    if (tasks.isEmpty()) {
+      return List.of();
+    }
+
+    List<UUID> taskIds = tasks.stream().map(TaskEntity::getId).toList();
+    Map<UUID, List<EstimateEntity>> estimatesByTask =
+        estimateRepository.findByTaskIds(taskIds).stream()
+            .collect(Collectors.groupingBy(e -> e.getTask().getId()));
+
+    List<AutoAssignedEstimate> result = new ArrayList<>();
+    List<TaskEntity> modified = new ArrayList<>();
+    for (TaskEntity task : tasks) {
+      List<EstimateEntity> estimates = estimatesByTask.getOrDefault(task.getId(), List.of());
+      List<String> points = estimates.stream().map(EstimateEntity::getStoryPoints).toList();
+      Double median = EstimationStats.computeMedian(points);
+      if (median != null) {
+        StoryPoints nearest = StoryPoints.nearestUp(median);
+        task.setFinalEstimate(nearest.getValue());
+        modified.add(task);
+        result.add(new AutoAssignedEstimate(task.getId(), task.getTitle(), nearest.getValue()));
+        log.info(
+            "Auto-assigned final estimate: taskId={}, median={}, assigned={}",
+            task.getId(),
+            median,
+            nearest.getValue());
+      }
+    }
+    if (!modified.isEmpty()) {
+      taskRepository.saveAll(modified);
+    }
+    return result;
   }
 
   @Transactional

@@ -13,15 +13,7 @@ import { PageSpinner } from '@/components/PageSpinner';
 import { NotFoundState } from '@/components/NotFoundState';
 import { TraceCopyButton } from '@/components/TraceCopyButton';
 import { SummaryCard } from '@/components/charts/SummaryCard';
-import { ResultsTable, getConsensusLevel, type TaskEstimate } from '@/components/ResultsTable';
-
-function getTaskSp(task: TaskEstimate): number {
-  if (task.finalEstimate) {
-    const n = Number(task.finalEstimate);
-    return isNaN(n) ? 0 : n;
-  }
-  return task.median ?? 0;
-}
+import { ResultsTable, getConsensusLevel, getTaskSp, type TaskEstimate } from '@/components/ResultsTable';
 
 export function ResultsPage() {
   const { slug, roomId } = useParams<{ slug: string; roomId: string }>();

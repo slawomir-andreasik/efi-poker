@@ -10,6 +10,7 @@ import {
   useCreateRoom,
   useRevealRoom,
   useReopenRoom,
+  useFinishSession,
   useUpdateProject,
   useDeleteProject,
   useAddTask,
@@ -30,7 +31,8 @@ import { CountdownTimer } from '@/components/CountdownTimer';
 import { DeadlineInput, getDefaultDeadline, formatPreview } from '@/components/DeadlineInput';
 import { ImportModal } from '@/components/ImportModal';
 import { AddTaskForm } from '@/components/AddTaskForm';
-import { Copy, Trash2, Plus, X, Eye, RotateCcw, Upload, Download } from 'lucide-react';
+import { FinishSessionDialog } from '@/components/FinishSessionDialog';
+import { Copy, Trash2, Plus, X, Eye, RotateCcw, Upload, Download, Square } from 'lucide-react';
 import { InlineConfirmAction } from '@/components/InlineConfirmAction';
 import { RoomSettings, DEFAULT_COMMENT_TEMPLATE } from '@/components/RoomSettings';
 import { RandomNameButton } from '@/components/RandomNameButton';
@@ -38,7 +40,7 @@ import { generateRoomName } from '@/utils/nameGenerator';
 import { Linkify } from '@/lib/linkify';
 import { statusBadge, roomTypeBadge, statusLabel } from '@/utils/roomBadges';
 import { TextInput, TextArea } from '@/components/TextInput';
-import type { RoomType } from '@/api/types';
+import type { RoomType, AutoAssignedEstimate } from '@/api/types';
 
 export function ProjectPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -94,9 +96,14 @@ export function ProjectPage() {
   });
 
   // Mutations
+  const [showFinishDialog, setShowFinishDialog] = useState(false);
+  const [finishRoomId, setFinishRoomId] = useState<string | null>(null);
+  const [autoAssigned, setAutoAssigned] = useState<AutoAssignedEstimate[] | null>(null);
+
   const createRoom = useCreateRoom(slug ?? '');
   const revealRoom = useRevealRoom(slug ?? '');
   const reopenRoom = useReopenRoom(slug ?? '');
+  const finishSession = useFinishSession(slug ?? '');
   const addTask = useAddTask(slug ?? '');
   const importTasks = useImportTasks(slug ?? '');
   const updateTask = useUpdateTask(slug ?? '');
@@ -180,6 +187,21 @@ export function ProjectPage() {
       await reopenRoom.mutateAsync(roomId);
     } catch (err) {
       logger.warn('Failed to reopen room:', getErrorMessage(err));
+      showToast(getErrorMessage(err));
+    }
+  }
+
+  async function handleFinishSession(revealVotes: boolean) {
+    if (!finishRoomId) return;
+    try {
+      const result = await finishSession.mutateAsync({ roomId: finishRoomId, revealVotes });
+      if (result.autoAssignedEstimates.length > 0) {
+        setAutoAssigned(result.autoAssignedEstimates);
+      } else {
+        setShowFinishDialog(false);
+        setFinishRoomId(null);
+      }
+    } catch (err) {
       showToast(getErrorMessage(err));
     }
   }
@@ -468,6 +490,15 @@ export function ProjectPage() {
                         className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-info/30 text-efi-info hover:bg-efi-info/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                       >
                         {reopenRoom.isPending ? <><ButtonSpinner /> Reopening...</> : <><RotateCcw className="w-4 h-4" /> Reopen Voting</>}
+                      </button>
+                    )}
+                    {room.status !== 'CLOSED' && (
+                      <button
+                        type="button"
+                        onClick={() => { setFinishRoomId(room.id); setShowFinishDialog(true); }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-efi-error/30 text-efi-error hover:bg-efi-error/10 transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+                      >
+                        <Square className="w-3.5 h-3.5" /> Finish
                       </button>
                     )}
                     {!isRoomLive && room.status !== 'REVEALED' && room.status !== 'CLOSED' && (
@@ -851,6 +882,15 @@ export function ProjectPage() {
           isOpen={showImport}
           onClose={() => setShowImport(false)}
           onImport={(titles) => void handleImportTasks(titles)}
+        />
+
+        <FinishSessionDialog
+          isOpen={showFinishDialog}
+          isPending={finishSession.isPending}
+          onFinish={(revealVotes) => void handleFinishSession(revealVotes)}
+          onCancel={() => { setShowFinishDialog(false); setFinishRoomId(null); }}
+          autoAssigned={autoAssigned}
+          onDismissAutoAssigned={() => { setAutoAssigned(null); setShowFinishDialog(false); setFinishRoomId(null); }}
         />
       </div>
     );

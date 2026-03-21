@@ -782,6 +782,51 @@ paths:
       summary: Reopen a revealed or closed room
       tags:
       - rooms
+  /rooms/{roomId}/finish:
+    post:
+      operationId: finishSession
+      parameters:
+      - description: UUID of the room
+        in: path
+        name: roomId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      - description: Admin code for project authorization
+        in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: revealVotes
+        required: false
+        schema:
+          default: true
+          type: boolean
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinishSessionResponse"
+          description: Session finished
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Resource not found
+      summary: Finish session and optionally reveal votes
+      tags:
+      - rooms
   /rooms/{roomId}/progress:
     get:
       operationId: getRoomProgress
@@ -1843,6 +1888,12 @@ paths:
         schema:
           format: uuid
           type: string
+      - description: Admin code for project authorization
+        in: header
+        name: X-Admin-Code
+        required: false
+        schema:
+          type: string
       responses:
         "200":
           content:
@@ -1873,6 +1924,12 @@ paths:
         in: path
         name: slug
         required: true
+        schema:
+          type: string
+      - description: Admin code for project authorization
+        in: header
+        name: X-Admin-Code
+        required: false
         schema:
           type: string
       responses:
@@ -1978,6 +2035,7 @@ components:
         name:
           maxLength: 255
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
       required:
       - name
@@ -2066,6 +2124,7 @@ components:
         name:
           maxLength: 255
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
       type: object
     RoomResponse:
@@ -2110,9 +2169,11 @@ components:
         title:
           maxLength: 255
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         description:
           maxLength: 2000
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         roomType:
           $ref: "#/components/schemas/RoomType"
@@ -2124,6 +2185,7 @@ components:
           type: boolean
         commentTemplate:
           maxLength: 2000
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         commentRequired:
           default: false
@@ -2169,6 +2231,7 @@ components:
         nickname:
           maxLength: 100
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         roomId:
           description: "When provided, adds access to this room. Multiple room joins\
@@ -2185,6 +2248,7 @@ components:
         nickname:
           maxLength: 100
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
       required:
       - nickname
@@ -2317,18 +2381,22 @@ components:
         title:
           maxLength: 255
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         description:
           maxLength: 2000
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         deadline:
           format: date-time
           type: string
         topic:
-          maxLength: 500
+          maxLength: 2000
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         commentTemplate:
           maxLength: 2000
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         commentRequired:
           type: boolean
@@ -2418,6 +2486,27 @@ components:
           - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+    FinishSessionResponse:
+      example:
+        autoAssignedEstimates:
+        - taskTitle: taskTitle
+          finalEstimate: finalEstimate
+          taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - taskTitle: taskTitle
+          finalEstimate: finalEstimate
+          taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        status: OPEN
+      properties:
+        status:
+          $ref: "#/components/schemas/RoomStatus"
+        autoAssignedEstimates:
+          items:
+            $ref: "#/components/schemas/AutoAssignedEstimate"
+          type: array
+      required:
+      - autoAssignedEstimates
+      - status
+      type: object
     RoomProgressResponse:
       example:
         totalParticipants: 0
@@ -2463,13 +2552,11 @@ components:
         roomId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         slug: slug
         participants:
-        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-          hasCommentedAll: true
+        - hasCommentedAll: true
           nickname: nickname
           votedCount: 6
           totalTasks: 1
-        - participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-          hasCommentedAll: true
+        - hasCommentedAll: true
           nickname: nickname
           votedCount: 6
           totalTasks: 1
@@ -2565,9 +2652,11 @@ components:
         title:
           maxLength: 255
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         description:
           maxLength: 2000
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         sortOrder:
           default: 0
@@ -2612,6 +2701,7 @@ components:
           items:
             maxLength: 255
             minLength: 1
+            pattern: "^(?!.*<[a-zA-Z/]).*$"
             type: string
           maxItems: 200
           minItems: 1
@@ -2711,8 +2801,9 @@ components:
         topic: topic
       properties:
         topic:
-          maxLength: 500
+          maxLength: 2000
           minLength: 1
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
       type: object
     RoundHistoryEntry:
@@ -2765,9 +2856,11 @@ components:
         title:
           maxLength: 255
           minLength: 1
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         description:
           maxLength: 2000
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
         sortOrder:
           type: integer
@@ -2789,7 +2882,8 @@ components:
         storyPoints:
           $ref: "#/components/schemas/StoryPoints"
         comment:
-          maxLength: 500
+          maxLength: 2000
+          pattern: "^(?![\\s\\S]*<[a-zA-Z/])[\\s\\S]*$"
           type: string
       type: object
     EstimateResponse:
@@ -2853,11 +2947,13 @@ components:
           description: Unique username for the new account
           maxLength: 100
           minLength: 3
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         password:
           description: Password (8-128 characters)
           maxLength: 128
           minLength: 8
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$"
           type: string
         email:
           description: Optional email address
@@ -2890,6 +2986,7 @@ components:
         username:
           maxLength: 100
           minLength: 3
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         password:
           maxLength: 128
@@ -2944,6 +3041,7 @@ components:
         newPassword:
           maxLength: 128
           minLength: 8
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$"
           type: string
       required:
       - newPassword
@@ -3000,10 +3098,12 @@ components:
         username:
           maxLength: 100
           minLength: 3
+          pattern: "^(?!.*<[a-zA-Z/]).*$"
           type: string
         password:
           maxLength: 128
           minLength: 8
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$"
           type: string
         email:
           format: email
@@ -3070,6 +3170,7 @@ components:
         newPassword:
           maxLength: 128
           minLength: 8
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$"
           type: string
       required:
       - newPassword
@@ -3355,6 +3456,26 @@ components:
       - REVEALED
       - CLOSED
       type: string
+    AutoAssignedEstimate:
+      example:
+        taskTitle: taskTitle
+        finalEstimate: finalEstimate
+        taskId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        taskId:
+          format: uuid
+          type: string
+        taskTitle:
+          maxLength: 2000
+          type: string
+        finalEstimate:
+          maxLength: 10
+          type: string
+      required:
+      - finalEstimate
+      - taskId
+      - taskTitle
+      type: object
     TaskProgressResponse:
       example:
         questionVotesCount: 1
@@ -3382,15 +3503,11 @@ components:
       type: object
     ParticipantProgressEntry:
       example:
-        participantId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         hasCommentedAll: true
         nickname: nickname
         votedCount: 6
         totalTasks: 1
       properties:
-        participantId:
-          format: uuid
-          type: string
         nickname:
           type: string
         votedCount:
@@ -3402,7 +3519,6 @@ components:
           type: boolean
       required:
       - nickname
-      - participantId
       - totalTasks
       - votedCount
       type: object
@@ -3547,6 +3663,7 @@ components:
       - "13"
       - "21"
       - '?'
+      - N/A
       type: string
     UserRole:
       enum:

@@ -48,7 +48,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{id}/tasks", room.getId())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isCreated())
@@ -84,7 +84,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{id}/tasks", room.getId())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isBadRequest());
@@ -98,7 +98,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{id}/tasks", room.getId())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isBadRequest());
@@ -113,7 +113,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{id}/tasks", room.getId())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isBadRequest());
@@ -136,7 +136,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
           mockMvc
               .perform(
                   post("/api/v1/rooms/{id}/tasks/import", room.getId())
-                      .header("X-Admin-Code", project.getAdminCode())
+                      .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                       .contentType(MediaType.APPLICATION_JSON)
                       .content(body))
               .andExpect(status().isCreated())
@@ -192,7 +192,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               patch("/api/v1/tasks/{id}", task.getId())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk())
@@ -227,7 +227,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               patch("/api/v1/tasks/{id}", UUID.randomUUID())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isNotFound());
@@ -246,7 +246,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
           mockMvc
               .perform(
                   patch("/api/v1/tasks/{id}", randomId)
-                      .header("X-Admin-Code", project.getAdminCode())
+                      .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                       .contentType(MediaType.APPLICATION_JSON)
                       .content(body))
               .andExpect(status().isNotFound())
@@ -283,7 +283,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               put("/api/v1/tasks/{id}/final-estimate", task.getId())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk())
@@ -308,7 +308,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               put("/api/v1/tasks/{id}/final-estimate", task.getId())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk())
@@ -329,7 +329,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               put("/api/v1/tasks/{id}/final-estimate", openTask.getId())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isForbidden());
@@ -363,7 +363,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               put("/api/v1/tasks/{id}/final-estimate", task.getId())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isBadRequest());
@@ -380,7 +380,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               put("/api/v1/tasks/{id}/final-estimate", UUID.randomUUID())
-                  .header("X-Admin-Code", project.getAdminCode())
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isNotFound());
@@ -403,7 +403,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               delete("/api/v1/tasks/{id}", task.getId())
-                  .header("X-Admin-Code", project.getAdminCode()))
+                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
           .andExpect(status().isNoContent());
 
       assertThat(taskRepository.findById(task.getId())).isEmpty();

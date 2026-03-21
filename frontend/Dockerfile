@@ -7,9 +7,10 @@ RUN bun install --frozen-lockfile
 COPY . .
 RUN VITE_APP_VERSION=$APP_VERSION bun run build
 
-# Runtime stage
+# Runtime stage - pin to latest patch for CVE fixes (zlib, libpng)
 FROM nginx:1.28-alpine
-RUN apk upgrade --no-cache
+# Force fresh package index + upgrade on every build (bust Docker cache via --no-cache)
+RUN apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 

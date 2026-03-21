@@ -13,6 +13,7 @@ import type {
   ChangePasswordRequest,
   AdminResetPasswordRequest,
   RoomType,
+  FinishSessionResponse,
 } from './types';
 
 // --- Auth mutations ---
@@ -124,6 +125,20 @@ export function useNewRound(slug: string, roomId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.rooms.live(roomId) });
       void qc.invalidateQueries({ queryKey: queryKeys.rooms.history(roomId) });
+    },
+  });
+}
+
+export function useFinishSession(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ roomId, revealVotes }: { roomId: string; revealVotes: boolean }) =>
+      api<FinishSessionResponse>(`/rooms/${roomId}/finish?revealVotes=${revealVotes}`, { method: 'POST' }, slug),
+    onSuccess: (_data, { roomId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.rooms.admin(roomId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.rooms.detail(roomId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.rooms.history(roomId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.rooms(slug) });
     },
   });
 }

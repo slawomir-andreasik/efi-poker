@@ -24,3 +24,13 @@ databaseChangeLog:
             sql: |
               DROP INDEX IF EXISTS idx_round_history_room;
               DROP TABLE IF EXISTS round_history;
+
+  - changeSet:
+      id: "round-history-002-increase-topic-limit"
+      author: "sandreasik"
+      comment: "Increase topic limit from 500 to 2000 characters"
+      changes:
+        - modifyDataType:
+            tableName: round_history
+            columnName: topic
+            newDataType: VARCHAR(2000)

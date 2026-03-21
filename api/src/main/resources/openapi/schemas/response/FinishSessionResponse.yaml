@@ -1,0 +1,11 @@
+type: object
+required:
+  - status
+  - autoAssignedEstimates
+properties:
+  status:
+    $ref: '../enums/RoomStatus.yaml'
+  autoAssignedEstimates:
+    type: array
+    items:
+      $ref: './AutoAssignedEstimate.yaml'

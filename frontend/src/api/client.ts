@@ -131,6 +131,24 @@ export async function api<T>(path: string, options: RequestOptions = {}, slug?: 
     throw err;
   }
 
+  // If 401 with a JWT, token is expired/invalid - clear it and retry without auth
+  if (response.status === 401 && jwt) {
+    logger.warn(`JWT expired/invalid, clearing and retrying ${method} ${path}`);
+    removeJwt();
+    delete headers['Authorization'];
+    try {
+      response = await fetch(`${BASE_URL}${path}`, {
+        method,
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+        signal: AbortSignal.timeout(30_000),
+      });
+    } catch (err) {
+      logger.error(`API network error on retry ${method} ${path}`);
+      throw err;
+    }
+  }
+
   if (!response.ok) {
     const traceId = response.headers.get('X-Trace-Id') ?? undefined;
     if (response.status >= 500) {

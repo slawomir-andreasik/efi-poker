@@ -1,0 +1,15 @@
+type: object
+required:
+  - taskId
+  - taskTitle
+  - finalEstimate
+properties:
+  taskId:
+    type: string
+    format: uuid
+  taskTitle:
+    type: string
+    maxLength: 2000
+  finalEstimate:
+    type: string
+    maxLength: 10

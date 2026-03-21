@@ -63,3 +63,23 @@ databaseChangeLog:
       rollback:
         - sql:
             sql: "DROP INDEX IF EXISTS idx_projects_created_by;"
+
+  - changeSet:
+      id: admin-code-hash-column-resize
+      author: "sandreasik"
+      logicalFilePath: db/changelog/tables/admin-code-hash.yaml
+      comment: "Resize admin_code column for BCrypt hashes"
+      changes:
+        - modifyDataType:
+            tableName: projects
+            columnName: admin_code
+            newDataType: VARCHAR(128)
+
+  - changeSet:
+      id: hash-existing-admin-codes
+      author: "sandreasik"
+      logicalFilePath: db/changelog/tables/admin-code-hash.yaml
+      comment: "One-shot BCrypt hashing of all plaintext admin codes. Non-reversible."
+      changes:
+        - customChange:
+            class: com.andreasik.efipoker.project.AdminCodeHashMigration

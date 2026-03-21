@@ -88,6 +88,7 @@ tasks.jacocoTestReport {
     dependsOn(tasks.test)
     reports {
         xml.required.set(true)
+        csv.required.set(true)
         html.required.set(!providers.environmentVariable("CI").isPresent)
     }
 }
@@ -118,8 +119,10 @@ tasks.bootRun {
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("bootBuildImage") {
-    imageName.set("ghcr.io/slawomir-andreasik/efi-poker/backend:${project.version}")
-    builder.set("paketobuildpacks/ubuntu-noble-builder:0.0.91")
+    val backendImage = providers.environmentVariable("BACKEND_IMAGE")
+        .getOrElse("ghcr.io/slawomir-andreasik/efi-poker/backend")
+    imageName.set("$backendImage:${project.version}")
+    builder.set("paketobuildpacks/builder-noble-java-tiny:0.0.119")
     buildpacks.set(listOf(
         "urn:cnb:builder:paketo-buildpacks/java",
         "docker://docker.io/paketobuildpacks/health-checker"

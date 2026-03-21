@@ -254,7 +254,7 @@ describe('OpenAPI contract: request schemas', () => {
 describe('OpenAPI contract: enums', () => {
   it('StoryPoints enum has correct values', () => {
     const schema = schemas['StoryPoints'];
-    expect(schema?.enum).toEqual(['0', '0.5', '1', '2', '3', '5', '8', '13', '21', '?']);
+    expect(schema?.enum).toEqual(['0', '0.5', '1', '2', '3', '5', '8', '13', '21', '?', 'N/A']);
     expect(schema?.type).toBe('string');
   });
 

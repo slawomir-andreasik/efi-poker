@@ -21,7 +21,7 @@ export function statusLabel(status: string): string {
   const labels: Record<string, string> = {
     OPEN: 'Voting open',
     REVEALED: 'Votes revealed',
-    CLOSED: 'Completed',
+    CLOSED: 'Finished',
   };
   return labels[status] ?? status;
 }

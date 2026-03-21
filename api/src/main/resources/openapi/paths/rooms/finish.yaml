@@ -1,19 +1,25 @@
-get:
-  operationId: getRoomAnalytics
-  tags: [analytics]
-  summary: Get analytics for a revealed/closed room
+post:
+  operationId: finishSession
+  tags: [rooms]
+  summary: Finish session and optionally reveal votes
   parameters:
     - $ref: '../../parameters/RoomIdPath.yaml'
     - $ref: '../../parameters/AdminCodeHeader.yaml'
+    - name: revealVotes
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: true
   responses:
     '200':
-      description: Room analytics
+      description: Session finished
       content:
         application/json:
           schema:
-            $ref: '../../schemas/response/RoomAnalyticsResponse.yaml'
+            $ref: '../../schemas/response/FinishSessionResponse.yaml'
     '403':
-      description: Room not yet revealed
+      description: Access denied
       content:
         application/problem+json:
           schema:

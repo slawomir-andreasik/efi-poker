@@ -4,18 +4,22 @@ properties:
     type: string
     minLength: 1
     maxLength: 255
+    pattern: '^(?!.*<[a-zA-Z/]).*$'
   description:
     type: string
     maxLength: 2000
+    pattern: '^(?![\s\S]*<[a-zA-Z/])[\s\S]*$'
   deadline:
     type: string
     format: date-time
   topic:
     type: string
-    maxLength: 500
+    maxLength: 2000
+    pattern: '^(?![\s\S]*<[a-zA-Z/])[\s\S]*$'
   commentTemplate:
     type: string
     maxLength: 2000
+    pattern: '^(?![\s\S]*<[a-zA-Z/])[\s\S]*$'
   commentRequired:
     type: boolean
   autoRevealOnDeadline:

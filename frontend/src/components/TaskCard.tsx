@@ -2,7 +2,7 @@ import { memo, useState, useRef } from 'react';
 import { EstimateButtons } from './EstimateButtons';
 import { ProgressBar } from './ProgressBar';
 import { Linkify } from '@/lib/linkify';
-import { SP_VALUES } from '@/api/types';
+import { SP_VALUES, SP_NOT_APPLICABLE } from '@/api/types';
 import { TextArea } from '@/components/TextInput';
 import { CommentInput } from '@/components/CommentInput';
 import { useSaveIndicator } from '@/hooks/useSaveIndicator';
@@ -55,7 +55,8 @@ export const TaskCard = memo(function TaskCard({
   myComment,
 }: TaskCardProps) {
   const hasVoted = selectedSp !== null;
-  const showCommentBox = !revealed && !disabled && (commentTemplate || commentRequired);
+  const isNA = selectedSp === SP_NOT_APPLICABLE;
+  const showCommentBox = !revealed && !disabled && !isNA && (commentTemplate || commentRequired);
   const [comment, setComment] = useState(() => getDraftComment(id) ?? myComment ?? commentTemplate ?? '');
   const { saving, showSaveIndicator } = useSaveIndicator();
 
@@ -63,7 +64,7 @@ export const TaskCard = memo(function TaskCard({
     <div
       className={`
         rounded-xl p-2.5 sm:p-3 transition-all
-        ${hasVoted ? 'glass-gold border-efi-gold/30' : 'glass-frost hover:border-efi-gold-light/20'}
+        ${hasVoted ? 'glass-gold border-l-2 border-l-efi-gold border-efi-gold/30' : 'glass-frost hover:border-efi-gold-light/20'}
       `}
     >
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3">
@@ -97,7 +98,7 @@ export const TaskCard = memo(function TaskCard({
         <EstimateButtons
           selectedValue={selectedSp}
           onSelect={(value) => {
-            onEstimate(id, value, value !== null ? (comment.trim() || undefined) : undefined);
+            onEstimate(id, value, value !== null && value !== SP_NOT_APPLICABLE ? (comment.trim() || undefined) : undefined);
             if (value !== null) {
               clearDraftComment(id);
               showSaveIndicator();
@@ -154,20 +155,21 @@ export const TaskCard = memo(function TaskCard({
             <div className="space-y-2 mb-3">
               {allEstimates.map((est) => {
                 const isQuestion = est.storyPoints === '?';
+                const estIsNA = est.storyPoints === SP_NOT_APPLICABLE;
                 return (
                   <div
                     key={est.id}
                     className={`px-2.5 py-1.5 rounded-md text-xs ${isQuestion
                         ? 'bg-efi-warning/20 border border-efi-warning/30'
-                        : 'bg-white/6'
+                        : estIsNA ? 'bg-white/4' : 'bg-white/6'
                       }`}
                   >
                     <div className="flex items-center gap-1.5">
-                      <span className={isQuestion ? 'text-efi-warning/70' : 'text-efi-text-secondary'}>{est.participantNickname}</span>
-                      <span className={`font-bold ${isQuestion ? 'text-efi-warning' : 'text-efi-text-primary'}`}>{est.storyPoints}</span>
+                      <span className={isQuestion ? 'text-efi-warning/70' : estIsNA ? 'text-efi-text-tertiary' : 'text-efi-text-secondary'}>{est.participantNickname}</span>
+                      <span className={`font-bold ${isQuestion ? 'text-efi-warning' : estIsNA ? 'text-efi-text-tertiary' : 'text-efi-text-primary'}`}>{est.storyPoints}</span>
                     </div>
                     {est.comment && (
-                      <p className="text-efi-text-tertiary mt-1 whitespace-pre-line break-words">{est.comment}</p>
+                      <p className="text-efi-text-secondary mt-1 whitespace-pre-line break-words">{est.comment}</p>
                     )}
                   </div>
                 );
@@ -177,15 +179,16 @@ export const TaskCard = memo(function TaskCard({
             <div className="flex flex-wrap gap-2 mb-3">
               {allEstimates.map((est) => {
                 const isQuestion = est.storyPoints === '?';
+                const estIsNA = est.storyPoints === SP_NOT_APPLICABLE;
                 return (
                   <span
                     key={est.id}
                     className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs ${isQuestion
                         ? 'bg-efi-warning/20 border border-efi-warning/30 text-efi-warning'
-                        : 'bg-white/6 text-efi-text-primary'
+                        : estIsNA ? 'bg-white/4 text-efi-text-tertiary' : 'bg-white/6 text-efi-text-primary'
                       }`}
                   >
-                    <span className={isQuestion ? 'text-efi-warning/70' : 'text-efi-text-secondary'}>{est.participantNickname}</span>
+                    <span className={isQuestion ? 'text-efi-warning/70' : estIsNA ? 'text-efi-text-tertiary' : 'text-efi-text-secondary'}>{est.participantNickname}</span>
                     <span className="font-bold">{est.storyPoints}</span>
                   </span>
                 );

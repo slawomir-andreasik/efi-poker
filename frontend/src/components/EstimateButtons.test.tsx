@@ -6,11 +6,11 @@ import { SP_VALUES } from '@/api/types';
 import type { StoryPoints } from '@/api/types';
 
 describe('EstimateButtons', () => {
-  it('should render all 10 story point values as strings', () => {
+  it('should render all story point values as strings', () => {
     render(<EstimateButtons selectedValue={null} onSelect={() => {}} />);
 
     const buttons = screen.getAllByRole('button');
-    expect(buttons).toHaveLength(10);
+    expect(buttons).toHaveLength(SP_VALUES.length);
 
     const labels = buttons.map((b) => b.textContent);
     expect(labels).toEqual(SP_VALUES);

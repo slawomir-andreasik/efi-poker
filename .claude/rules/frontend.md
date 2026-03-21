@@ -15,6 +15,7 @@ src/
     layout/     -> Header, Breadcrumbs, Footer
     charts/     -> chart components (recharts)
   hooks/        -> custom React hooks
+  lib/          -> standalone utility modules (linkify, etc.)
   pages/        -> route-level page components
   utils/        -> logger, error helpers
   styles/       -> theme.css (glass tiers, colors)
@@ -36,6 +37,8 @@ src/
 | Role badge | `<RoleBadge isAdmin={bool} />` |
 | Dropdown dismiss | `useDropdownDismiss(ref, isOpen, onClose)` hook |
 | Auth fallback | `useProjectAuth(slug)` hook (adminCode + participant recovery for logged-in users) |
+| URL safety | `isSafeUrl(url)` from `@/lib/linkify` - validates `http:`/`https:` protocol via `new URL()` |
+| Link rendering | `<Linkify text={str} />` from `@/lib/linkify` - renders URLs as links with protocol validation |
 
 Error handling pattern: `logger.warn('Failed to X:', getErrorMessage(err))` + `showToast(getErrorMessage(err))`
 

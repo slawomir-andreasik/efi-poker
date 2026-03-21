@@ -5,6 +5,7 @@ properties:
     type: string
     minLength: 3
     maxLength: 100
+    pattern: '^(?!.*<[a-zA-Z/]).*$'
   password:
     type: string
     minLength: 8

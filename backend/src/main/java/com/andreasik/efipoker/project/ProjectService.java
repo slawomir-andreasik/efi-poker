@@ -4,23 +4,20 @@ import com.andreasik.efipoker.auth.UserEntity;
 import com.andreasik.efipoker.shared.event.ProjectCreatedEvent;
 import com.andreasik.efipoker.shared.exception.ResourceNotFoundException;
 import com.andreasik.efipoker.shared.exception.UnauthorizedException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.UUID;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Transactional(readOnly = true)
 public class ProjectService implements ProjectApi {
 
@@ -31,6 +28,18 @@ public class ProjectService implements ProjectApi {
   private final ProjectRepository projectRepository;
   private final ProjectEntityMapper projectEntityMapper;
   private final ApplicationEventPublisher eventPublisher;
+  private final PasswordEncoder adminCodeEncoder;
+
+  ProjectService(
+      ProjectRepository projectRepository,
+      ProjectEntityMapper projectEntityMapper,
+      ApplicationEventPublisher eventPublisher,
+      @Qualifier("adminCodeEncoder") PasswordEncoder adminCodeEncoder) {
+    this.projectRepository = projectRepository;
+    this.projectEntityMapper = projectEntityMapper;
+    this.eventPublisher = eventPublisher;
+    this.adminCodeEncoder = adminCodeEncoder;
+  }
 
   @Transactional
   public Project createProject(String name) {
@@ -40,7 +49,8 @@ public class ProjectService implements ProjectApi {
   @Transactional
   public Project createProject(String name, UUID ownerId) {
     String slug = generateSlug();
-    String adminCode = UUID.randomUUID().toString();
+    String rawAdminCode = UUID.randomUUID().toString();
+    String adminCode = adminCodeEncoder.encode(rawAdminCode);
 
     ProjectEntity.ProjectEntityBuilder builder =
         ProjectEntity.builder().name(name).slug(slug).adminCode(adminCode);
@@ -53,7 +63,8 @@ public class ProjectService implements ProjectApi {
     log.info(
         "Project created: slug={}, name={}, ownerId={}", saved.getSlug(), saved.getName(), ownerId);
     eventPublisher.publishEvent(new ProjectCreatedEvent(saved.getId()));
-    return projectEntityMapper.toDomain(saved);
+    Project project = projectEntityMapper.toDomain(saved);
+    return project.toBuilder().adminCode(rawAdminCode).build(); // return raw code to creator
   }
 
   public List<Project> listProjectsByOwner(UUID ownerId) {
@@ -76,6 +87,11 @@ public class ProjectService implements ProjectApi {
             .findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Project", id));
     return projectEntityMapper.toDomain(entity);
+  }
+
+  @Override
+  public void validateAdminCodeBySlug(String slug, String adminCode) {
+    validateAdminAccess(slug, adminCode, null);
   }
 
   public Project validateAdminCode(String slug, String adminCode) {
@@ -173,9 +189,7 @@ public class ProjectService implements ProjectApi {
     if (provided == null) {
       return false;
     }
-    byte[] a = stored.getBytes(StandardCharsets.UTF_8);
-    byte[] b = provided.getBytes(StandardCharsets.UTF_8);
-    return MessageDigest.isEqual(a, b);
+    return adminCodeEncoder.matches(provided, stored);
   }
 
   private String generateSlug() {

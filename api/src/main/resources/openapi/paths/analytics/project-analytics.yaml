@@ -4,6 +4,7 @@ get:
   summary: Get analytics across all revealed/closed rooms in a project
   parameters:
     - $ref: '../../parameters/SlugPath.yaml'
+    - $ref: '../../parameters/AdminCodeHeader.yaml'
   responses:
     '200':
       description: Project analytics

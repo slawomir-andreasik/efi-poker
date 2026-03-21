@@ -5,10 +5,12 @@ properties:
     type: string
     minLength: 3
     maxLength: 100
+    pattern: '^(?!.*<[a-zA-Z/]).*$'
   password:
     type: string
     minLength: 8
     maxLength: 128
+    pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$'
   email:
     type: string
     format: email

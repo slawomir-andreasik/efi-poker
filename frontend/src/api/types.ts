@@ -75,9 +75,11 @@ export interface AdminResetPasswordRequest {
 
 // Enums
 
-export type StoryPoints = '0' | '0.5' | '1' | '2' | '3' | '5' | '8' | '13' | '21' | '?';
+export type StoryPoints = '0' | '0.5' | '1' | '2' | '3' | '5' | '8' | '13' | '21' | '?' | 'N/A';
 
-export const SP_VALUES: StoryPoints[] = ['0', '0.5', '1', '2', '3', '5', '8', '13', '21', '?'];
+export const SP_VALUES: StoryPoints[] = ['0', '0.5', '1', '2', '3', '5', '8', '13', '21', '?', 'N/A'];
+
+export const SP_NOT_APPLICABLE: StoryPoints = 'N/A';
 
 export type RoomStatus = 'OPEN' | 'REVEALED' | 'CLOSED';
 
@@ -323,6 +325,19 @@ export interface SetFinalEstimateRequest {
   storyPoints: StoryPoints;
 }
 
+// Finish session
+
+export interface FinishSessionResponse {
+  status: RoomStatus;
+  autoAssignedEstimates: AutoAssignedEstimate[];
+}
+
+export interface AutoAssignedEstimate {
+  taskId: string;
+  taskTitle: string;
+  finalEstimate: string;
+}
+
 // Analytics
 
 export interface RoomAnalyticsResponse {
@@ -410,7 +425,6 @@ export interface ParticipantProgressResponse {
 }
 
 export interface ParticipantProgressEntry {
-  participantId: string;
   nickname: string;
   votedCount: number;
   totalTasks: number;

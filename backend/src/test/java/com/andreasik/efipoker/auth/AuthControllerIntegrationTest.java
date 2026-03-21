@@ -49,7 +49,7 @@ class AuthControllerIntegrationTest extends BaseComponentTest {
     }
 
     @Test
-    void should_reject_wrong_password_403() throws Exception {
+    void should_reject_wrong_password_401() throws Exception {
       // language=JSON
       String body =
           """
@@ -58,11 +58,11 @@ class AuthControllerIntegrationTest extends BaseComponentTest {
 
       mockMvc
           .perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content(body))
-          .andExpect(status().isForbidden());
+          .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void should_reject_nonexistent_user_403() throws Exception {
+    void should_reject_nonexistent_user_401() throws Exception {
       // language=JSON
       String body =
           """
@@ -71,7 +71,7 @@ class AuthControllerIntegrationTest extends BaseComponentTest {
 
       mockMvc
           .perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content(body))
-          .andExpect(status().isForbidden());
+          .andExpect(status().isUnauthorized());
     }
 
     @Test

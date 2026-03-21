@@ -1,6 +1,6 @@
-# FALLBACK Dockerfile - kept for fast local dev builds (compose.dev.yaml) and as a safety net.
-# Production images are built via `make image-build` (Paketo buildpacks + AOT cache).
-# See: backend/build.gradle.kts bootBuildImage task.
+# FALLBACK ONLY - NOT used for production images.
+# Production: `make image-build` (Paketo buildpacks via bootBuildImage in build.gradle.kts)
+# This Dockerfile: local dev builds (compose.dev.yaml) and CI fallback only.
 
 # Build stage
 FROM eclipse-temurin:25-jdk AS build
@@ -14,6 +14,9 @@ RUN chmod +x gradlew && ./gradlew :backend:bootJar --no-daemon -x test
 # Runtime stage
 FROM eclipse-temurin:25-jre
 WORKDIR /app
+
+# Patch OS-level CVEs on every build
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 RUN addgroup --system --gid 1001 appgroup && \
     adduser --system --uid 1001 --ingroup appgroup appuser
