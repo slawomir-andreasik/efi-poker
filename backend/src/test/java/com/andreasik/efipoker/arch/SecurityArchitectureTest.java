@@ -143,7 +143,7 @@ class SecurityArchitectureTest extends BaseArchUnitTest {
     }
   }
 
-  /** Checks if a YAML file contains a field definition (e.g. "password:"). */
+  /// Checks if a YAML file contains a field definition (e.g. "password:").
   private static boolean containsField(String yamlContent, String fieldName) {
     for (String line : yamlContent.split("\n")) {
       String trimmed = line.trim();
@@ -154,7 +154,7 @@ class SecurityArchitectureTest extends BaseArchUnitTest {
     return false;
   }
 
-  /** Checks if a YAML field has a 'pattern:' key within the next 10 lines. */
+  /// Checks if a YAML field has a 'pattern:' key within the next 10 lines.
   private static boolean containsPatternForField(String yamlContent, String fieldName) {
     String[] lines = yamlContent.split("\n");
     for (int i = 0; i < lines.length; i++) {

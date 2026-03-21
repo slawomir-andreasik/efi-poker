@@ -17,11 +17,9 @@ import liquibase.exception.ValidationErrors;
 import liquibase.resource.ResourceAccessor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-/**
- * One-shot migration: hash all plaintext admin codes with BCrypt. Plaintext UUIDs (36 chars, no $
- * prefix) are hashed in place. Already-hashed values (starting with $2) are skipped.
- * ProjectService.adminCodeMatches() uses passwordEncoder.matches() for all codes.
- */
+/// One-shot migration: hash all plaintext admin codes with BCrypt. Plaintext UUIDs (36 chars, no $
+/// prefix) are hashed in place. Already-hashed values (starting with $2) are skipped.
+/// ProjectService.adminCodeMatches() uses passwordEncoder.matches() for all codes.
 public class AdminCodeHashMigration implements CustomTaskChange, CustomTaskRollback {
 
   @Override

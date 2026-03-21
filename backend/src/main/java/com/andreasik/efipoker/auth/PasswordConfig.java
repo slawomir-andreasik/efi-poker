@@ -14,6 +14,8 @@ class PasswordConfig {
     return new BCryptPasswordEncoder(12);
   }
 
+  /// BCrypt default strength (10) is intentional - admin codes are full UUIDs
+  /// (128-bit entropy), brute-force infeasible. Lower cost keeps creation fast.
   @Bean
   @Qualifier("adminCodeEncoder")
   PasswordEncoder adminCodeEncoder() {

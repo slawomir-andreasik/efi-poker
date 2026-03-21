@@ -222,10 +222,8 @@ class ArchitectureTest extends BaseArchUnitTest {
     }
   }
 
-  /**
-   * Source-level checks that ArchUnit can't do (ArchUnit operates on bytecode where all references
-   * are fully qualified regardless of source-level imports).
-   */
+  /// Source-level checks that ArchUnit can't do (ArchUnit operates on bytecode where all references
+  /// are fully qualified regardless of source-level imports).
   @Nested
   @DisplayName("SourceCodeQuality")
   class SourceCodeQuality {
@@ -235,19 +233,15 @@ class ArchitectureTest extends BaseArchUnitTest {
     private static final Pattern FQN_PATTERN =
         Pattern.compile("com\\.andreasik\\.efipoker\\.[a-z]+(\\.[a-z]+)*\\.[A-Z]\\w+");
 
-    /**
-     * Per-file exceptions where FQN is unavoidable due to name collision (two classes with the same
-     * simple name from different packages used in one file).
-     *
-     * <p>Format: "SimpleFileName.java -> fqn.prefix" (the FQN that is allowed ONLY in that file).
-     *
-     * <p>If this test fails:
-     *
-     * <ul>
-     *   <li>Usually: add an {@code import} and use the simple class name
-     *   <li>Name collision: add an entry here for the specific file + the less-imported FQN
-     * </ul>
-     */
+    /// Per-file exceptions where FQN is unavoidable due to name collision
+    /// (two classes with the same simple name from different packages used in one file).
+    ///
+    /// Format: "SimpleFileName.java -> fqn.prefix" (the FQN that is allowed ONLY in that file).
+    ///
+    /// If this test fails:
+    ///
+    /// - Usually: add an `import` and use the simple class name
+    /// - Name collision: add an entry here for the specific file + the less-imported FQN
     private static final List<String> ALLOWED_FQN_PER_FILE =
         List.of(
             // RoomMapper uses api.model.RoomType (imported) + domain RoomType (FQN for param)

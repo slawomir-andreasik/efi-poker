@@ -18,11 +18,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
-/**
- * Security audit regression tests. Each @Nested class maps to one SEC-XXX task from the security
- * the secure behavior which the code does not yet implement. Enable after fixing the corresponding
- * SEC task.
- */
+/// Security audit regression tests. Each @Nested class maps to one SEC-XXX audit task documenting
+/// the secure behavior which the code does not yet implement. Enable after fixing the corresponding
+/// SEC task.
 @DisplayName("Security Audit Tests")
 class SecurityAuditTest extends BaseComponentTest {
 

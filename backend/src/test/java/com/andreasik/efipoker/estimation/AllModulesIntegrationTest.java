@@ -35,11 +35,9 @@ import org.springframework.modulith.test.ApplicationModuleTest;
 import org.springframework.modulith.test.ApplicationModuleTest.BootstrapMode;
 import org.springframework.modulith.test.AssertablePublishedEvents;
 
-/**
- * Merged module integration test. All 3 module tests (project, participant, estimation) share one
- * Spring context instead of 3 separate ones. Placed in estimation package because it transitively
- * depends on all other modules (estimation -> project -> auth, estimation -> participant).
- */
+/// Merged module integration test. All 3 module tests (project, participant, estimation) share one
+/// Spring context instead of 3 separate ones. Placed in estimation package because it transitively
+/// depends on all other modules (estimation -> project -> auth, estimation -> participant).
 @DisplayName("AllModulesIntegrationTest")
 @ApplicationModuleTest(mode = BootstrapMode.ALL_DEPENDENCIES)
 class AllModulesIntegrationTest extends BaseModuleTest {
