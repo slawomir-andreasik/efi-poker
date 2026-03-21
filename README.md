@@ -1,18 +1,33 @@
 # EFI Poker
 
+[![GitHub Release](https://img.shields.io/github/v/release/slawomir-andreasik/efi-poker)](https://github.com/slawomir-andreasik/efi-poker/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/slawomir-andreasik/efi-poker/actions/workflows/ci.yml/badge.svg)](https://github.com/slawomir-andreasik/efi-poker/actions)
+[![Java](https://img.shields.io/badge/Java-25-blue.svg)](https://openjdk.java.net/)
+
 > Estimate. Focus. Improve.
 
-Sprint Planning Poker for Scrum teams. Replace manual estimation on video calls with a dedicated tool - create projects, share links, and estimate in rooms with hidden votes and classic poker reveal.
+Sprint Planning Poker for Scrum teams. Replace manual estimation on video calls with a dedicated tool - create projects, share links and estimate in rooms with hidden votes and classic poker reveal.
+
+**Live demo:** [app.efipoker.com](https://app.efipoker.com)
+
+| |
+|:---:|
+| ![EFI Poker - estimation room with revealed votes](docs/images/revealed.jpg) |
+| *Async estimation room with revealed votes* |
 
 ## Features
 
 - **Two estimation modes** - async (deadline-driven) and live (real-time poker table)
 - **Hidden votes** with classic poker reveal
+- **Finish session** - end refinement early with auto-assigned final estimates from median
+- **N/A and ? votes** - mark tasks as not applicable or flag uncertainty
+- **Markdown and CSV export** of estimation results
 - **Project/room/task hierarchy** - organize work by project, create rooms per sprint
 - **Admin tools** - user management, RBAC, project admin codes
-- **CSV export** of estimation results
+- **No registration required** - participants join by nickname, no account needed
 - **PWA support** - installable on mobile
-- **Flexible auth** - built-in password, LDAP, and OAuth2 (Auth0) providers
+- **Flexible auth** - built-in password, LDAP and OAuth2 (Auth0) providers
 
 ## Quick Start
 
@@ -93,7 +108,7 @@ To get started:
 | API | OpenAPI-first (spec generates Java interfaces + TypeScript client) |
 | Auth | JWT + password, LDAP, OAuth2 (Auth0) |
 | Observability | Micrometer + OpenTelemetry, Prometheus metrics |
-| Containers | Docker, Paketo Buildpacks (backend), nginx (frontend) |
+| Containers | Docker, Paketo Buildpacks (backend) and nginx (frontend) |
 
 ## Environment Variables
 
@@ -114,11 +129,12 @@ To get started:
 | `AUTH0_CLIENT_SECRET` | - | Auth0 client secret |
 | `LDAP_ENABLED` | `false` | Enable LDAP authentication |
 | `LDAP_URL` | - | LDAP server URL (e.g. `ldap://localhost:389`) |
-| `LDAP_BASE_DN` | - | LDAP search base (e.g. `dc=example,dc=com`) |
+| `LDAP_BASE_DN` | `dc=example,dc=com` | LDAP search base |
+| `LDAP_USERS_DN` | `ou=users` | LDAP users organizational unit |
 | `LDAP_BIND_DN` | - | LDAP bind DN for search |
 | `LDAP_BIND_PASSWORD` | - | LDAP bind password |
 | `LDAP_USER_FILTER` | `(uid={0})` | LDAP user search filter |
-| `REGISTRATION_ENABLED` | `true` | Allow public user registration |
+| `REGISTRATION_ENABLED` | `false` | Allow public user registration |
 
 ## Project Structure
 
@@ -133,6 +149,8 @@ backend/              Spring Boot application
 frontend/             React SPA
   src/                          TypeScript source
   public/                       Static assets
+docs/                 Deployment guide and images
+.claude/              Claude Code rules and project conventions
 docker-compose.yml    Dev database (PostgreSQL)
 compose.yaml          Quick start with pre-built images
 compose.dev.yaml      Full Docker dev environment
@@ -141,6 +159,24 @@ compose.dev.yaml      Full Docker dev environment
 ## Deployment
 
 See [docs/deployment.md](docs/deployment.md) for Docker Compose and Kubernetes deployment examples.
+
+## Screenshots
+
+| | |
+|:---:|:---:|
+| ![Project](docs/images/project.jpg) | ![Voting](docs/images/voting.jpg) |
+| *Project dashboard with rooms* | *Async voting with hidden estimates* |
+| ![Live mode](docs/images/live.jpg) | ![Results](docs/images/results.jpg) |
+| *Live poker table with real-time updates* | *Results summary and export* |
+
+<table>
+<tr>
+<td align="center"><img src="docs/images/mobile-project.jpg" alt="Mobile - project" width="180" /><br><em>Project</em></td>
+<td align="center"><img src="docs/images/create-room.jpg" alt="Mobile - create room" width="180" /><br><em>Create room</em></td>
+<td align="center"><img src="docs/images/mobile.jpg" alt="Mobile - voting" width="180" /><br><em>Voting</em></td>
+<td align="center"><img src="docs/images/mobile-live.jpg" alt="Mobile - live" width="180" /><br><em>Live session</em></td>
+</tr>
+</table>
 
 ## License
 
