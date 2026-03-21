@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.within;
 import static org.mockito.BDDMockito.given;
 
 import com.andreasik.efipoker.api.model.RoomAnalyticsResponse;
+import com.andreasik.efipoker.api.model.TaskAnalyticsEntry;
 import com.andreasik.efipoker.estimation.estimate.Estimate;
 import com.andreasik.efipoker.estimation.estimate.EstimateService;
 import com.andreasik.efipoker.estimation.task.Task;
@@ -136,6 +137,123 @@ class AnalyticsServiceTest extends BaseUnitTest {
       assertThat(result.getSummary().getParticipationRate()).isCloseTo(100.0, within(0.1));
       // task1 has consensus (both voted 5)
       assertThat(result.getSummary().getConsensusCount()).isEqualTo(1);
+      // totalSP: task1 avg=5.0 (no finalEstimate), task2 avg=5.5 (no finalEstimate)
+      assertThat(result.getSummary().getTotalStoryPoints()).isCloseTo(10.5, within(0.01));
+
+      // slug propagated to response
+      assertThat(result.getSlug()).isEqualTo("ABC-DEF");
+
+      // task analytics fields
+      TaskAnalyticsEntry task1Entry =
+          result.getTaskAnalytics().stream()
+              .filter(e -> taskId1.equals(e.getTaskId()))
+              .findFirst()
+              .orElseThrow();
+      assertThat(task1Entry.getTaskId()).isEqualTo(taskId1);
+      assertThat(task1Entry.getTitle()).isEqualTo("Login");
+      assertThat(task1Entry.getAveragePoints()).isCloseTo(5.0, within(0.01));
+      assertThat(task1Entry.getMedianPoints()).isCloseTo(5.0, within(0.01));
+      assertThat(task1Entry.getVoteDistribution()).containsEntry("5", 2);
+
+      TaskAnalyticsEntry task2Entry =
+          result.getTaskAnalytics().stream()
+              .filter(e -> taskId2.equals(e.getTaskId()))
+              .findFirst()
+              .orElseThrow();
+      assertThat(task2Entry.getTaskId()).isEqualTo(taskId2);
+      assertThat(task2Entry.getTitle()).isEqualTo("Logout");
+      assertThat(task2Entry.getAveragePoints()).isCloseTo(5.5, within(0.01));
+      assertThat(task2Entry.getMedianPoints()).isCloseTo(5.5, within(0.01));
+      assertThat(task2Entry.getVoteDistribution()).containsEntry("3", 1).containsEntry("8", 1);
+
+      // participation matrix present
+      assertThat(result.getParticipationMatrix()).hasSize(2);
+    }
+
+    @Test
+    void should_build_participation_matrix_with_correct_entries() {
+      // Arrange
+      UUID roomId = UUID.randomUUID();
+      UUID projectId = UUID.randomUUID();
+      UUID taskId1 = UUID.randomUUID();
+      UUID taskId2 = UUID.randomUUID();
+      UUID participantId1 = UUID.randomUUID();
+      UUID participantId2 = UUID.randomUUID();
+
+      Project project = Project.builder().id(projectId).name("Project").slug("proj").build();
+      Room room =
+          Room.builder()
+              .id(roomId)
+              .project(project)
+              .slug("MAT-RIX")
+              .title("Matrix Room")
+              .status(RoomStatus.REVEALED.name())
+              .build();
+
+      Task task1 = Task.builder().id(taskId1).title("T1").room(room).build();
+      Task task2 = Task.builder().id(taskId2).title("T2").room(room).build();
+
+      Participant p1 =
+          Participant.builder().id(participantId1).nickname("Alice").project(project).build();
+      Participant p2 =
+          Participant.builder().id(participantId2).nickname("Bob").project(project).build();
+
+      Estimate e1 =
+          Estimate.builder()
+              .id(UUID.randomUUID())
+              .task(task1)
+              .participant(p1)
+              .storyPoints("3")
+              .build();
+      Estimate e2 =
+          Estimate.builder()
+              .id(UUID.randomUUID())
+              .task(task2)
+              .participant(p1)
+              .storyPoints("8")
+              .build();
+      // p2 only votes on task1
+      Estimate e3 =
+          Estimate.builder()
+              .id(UUID.randomUUID())
+              .task(task1)
+              .participant(p2)
+              .storyPoints("5")
+              .build();
+
+      given(roomService.getRoom(roomId)).willReturn(room);
+      given(taskService.listByRoom(roomId)).willReturn(List.of(task1, task2));
+      given(participantService.listParticipants(projectId)).willReturn(List.of(p1, p2));
+      given(estimateService.getEstimatesByTaskIds(List.of(taskId1, taskId2)))
+          .willReturn(Map.of(taskId1, List.of(e1, e3), taskId2, List.of(e2)));
+
+      // Act
+      RoomAnalyticsResponse result = analyticsService.computeRoomAnalytics(roomId);
+
+      // Assert - matrix entries have participantId, nickname, taskVotes
+      assertThat(result.getParticipationMatrix()).hasSize(2);
+
+      var aliceEntry =
+          result.getParticipationMatrix().stream()
+              .filter(e -> participantId1.equals(e.getParticipantId()))
+              .findFirst()
+              .orElseThrow();
+      assertThat(aliceEntry.getParticipantId()).isEqualTo(participantId1);
+      assertThat(aliceEntry.getNickname()).isEqualTo("Alice");
+      assertThat(aliceEntry.getTaskVotes())
+          .containsEntry(taskId1.toString(), "3")
+          .containsEntry(taskId2.toString(), "8");
+
+      var bobEntry =
+          result.getParticipationMatrix().stream()
+              .filter(e -> participantId2.equals(e.getParticipantId()))
+              .findFirst()
+              .orElseThrow();
+      assertThat(bobEntry.getParticipantId()).isEqualTo(participantId2);
+      assertThat(bobEntry.getNickname()).isEqualTo("Bob");
+      assertThat(bobEntry.getTaskVotes())
+          .containsEntry(taskId1.toString(), "5")
+          .doesNotContainKey(taskId2.toString());
     }
 
     @Test

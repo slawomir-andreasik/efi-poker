@@ -131,4 +131,47 @@ class RefreshTokenServiceTest extends BaseUnitTest {
       assertThat(hash1).isNotEqualTo(hash2);
     }
   }
+
+  @Nested
+  @DisplayName("createRefreshToken - token uniqueness")
+  class CreateRefreshTokenUniqueness {
+
+    @Test
+    void should_generate_unique_tokens_on_each_call() {
+      // Mutant: removed call to SecureRandom::nextBytes - would produce all-zero bytes,
+      // making every token identical. Two calls must yield different tokens.
+      when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+      String token1 = service.createRefreshToken(UUID.randomUUID(), false);
+      String token2 = service.createRefreshToken(UUID.randomUUID(), false);
+
+      assertThat(token1).isNotEqualTo(token2);
+    }
+  }
+
+  @Nested
+  @DisplayName("cleanupExpired")
+  class CleanupExpired {
+
+    @Test
+    void should_return_count_from_repository() {
+      // Mutant: replaced int return with 0 - would ignore the real deleted count.
+      when(refreshTokenRepository.deleteExpired(any())).thenReturn(5);
+
+      int result = service.cleanupExpired();
+
+      assertThat(result).isEqualTo(5);
+    }
+
+    @Test
+    void should_call_deleteExpired_with_current_time() {
+      when(refreshTokenRepository.deleteExpired(any())).thenReturn(0);
+      ArgumentCaptor<Instant> timeCaptor = ArgumentCaptor.forClass(Instant.class);
+
+      service.cleanupExpired();
+
+      verify(refreshTokenRepository).deleteExpired(timeCaptor.capture());
+      assertThat(timeCaptor.getValue()).isBeforeOrEqualTo(Instant.now());
+    }
+  }
 }

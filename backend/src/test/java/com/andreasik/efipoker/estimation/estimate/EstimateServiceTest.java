@@ -492,4 +492,180 @@ class EstimateServiceTest extends BaseUnitTest {
           .deleteByTaskIdAndParticipantId(taskId, participantId);
     }
   }
+
+  @Nested
+  @DisplayName("submitEstimate - storyPoints validation")
+  class SubmitEstimateStoryPointsValidation {
+
+    @Test
+    void should_throw_for_invalid_story_points_value() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+
+      // No repository stub needed - validation fires before any repo call
+
+      // Act & Assert
+      assertThatThrownBy(() -> estimateService.submitEstimate(taskId, participantId, "999", null))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("Invalid story points value");
+
+      then(estimateRepository).should(never()).save(ArgumentMatchers.any());
+    }
+
+    @Test
+    void should_not_throw_for_null_story_points() {
+      // Arrange - null storyPoints means draft vote; validation must be skipped
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+
+      ProjectEntity project = ProjectEntity.builder().id(UUID.randomUUID()).build();
+      RoomEntity room =
+          RoomEntity.builder()
+              .id(UUID.randomUUID())
+              .project(project)
+              .commentRequired(false)
+              .build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+      ParticipantEntity participant =
+          ParticipantEntity.builder().id(participantId).nickname("Carol").build();
+      EstimateEntity saved =
+          EstimateEntity.builder()
+              .id(UUID.randomUUID())
+              .task(task)
+              .participant(participant)
+              .storyPoints(null)
+              .build();
+      Estimate domain = Estimate.builder().id(saved.getId()).storyPoints(null).build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.empty());
+      given(taskRepository.findById(taskId)).willReturn(Optional.of(task));
+      given(entityManager.getReference(ParticipantEntity.class, participantId))
+          .willReturn(participant);
+      given(estimateRepository.save(ArgumentMatchers.any())).willReturn(saved);
+      given(estimateEntityMapper.toDomain(saved)).willReturn(domain);
+
+      // Act
+      Estimate result = estimateService.submitEstimate(taskId, participantId, null, null);
+
+      // Assert - null storyPoints is a draft vote, must succeed and return the saved estimate
+      assertThat(result).isNotNull();
+      assertThat(result.storyPoints()).isNull();
+    }
+  }
+
+  @Nested
+  @DisplayName("submitEstimate - update existing estimate")
+  class SubmitEstimateUpdateExisting {
+
+    @Test
+    void should_set_new_story_points_and_comment_on_update() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+
+      RoomEntity room = RoomEntity.builder().id(UUID.randomUUID()).commentRequired(false).build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+      EstimateEntity existing =
+          EstimateEntity.builder()
+              .id(UUID.randomUUID())
+              .task(task)
+              .storyPoints("3")
+              .comment("old comment")
+              .build();
+      Estimate domain =
+          Estimate.builder().id(existing.getId()).storyPoints("8").comment("new comment").build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.of(existing));
+      given(estimateRepository.save(existing)).willReturn(existing);
+      given(estimateEntityMapper.toDomain(existing)).willReturn(domain);
+
+      // Act
+      Estimate result = estimateService.submitEstimate(taskId, participantId, "8", "new comment");
+
+      // Assert - entity must have the new values applied before save
+      assertThat(existing.getStoryPoints()).isEqualTo("8");
+      assertThat(existing.getComment()).isEqualTo("new comment");
+      assertThat(result).isNotNull();
+      assertThat(result.storyPoints()).isEqualTo("8");
+    }
+
+    @Test
+    void should_clear_story_points_and_comment_when_updating_to_null() {
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+
+      RoomEntity room = RoomEntity.builder().id(UUID.randomUUID()).commentRequired(false).build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+      EstimateEntity existing =
+          EstimateEntity.builder()
+              .id(UUID.randomUUID())
+              .task(task)
+              .storyPoints("5")
+              .comment("some comment")
+              .build();
+      Estimate domain =
+          Estimate.builder().id(existing.getId()).storyPoints(null).comment(null).build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.of(existing));
+      given(estimateRepository.save(existing)).willReturn(existing);
+      given(estimateEntityMapper.toDomain(existing)).willReturn(domain);
+
+      // Act
+      Estimate result = estimateService.submitEstimate(taskId, participantId, null, null);
+
+      // Assert - null storyPoints (draft) must clear both fields
+      assertThat(existing.getStoryPoints()).isNull();
+      assertThat(existing.getComment()).isNull();
+      assertThat(result).isNotNull();
+    }
+
+    @Test
+    void should_return_non_null_estimate_after_update() {
+      // Mutant #3: replaced return value with null
+      // Arrange
+      UUID taskId = UUID.randomUUID();
+      UUID participantId = UUID.randomUUID();
+
+      RoomEntity room = RoomEntity.builder().id(UUID.randomUUID()).commentRequired(false).build();
+      TaskEntity task = TaskEntity.builder().id(taskId).room(room).build();
+      EstimateEntity existing =
+          EstimateEntity.builder().id(UUID.randomUUID()).task(task).storyPoints("3").build();
+      Estimate domain = Estimate.builder().id(existing.getId()).storyPoints("5").build();
+
+      given(estimateRepository.findByTaskAndParticipant(taskId, participantId))
+          .willReturn(Optional.of(existing));
+      given(estimateRepository.save(existing)).willReturn(existing);
+      given(estimateEntityMapper.toDomain(existing)).willReturn(domain);
+
+      // Act
+      Estimate result = estimateService.submitEstimate(taskId, participantId, "5", null);
+
+      // Assert - return value must not be null
+      assertThat(result).isNotNull();
+      assertThat(result.storyPoints()).isEqualTo("5");
+    }
+  }
+
+  @Nested
+  @DisplayName("Estimate.hasVoted")
+  class EstimateHasVoted {
+
+    @Test
+    void should_return_false_when_story_points_is_null() {
+      // Mutant: replaced boolean return with true
+      Estimate estimate = Estimate.builder().id(UUID.randomUUID()).storyPoints(null).build();
+      assertThat(estimate.hasVoted()).isFalse();
+    }
+
+    @Test
+    void should_return_true_when_story_points_is_set() {
+      Estimate estimate = Estimate.builder().id(UUID.randomUUID()).storyPoints("5").build();
+      assertThat(estimate.hasVoted()).isTrue();
+    }
+  }
 }
