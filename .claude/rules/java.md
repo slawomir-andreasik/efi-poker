@@ -1,3 +1,10 @@
+---
+paths:
+  - "backend/**/*.java"
+  - "backend/**/*.yml"
+  - "backend/**/*.yaml"
+---
+
 # Java Conventions
 
 ## Entity / Domain Split
