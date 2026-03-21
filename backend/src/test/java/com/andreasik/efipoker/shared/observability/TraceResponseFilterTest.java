@@ -32,7 +32,7 @@ class TraceResponseFilterTest extends BaseUnitTest {
       // Arrange
       MockHttpServletRequest request = new MockHttpServletRequest();
       MockHttpServletResponse response = new MockHttpServletResponse();
-      MDC.put("traceId", "abc123def456");
+      MDC.put(TraceResponseFilter.MDC_TRACE_ID, "abc123def456");
 
       try {
         // Act
@@ -64,7 +64,7 @@ class TraceResponseFilterTest extends BaseUnitTest {
       // Arrange
       MockHttpServletRequest request = new MockHttpServletRequest();
       MockHttpServletResponse response = new MockHttpServletResponse();
-      MDC.put("traceId", "trace-before-throw");
+      MDC.put(TraceResponseFilter.MDC_TRACE_ID, "trace-before-throw");
       willThrow(new ServletException("downstream error")).given(filterChain).doFilter(any(), any());
 
       try {
@@ -82,7 +82,7 @@ class TraceResponseFilterTest extends BaseUnitTest {
       // Arrange
       MockHttpServletRequest request = new MockHttpServletRequest();
       MockHttpServletResponse response = new MockHttpServletResponse();
-      MDC.put("traceId", "  ");
+      MDC.put(TraceResponseFilter.MDC_TRACE_ID, "  ");
 
       try {
         // Act

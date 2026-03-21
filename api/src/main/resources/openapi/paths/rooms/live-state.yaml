@@ -4,7 +4,6 @@ get:
   summary: Get live room state with participant vote statuses
   parameters:
     - $ref: '../../parameters/RoomIdPath.yaml'
-    - $ref: '../../parameters/ParticipantIdHeader.yaml'
   responses:
     '200':
       description: Live room state

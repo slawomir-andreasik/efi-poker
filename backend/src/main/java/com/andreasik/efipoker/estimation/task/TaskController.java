@@ -27,10 +27,9 @@ public class TaskController implements TasksApi {
   private final TaskMapper taskMapper;
 
   @Override
-  public ResponseEntity<TaskResponse> createTask(
-      UUID roomId, CreateTaskRequest createTaskRequest, String xAdminCode) {
+  public ResponseEntity<TaskResponse> createTask(UUID roomId, CreateTaskRequest createTaskRequest) {
     log.debug("POST /rooms/{}/tasks", roomId);
-    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId);
 
     int sortOrder = createTaskRequest.getSortOrder() != null ? createTaskRequest.getSortOrder() : 0;
 
@@ -42,20 +41,19 @@ public class TaskController implements TasksApi {
 
   @Override
   public ResponseEntity<List<TaskResponse>> importTasks(
-      UUID roomId, ImportTasksRequest importTasksRequest, String xAdminCode) {
+      UUID roomId, ImportTasksRequest importTasksRequest) {
     log.debug("POST /rooms/{}/tasks/import", roomId);
-    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId);
 
     List<Task> tasks = taskService.importTasks(roomId, importTasksRequest.getTitles());
     return ResponseEntity.status(HttpStatus.CREATED).body(taskMapper.toResponseList(tasks));
   }
 
   @Override
-  public ResponseEntity<TaskResponse> updateTask(
-      UUID taskId, UpdateTaskRequest updateTaskRequest, String xAdminCode) {
+  public ResponseEntity<TaskResponse> updateTask(UUID taskId, UpdateTaskRequest updateTaskRequest) {
     log.debug("PATCH /tasks/{}", taskId);
     Task task = taskService.getTask(taskId);
-    roomService.validateAdminAndGetRoom(task.room().id(), xAdminCode);
+    roomService.validateAdminAndGetRoom(task.room().id());
 
     Task updated =
         taskService.updateTask(
@@ -68,10 +66,10 @@ public class TaskController implements TasksApi {
 
   @Override
   public ResponseEntity<TaskResponse> setFinalEstimate(
-      UUID taskId, SetFinalEstimateRequest setFinalEstimateRequest, String xAdminCode) {
+      UUID taskId, SetFinalEstimateRequest setFinalEstimateRequest) {
     log.debug("PUT /tasks/{}/final-estimate", taskId);
     Task task = taskService.getTask(taskId);
-    Room room = roomService.validateAdminAndGetRoom(task.room().id(), xAdminCode);
+    Room room = roomService.validateAdminAndGetRoom(task.room().id());
 
     if (!RoomService.isRevealedStatus(room.status())) {
       throw new UnauthorizedException("Final estimate can only be set after votes are revealed");
@@ -83,10 +81,10 @@ public class TaskController implements TasksApi {
   }
 
   @Override
-  public ResponseEntity<Void> deleteTask(UUID taskId, String xAdminCode) {
+  public ResponseEntity<Void> deleteTask(UUID taskId) {
     log.debug("DELETE /tasks/{}", taskId);
     Task task = taskService.getTask(taskId);
-    roomService.validateAdminAndGetRoom(task.room().id(), xAdminCode);
+    roomService.validateAdminAndGetRoom(task.room().id());
 
     taskService.deleteTask(taskId);
     return ResponseEntity.noContent().build();

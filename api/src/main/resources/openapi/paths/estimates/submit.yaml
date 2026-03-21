@@ -2,9 +2,10 @@ post:
   operationId: submitEstimate
   tags: [estimates]
   summary: Submit or update estimate
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/TaskIdPath.yaml'
-    - $ref: '../../parameters/ParticipantIdHeader.yaml'
   requestBody:
     required: true
     content:
@@ -29,9 +30,10 @@ delete:
   operationId: deleteEstimate
   tags: [estimates]
   summary: Remove estimate (unvote)
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/TaskIdPath.yaml'
-    - $ref: '../../parameters/ParticipantIdHeader.yaml'
   responses:
     '204':
       description: Estimate removed

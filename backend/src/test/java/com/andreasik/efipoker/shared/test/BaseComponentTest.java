@@ -48,6 +48,8 @@ public abstract class BaseComponentTest {
 
   @Autowired protected UserRepository userRepository;
 
+  @Autowired protected TestJwtHelper testJwt;
+
   protected String toJson(Object obj) throws Exception {
     return objectMapper.writeValueAsString(obj);
   }

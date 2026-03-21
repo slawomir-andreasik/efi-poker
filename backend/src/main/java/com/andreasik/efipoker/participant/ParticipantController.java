@@ -4,6 +4,7 @@ import com.andreasik.efipoker.api.ParticipantsApi;
 import com.andreasik.efipoker.api.model.JoinProjectRequest;
 import com.andreasik.efipoker.api.model.ParticipantResponse;
 import com.andreasik.efipoker.api.model.UpdateParticipantRequest;
+import com.andreasik.efipoker.auth.JwtService;
 import com.andreasik.efipoker.project.Project;
 import com.andreasik.efipoker.project.ProjectService;
 import com.andreasik.efipoker.shared.exception.UnauthorizedException;
@@ -23,26 +24,36 @@ public class ParticipantController implements ParticipantsApi {
   private final ParticipantService participantService;
   private final ProjectService projectService;
   private final ParticipantMapper participantMapper;
+  private final JwtService jwtService;
 
   @Override
   public ResponseEntity<ParticipantResponse> joinProject(
       String slug, JoinProjectRequest joinProjectRequest) {
     log.debug("POST /projects/{}/participants nickname={}", slug, joinProjectRequest.getNickname());
     Project project = projectService.getProjectBySlug(slug);
+    UUID userId = SecurityUtils.getCurrentUserId();
     Participant participant =
         participantService.joinProject(
-            project.id(),
-            joinProjectRequest.getNickname(),
-            SecurityUtils.getCurrentUserId(),
-            joinProjectRequest.getRoomId());
-    return ResponseEntity.ok(participantMapper.toResponse(participant));
+            project.id(), joinProjectRequest.getNickname(), userId, joinProjectRequest.getRoomId());
+
+    ParticipantResponse response = participantMapper.toResponse(participant);
+
+    // For unauthenticated (guest) callers, generate a guest JWT
+    if (userId == null) {
+      boolean isAdmin = SecurityUtils.isGuestToken() && SecurityUtils.isGuestAdmin();
+      String token =
+          jwtService.generateGuestToken(
+              project.id(), participant.id(), isAdmin, participant.nickname());
+      response.token(token).tokenExpiresAt(jwtService.getGuestTokenExpiresAt());
+    }
+
+    return ResponseEntity.ok(response);
   }
 
   @Override
-  public ResponseEntity<List<ParticipantResponse>> listProjectParticipants(
-      String slug, String xAdminCode) {
+  public ResponseEntity<List<ParticipantResponse>> listProjectParticipants(String slug) {
     log.debug("GET /projects/{}/participants", slug);
-    Project project = projectService.validateAdminCode(slug, xAdminCode);
+    Project project = projectService.validateAdminAccessBySlug(slug);
     List<Participant> participants = participantService.listParticipants(project.id());
     return ResponseEntity.ok(participantMapper.toResponseList(participants));
   }
@@ -57,12 +68,10 @@ public class ParticipantController implements ParticipantsApi {
 
   @Override
   public ResponseEntity<ParticipantResponse> updateParticipant(
-      String slug,
-      UUID participantId,
-      UpdateParticipantRequest updateParticipantRequest,
-      UUID xParticipantId) {
+      String slug, UUID participantId, UpdateParticipantRequest updateParticipantRequest) {
     log.debug("PATCH /projects/{}/participants/{}", slug, participantId);
-    if (xParticipantId == null || !xParticipantId.equals(participantId)) {
+    UUID tokenParticipantId = SecurityUtils.getCurrentParticipantId();
+    if (tokenParticipantId == null || !tokenParticipantId.equals(participantId)) {
       throw new UnauthorizedException("You can only update your own participant profile");
     }
     Project project = projectService.getProjectBySlug(slug);
@@ -86,10 +95,9 @@ public class ParticipantController implements ParticipantsApi {
   }
 
   @Override
-  public ResponseEntity<Void> deleteParticipant(
-      String slug, UUID participantId, String xAdminCode) {
+  public ResponseEntity<Void> deleteParticipant(String slug, UUID participantId) {
     log.debug("DELETE /projects/{}/participants/{}", slug, participantId);
-    Project project = projectService.validateAdminCode(slug, xAdminCode);
+    Project project = projectService.validateAdminAccessBySlug(slug);
     participantService.deleteParticipant(project.id(), participantId);
     return ResponseEntity.noContent().build();
   }

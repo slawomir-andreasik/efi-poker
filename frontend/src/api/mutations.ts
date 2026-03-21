@@ -14,6 +14,7 @@ import type {
   AdminResetPasswordRequest,
   RoomType,
   FinishSessionResponse,
+  GuestTokenResponse,
 } from './types';
 
 // --- Auth mutations ---
@@ -261,7 +262,11 @@ export function useJoinProject(slug: string) {
         slug,
       ),
     onSuccess: (participant) => {
-      saveAuth(slug, { participantId: participant.id, nickname: participant.nickname });
+      if (participant.token) {
+        saveAuth(slug, { guestToken: participant.token, nickname: participant.nickname });
+      } else {
+        saveAuth(slug, { nickname: participant.nickname });
+      }
       void qc.invalidateQueries({ queryKey: queryKeys.projects.participants(slug) });
     },
   });
@@ -289,7 +294,11 @@ export function useAdminJoinMutation(slug: string) {
         slug,
       ),
     onSuccess: (participant) => {
-      saveAuth(slug, { participantId: participant.id, nickname: participant.nickname });
+      if (participant.token) {
+        saveAuth(slug, { guestToken: participant.token, nickname: participant.nickname });
+      } else {
+        saveAuth(slug, { nickname: participant.nickname });
+      }
       void qc.invalidateQueries({ queryKey: queryKeys.projects.participants(slug) });
       void qc.invalidateQueries({ queryKey: ['rooms'] });
     },
@@ -339,5 +348,21 @@ export function useAdminDeleteUser() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['admin', 'users'] });
     },
+  });
+}
+
+// --- Guest JWT mutations ---
+
+export function useExchangeAdminCode() {
+  return useMutation({
+    mutationFn: (body: { slug: string; adminCode: string }) =>
+      api<GuestTokenResponse>('/auth/guest/admin-exchange', { method: 'POST', body }),
+  });
+}
+
+export function useRefreshGuestToken() {
+  return useMutation({
+    mutationFn: (slug: string) =>
+      api<GuestTokenResponse>('/auth/guest/refresh', { method: 'POST' }, slug),
   });
 }

@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 import { InlineConfirmAction } from '@/components/InlineConfirmAction';
 import { useQuery } from '@tanstack/react-query';
-import { ApiError } from '@/api/client';
+import { ApiError, getJwt } from '@/api/client';
 import { queryKeys } from '@/api/queryKeys';
 import { roomApi } from '@/api/queries';
 import { useProjectAuth } from '@/hooks/useProjectAuth';
@@ -31,7 +31,7 @@ import type { StoryPoints } from '@/api/types';
 export function RoomPage() {
   const { slug, roomId } = useParams<{ slug: string; roomId: string }>();
   const { auth, isAdmin } = useProjectAuth(slug);
-  const hasParticipant = Boolean(auth.participantId);
+  const hasParticipant = Boolean(auth.guestToken || auth.nickname || getJwt());
   const { showToast } = useToast();
   const projectName = auth.projectName ?? slug;
 

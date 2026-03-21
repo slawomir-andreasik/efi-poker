@@ -39,8 +39,8 @@ export function removeJwt(): void {
 }
 
 export interface ProjectAuth {
+  guestToken?: string;
   adminCode?: string;
-  participantId?: string;
   nickname?: string;
   projectName?: string;
 }
@@ -101,19 +101,18 @@ export async function api<T>(path: string, options: RequestOptions = {}, slug?: 
     ...options.headers,
   };
 
-  // Inject Auth0 JWT if present (global admin auth)
+  // Auth priority: user JWT > per-project guest JWT
   const jwt = getJwt();
   if (jwt) {
     headers['Authorization'] = `Bearer ${jwt}`;
+  } else if (slug) {
+    const auth = getAuth(slug);
+    if (auth.guestToken) {
+      headers['Authorization'] = `Bearer ${auth.guestToken}`;
+    }
   }
 
   const method = options.method || 'GET';
-
-  if (slug) {
-    const auth = getAuth(slug);
-    if (auth.adminCode) headers['X-Admin-Code'] = auth.adminCode;
-    if (auth.participantId) headers['X-Participant-Id'] = auth.participantId;
-  }
 
   logger.debug(`API ${method} ${path}`);
   Object.assign(headers, getTracingHeaders());
@@ -131,10 +130,15 @@ export async function api<T>(path: string, options: RequestOptions = {}, slug?: 
     throw err;
   }
 
-  // If 401 with a JWT, token is expired/invalid - clear it and retry without auth
-  if (response.status === 401 && jwt) {
-    logger.warn(`JWT expired/invalid, clearing and retrying ${method} ${path}`);
-    removeJwt();
+  // If 401 with auth, token is expired/invalid - clear and retry without auth
+  if (response.status === 401 && headers['Authorization']) {
+    if (jwt) {
+      logger.warn(`User JWT expired/invalid, clearing and retrying ${method} ${path}`);
+      removeJwt();
+    } else if (slug) {
+      logger.warn(`Guest JWT expired/invalid, clearing and retrying ${method} ${path}`);
+      saveAuth(slug, { guestToken: undefined });
+    }
     delete headers['Authorization'];
     try {
       response = await fetch(`${BASE_URL}${path}`, {
@@ -168,6 +172,33 @@ export async function api<T>(path: string, options: RequestOptions = {}, slug?: 
   }
 
   return response.json() as Promise<T>;
+}
+
+export function parseJwtPayload(token: string): Record<string, unknown> {
+  const base64 = token.split('.')[1] ?? '';
+  return JSON.parse(atob(base64)) as Record<string, unknown>;
+}
+
+export function isGuestAdmin(auth: ProjectAuth): boolean {
+  if (!auth.guestToken) return false;
+  try {
+    return Boolean(parseJwtPayload(auth.guestToken).admin);
+  } catch {
+    return false;
+  }
+}
+
+export function getParticipantIdFromToken(slug: string): string | undefined {
+  const auth = getAuth(slug);
+  if (auth.guestToken) {
+    try {
+      const payload = parseJwtPayload(auth.guestToken);
+      return payload.participantId as string | undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
 }
 
 export function setLastActiveSlug(slug: string): void {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { saveAuth, removeProject, ApiError } from '@/api/client';
+import { saveAuth, removeProject, ApiError, getJwt } from '@/api/client';
 import { queryKeys } from '@/api/queryKeys';
 import { projectApi, roomApi } from '@/api/queries';
 import { useProjectAuth } from '@/hooks/useProjectAuth';
@@ -930,7 +930,7 @@ export function ProjectPage() {
               Analytics
             </Link>
           )}
-          {!auth.participantId && slug && (
+          {!auth.guestToken && !auth.nickname && !getJwt() && slug && (
             <Link
               to={`/p/${slug}/join`}
               className="px-4 py-2 rounded-lg text-sm font-medium bg-efi-gold text-efi-void hover:bg-efi-gold/80 transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"

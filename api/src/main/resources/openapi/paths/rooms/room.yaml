@@ -4,7 +4,6 @@ get:
   summary: Get room with tasks and own estimates
   parameters:
     - $ref: '../../parameters/RoomIdPath.yaml'
-    - $ref: '../../parameters/ParticipantIdHeader.yaml'
   responses:
     '200':
       description: Room details
@@ -22,9 +21,10 @@ patch:
   operationId: updateRoom
   tags: [rooms]
   summary: Update room
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/RoomIdPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   requestBody:
     required: true
     content:
@@ -60,9 +60,10 @@ delete:
   operationId: deleteRoom
   tags: [rooms]
   summary: Delete room and all associated data (admin)
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/RoomIdPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   responses:
     '204':
       description: Room deleted

@@ -2,9 +2,10 @@ patch:
   operationId: updateTask
   tags: [tasks]
   summary: Update a task
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/TaskIdPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   requestBody:
     required: true
     content:
@@ -34,9 +35,10 @@ delete:
   operationId: deleteTask
   tags: [tasks]
   summary: Delete a task
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/TaskIdPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   responses:
     '204':
       description: Task deleted

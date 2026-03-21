@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../helpers';
-import { setAdminAuth, setParticipantAuth, setIdentity } from '../auth-helpers';
+import { setAdminAuth, setGuestTokenAuth, setIdentity, fakeJwt } from '../auth-helpers';
 import { mockProjectAdmin, mockParticipant, mockProject, mockRoomDetail, mockRoomResults } from '../fixtures';
 
 // Must mock react-router-dom params before importing pages
@@ -161,7 +161,7 @@ describe('ProjectPage API calls', () => {
 
 describe('RoomPage API calls', () => {
   it('should fetch room from flat path /rooms/{id}', async () => {
-    setParticipantAuth('test-project', 'p-1');
+    setGuestTokenAuth('test-project', fakeJwt({ participantId: 'p-1' }));
     globalThis.fetch = routedFetch({
       '/rooms/': { id: 'room-123', title: 'Test', status: 'OPEN', roomType: 'ASYNC', deadline: '2026-03-01T00:00:00Z', roundNumber: 1, tasks: [] },
     });
@@ -182,7 +182,7 @@ describe('RoomPage API calls', () => {
 
   it('should POST estimate with storyPoints string to /tasks/{id}/estimates', async () => {
     const user = userEvent.setup();
-    setParticipantAuth('test-project', 'p-1');
+    setGuestTokenAuth('test-project', fakeJwt({ participantId: 'p-1' }));
     globalThis.fetch = routedFetch({
       '/estimates': {},
       '/rooms/': {
@@ -214,7 +214,7 @@ describe('RoomPage API calls', () => {
 
   it('should DELETE /tasks/{id}/estimates when clicking selected SP (unvote)', async () => {
     const user = userEvent.setup();
-    setParticipantAuth('test-project', 'p-1');
+    setGuestTokenAuth('test-project', fakeJwt({ participantId: 'p-1' }));
     globalThis.fetch = routedFetch({
       '/estimates': {},
       '/rooms/': mockRoomDetail({

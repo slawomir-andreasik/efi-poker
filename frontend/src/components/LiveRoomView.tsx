@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Check, Trash2, Eye, RotateCw, Square } from 'lucide-react';
 import { InlineConfirmAction } from '@/components/InlineConfirmAction';
-import { getAuth } from '@/api/client';
+import { getAuth, getJwt } from '@/api/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { queryKeys } from '@/api/queryKeys';
 import { roomApi } from '@/api/queries';
@@ -29,7 +29,7 @@ interface LiveRoomViewProps {
   slug: string;
   roomId: string;
   room: RoomDetailResponse;
-  auth: { adminCode?: string; participantId?: string; nickname?: string };
+  auth: { adminCode?: string; guestToken?: string; nickname?: string };
 }
 
 export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoomViewProps) {
@@ -86,7 +86,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
 
   // Admin join state
   const [currentAuth, setCurrentAuth] = useState(auth);
-  const hasParticipant = Boolean(currentAuth.participantId);
+  const hasParticipant = Boolean(currentAuth.guestToken || currentAuth.nickname || getJwt());
 
   // Sync selected estimate from live state
   useEffect(() => {

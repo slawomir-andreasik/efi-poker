@@ -49,14 +49,14 @@ class SecurityAuditTest extends BaseComponentTest {
     }
 
     @Test
-    void should_reject_room_analytics_without_admin_code() throws Exception {
+    void should_reject_room_analytics_without_jwt() throws Exception {
       mockMvc
           .perform(get("/api/v1/rooms/{roomId}/analytics", revealedRoom.getId()))
           .andExpect(status().isForbidden());
     }
 
     @Test
-    void should_reject_project_analytics_without_admin_code() throws Exception {
+    void should_reject_project_analytics_without_jwt() throws Exception {
       mockMvc
           .perform(get("/api/v1/projects/{slug}/analytics", project.getSlug()))
           .andExpect(status().isForbidden());
@@ -87,12 +87,13 @@ class SecurityAuditTest extends BaseComponentTest {
 
     @Test
     void should_reject_estimate_for_room_participant_is_not_invited_to() throws Exception {
+      String participantJwt = testJwt.guestParticipantJwt(project, participantWithRoomAAccess);
       String body = "{\"storyPoints\":\"5\"}";
 
       mockMvc
           .perform(
               post("/api/v1/tasks/{taskId}/estimates", taskInRoomB.getId())
-                  .header("X-Participant-Id", participantWithRoomAAccess.getId().toString())
+                  .header("Authorization", "Bearer " + participantJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isForbidden());
@@ -135,10 +136,12 @@ class SecurityAuditTest extends BaseComponentTest {
           participantRepository.save(Fixtures.participantEntity(project, "Alice"));
       estimateRepository.save(Fixtures.estimateEntity(task, participant, "5"));
 
+      String adminJwt = testJwt.guestAdminJwt(project);
+
       mockMvc
           .perform(
               get("/api/v1/rooms/{roomId}/results/export", revealedRoom.getId())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
+                  .header("Authorization", "Bearer " + adminJwt))
           .andExpect(status().isOk())
           .andExpect(content().contentTypeCompatibleWith("text/csv"));
     }

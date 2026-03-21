@@ -1,0 +1,13 @@
+type: object
+required:
+  - token
+  - expiresAt
+properties:
+  token:
+    type: string
+    description: Guest JWT token
+    minLength: 1
+  expiresAt:
+    type: string
+    format: date-time
+    description: Token expiration timestamp

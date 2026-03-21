@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllProjects } from '@/api/client';
+import { getAllProjects, isGuestAdmin } from '@/api/client';
 import type { ProjectAuth } from '@/api/client';
 import { useDropdownDismiss } from '@/hooks/useDropdownDismiss';
 import { RoleBadge } from '@/components/RoleBadge';
@@ -19,11 +19,13 @@ interface ProjectEntry {
 function getProjectEntries(): ProjectEntry[] {
   const projects = getAllProjects();
   return Object.entries(projects)
-    .map(([slug, auth]: [string, ProjectAuth]) => ({
-      slug,
-      name: auth.projectName ?? slug,
-      isAdmin: Boolean(auth.adminCode),
-    }))
+    .map(([slug, auth]: [string, ProjectAuth]) => {
+      return {
+        slug,
+        name: auth.projectName ?? slug,
+        isAdmin: Boolean(auth.adminCode) || isGuestAdmin(auth),
+      };
+    })
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 

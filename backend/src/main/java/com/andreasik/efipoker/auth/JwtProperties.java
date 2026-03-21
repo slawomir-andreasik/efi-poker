@@ -3,4 +3,4 @@ package com.andreasik.efipoker.auth;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "app.jwt")
-public record JwtProperties(String secret, long expiration) {}
+public record JwtProperties(String secret, long expiration, long guestExpiration) {}

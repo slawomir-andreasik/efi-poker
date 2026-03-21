@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, matchPath } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getAuth, setLastActiveSlug, getLastActiveSlug, getIdentity, getJwt, clearAllStorage } from '@/api/client';
+import { getAuth, setLastActiveSlug, getLastActiveSlug, getIdentity, getJwt, clearAllStorage, isGuestAdmin } from '@/api/client';
 import { queryKeys } from '@/api/queryKeys';
 import { projectApi } from '@/api/queries';
 import { useAuthConfig } from '@/hooks/useAuthConfig';
@@ -44,8 +44,7 @@ export function Header() {
   const effectiveSlug = slug ?? getLastActiveSlug() ?? undefined;
   const auth = useMemo(() => effectiveSlug ? getAuth(effectiveSlug) : {}, [effectiveSlug]);
   const [displayName, setDisplayName] = useState(auth.nickname || getIdentity() || currentUser?.username || null);
-  const isAdmin = Boolean(auth.adminCode);
-  const participantId = auth.participantId;
+  const isAdmin = Boolean(auth.adminCode) || isGuestAdmin(auth);
 
   // Sync displayName when slug/user changes
   useEffect(() => {
@@ -152,7 +151,6 @@ export function Header() {
               <NicknameDropdown
                 displayName={displayName}
                 slug={effectiveSlug}
-                participantId={participantId}
                 onNicknameChanged={setDisplayName}
                 onLogout={jwt ? handleLogout : handleGuestLogout}
                 onPasswordClick={jwt && currentUser?.authProvider !== 'LDAP' ? () => setPasswordModalOpen(true) : undefined}

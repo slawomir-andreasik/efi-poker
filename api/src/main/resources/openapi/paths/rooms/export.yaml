@@ -2,9 +2,10 @@ get:
   operationId: exportResults
   tags: [rooms]
   summary: Export results as CSV
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/RoomIdPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   responses:
     '200':
       description: CSV export

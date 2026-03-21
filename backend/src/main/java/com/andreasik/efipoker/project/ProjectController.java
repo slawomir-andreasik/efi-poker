@@ -1,11 +1,15 @@
 package com.andreasik.efipoker.project;
 
 import com.andreasik.efipoker.api.ProjectsApi;
+import com.andreasik.efipoker.api.model.AdminCodeExchangeRequest;
 import com.andreasik.efipoker.api.model.CreateProjectRequest;
+import com.andreasik.efipoker.api.model.GuestTokenResponse;
 import com.andreasik.efipoker.api.model.ProjectAdminResponse;
 import com.andreasik.efipoker.api.model.ProjectResponse;
 import com.andreasik.efipoker.api.model.UpdateProjectRequest;
+import com.andreasik.efipoker.auth.JwtService;
 import com.andreasik.efipoker.shared.security.SecurityUtils;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +25,7 @@ public class ProjectController implements ProjectsApi {
 
   private final ProjectService projectService;
   private final ProjectMapper projectMapper;
+  private final JwtService jwtService;
 
   @Override
   public ResponseEntity<ProjectAdminResponse> createProject(
@@ -28,7 +33,16 @@ public class ProjectController implements ProjectsApi {
     log.debug("POST /projects name={}", createProjectRequest.getName());
     UUID ownerId = SecurityUtils.getCurrentUserId();
     Project project = projectService.createProject(createProjectRequest.getName(), ownerId);
-    return ResponseEntity.status(HttpStatus.CREATED).body(projectMapper.toAdminResponse(project));
+
+    ProjectAdminResponse response = projectMapper.toAdminResponse(project);
+
+    // For unauthenticated (guest) callers, generate a guest admin JWT
+    if (ownerId == null) {
+      String token = jwtService.generateGuestToken(project.id(), null, true, null);
+      response.token(token).tokenExpiresAt(jwtService.getGuestTokenExpiresAt());
+    }
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   @Override
@@ -55,29 +69,52 @@ public class ProjectController implements ProjectsApi {
   }
 
   @Override
-  public ResponseEntity<ProjectAdminResponse> getProjectAdmin(String slug, String xAdminCode) {
+  public ResponseEntity<ProjectAdminResponse> getProjectAdmin(String slug) {
     log.debug("GET /projects/{}/admin", slug);
-    Project project =
-        projectService.validateAdminAccess(slug, xAdminCode, SecurityUtils.getCurrentUserId());
+    Project project = projectService.validateAdminAccessBySlug(slug);
     return ResponseEntity.ok(projectMapper.toAdminResponse(project));
   }
 
   @Override
-  public ResponseEntity<Void> deleteProject(String slug, String xAdminCode) {
+  public ResponseEntity<Void> deleteProject(String slug) {
     log.debug("DELETE /projects/{}", slug);
-    Project validated =
-        projectService.validateAdminAccess(slug, xAdminCode, SecurityUtils.getCurrentUserId());
+    Project validated = projectService.validateAdminAccessBySlug(slug);
     projectService.deleteProject(validated.id());
     return ResponseEntity.noContent().build();
   }
 
   @Override
   public ResponseEntity<ProjectAdminResponse> updateProject(
-      String slug, UpdateProjectRequest updateProjectRequest, String xAdminCode) {
+      String slug, UpdateProjectRequest updateProjectRequest) {
     log.debug("PATCH /projects/{} name={}", slug, updateProjectRequest.getName());
-    Project validated =
-        projectService.validateAdminAccess(slug, xAdminCode, SecurityUtils.getCurrentUserId());
+    Project validated = projectService.validateAdminAccessBySlug(slug);
     Project updated = projectService.updateProject(validated.id(), updateProjectRequest.getName());
     return ResponseEntity.ok(projectMapper.toAdminResponse(updated));
+  }
+
+  @Override
+  public ResponseEntity<GuestTokenResponse> exchangeAdminCode(
+      AdminCodeExchangeRequest adminCodeExchangeRequest) {
+    log.debug("POST /auth/guest/admin-exchange slug={}", adminCodeExchangeRequest.getSlug());
+    String slug = adminCodeExchangeRequest.getSlug();
+    String adminCode = adminCodeExchangeRequest.getAdminCode();
+
+    // Validate admin code against the project - throws if invalid
+    Project project =
+        projectService.validateAdminAccess(slug, adminCode, SecurityUtils.getCurrentUserId());
+
+    // Preserve participantId from current guest JWT if present
+    UUID participantId = SecurityUtils.getCurrentParticipantId();
+    String nickname = null;
+    var currentJwt = SecurityUtils.getCurrentJwt();
+    if (currentJwt != null && SecurityUtils.isGuestToken()) {
+      nickname = currentJwt.getClaimAsString(JwtService.CLAIM_NICKNAME);
+    }
+
+    String token = jwtService.generateGuestToken(project.id(), participantId, true, nickname);
+    Instant expiresAt = jwtService.getGuestTokenExpiresAt();
+
+    log.info("Admin code exchanged for guest admin JWT: slug={}", slug);
+    return ResponseEntity.ok(new GuestTokenResponse().token(token).expiresAt(expiresAt));
   }
 }

@@ -26,7 +26,7 @@ export function RoomJoinRedirectPage() {
     if (!data || accumulating) return;
 
     const auth = getAuth(data.projectSlug);
-    if (auth.participantId && auth.nickname) {
+    if (auth.nickname) {
       // Re-join to accumulate room access, then navigate
       setAccumulating(true);
       api<ParticipantResponse>(
@@ -35,7 +35,11 @@ export function RoomJoinRedirectPage() {
         data.projectSlug,
       )
         .then((participant) => {
-          saveAuth(data.projectSlug, { participantId: participant.id, nickname: participant.nickname });
+          if (participant.token) {
+            saveAuth(data.projectSlug, { guestToken: participant.token, nickname: participant.nickname });
+          } else {
+            saveAuth(data.projectSlug, { nickname: participant.nickname });
+          }
           logger.debug(`Room redirect: accumulated room access for project=${data.projectSlug}`);
           void navigate(`/p/${data.projectSlug}/r/${data.roomId}`, { replace: true });
         })
@@ -80,7 +84,7 @@ export function RoomJoinRedirectPage() {
   if (!data) return null;
 
   const auth = getAuth(data.projectSlug);
-  if (auth.participantId) {
+  if (auth.nickname) {
     // useEffect will handle re-join + navigate
     return null;
   }

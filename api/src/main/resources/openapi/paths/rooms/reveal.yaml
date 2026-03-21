@@ -2,9 +2,10 @@ post:
   operationId: revealEstimates
   tags: [rooms]
   summary: Force reveal all estimates
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/RoomIdPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   responses:
     '200':
       description: Estimates revealed

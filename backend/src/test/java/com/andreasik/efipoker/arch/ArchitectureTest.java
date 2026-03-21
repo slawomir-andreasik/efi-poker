@@ -306,6 +306,41 @@ class ArchitectureTest extends BaseArchUnitTest {
           .isEmpty();
     }
 
+    /// Known tech debt: RateLimitFilterTest uses Thread.sleep for window expiry.
+    /// New tests MUST NOT add Thread.sleep - use mocked clocks or pre-built test data instead.
+    private static final Set<String> THREAD_SLEEP_EXCEPTIONS =
+        Set.of("RateLimitFilterTest.java", "ArchitectureTest.java");
+
+    @Test
+    void tests_should_not_use_thread_sleep() throws IOException {
+      List<String> violations = new ArrayList<>();
+      try (Stream<Path> files =
+          Files.walk(SRC_ROOT.resolve("test")).filter(p -> p.toString().endsWith(".java"))) {
+        files.forEach(
+            path -> {
+              try {
+                if (THREAD_SLEEP_EXCEPTIONS.contains(path.getFileName().toString())) return;
+                List<String> lines = Files.readAllLines(path);
+                for (int i = 0; i < lines.size(); i++) {
+                  String line = lines.get(i).trim();
+                  if (line.startsWith("//") || line.startsWith("*")) continue;
+                  if (line.contains("Thread.sleep(") || line.contains("Thread.sleep (")) {
+                    String rel = SRC_ROOT.getParent().relativize(path).toString();
+                    violations.add(rel + ":" + (i + 1));
+                  }
+                }
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
+      }
+      assertThat(violations)
+          .as(
+              "Thread.sleep() in tests is an anti-pattern - use mocked clocks, "
+                  + "pre-expired tokens, or Awaitility instead")
+          .isEmpty();
+    }
+
     @Test
     void should_not_use_inline_fqn_when_import_is_possible() throws IOException {
       assertThat(SRC_ROOT.toFile())

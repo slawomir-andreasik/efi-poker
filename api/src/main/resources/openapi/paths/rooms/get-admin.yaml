@@ -2,9 +2,10 @@ get:
   operationId: getRoomAdmin
   tags: [rooms]
   summary: Get room with ALL estimates (admin)
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/RoomIdPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   responses:
     '200':
       description: Room admin view

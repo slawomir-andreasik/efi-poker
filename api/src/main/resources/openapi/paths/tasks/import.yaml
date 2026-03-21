@@ -2,9 +2,10 @@ post:
   operationId: importTasks
   tags: [tasks]
   summary: Bulk import tasks
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/RoomIdPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   requestBody:
     required: true
     content:

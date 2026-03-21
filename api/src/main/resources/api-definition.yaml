@@ -75,12 +75,6 @@ paths:
         required: true
         schema:
           type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
-          type: string
       responses:
         "204":
           description: Project deleted
@@ -96,6 +90,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Delete project and all associated data (admin)
       tags:
       - projects
@@ -133,12 +129,6 @@ paths:
         required: true
         schema:
           type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
-          type: string
       requestBody:
         content:
           application/json:
@@ -170,6 +160,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Update project (admin)
       tags:
       - projects
@@ -181,12 +173,6 @@ paths:
         in: path
         name: slug
         required: true
-        schema:
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
         schema:
           type: string
       responses:
@@ -208,6 +194,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Get project with admin data
       tags:
       - projects
@@ -220,13 +208,6 @@ paths:
         name: slug
         required: true
         schema:
-          type: string
-      - description: UUID of the current participant
-        in: header
-        name: X-Participant-Id
-        required: false
-        schema:
-          format: uuid
           type: string
       responses:
         "200":
@@ -247,12 +228,6 @@ paths:
         in: path
         name: slug
         required: true
-        schema:
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
         schema:
           type: string
       requestBody:
@@ -280,6 +255,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Access denied
+      security:
+      - bearerAuth: []
       summary: Create a room
       tags:
       - rooms
@@ -291,12 +268,6 @@ paths:
         in: path
         name: slug
         required: true
-        schema:
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
         schema:
           type: string
       responses:
@@ -320,6 +291,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: List project participants (admin only)
       tags:
       - participants
@@ -401,12 +374,6 @@ paths:
         schema:
           format: uuid
           type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
-          type: string
       responses:
         "204":
           description: Participant deleted
@@ -422,6 +389,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Participant not found
+      security:
+      - bearerAuth: []
       summary: Delete participant (admin only)
       tags:
       - participants
@@ -473,13 +442,6 @@ paths:
         schema:
           format: uuid
           type: string
-      - description: UUID of the current participant
-        in: header
-        name: X-Participant-Id
-        required: false
-        schema:
-          format: uuid
-          type: string
       requestBody:
         content:
           application/json:
@@ -517,6 +479,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Nickname already taken in this project
+      security:
+      - bearerAuth: []
       summary: Update participant nickname (self-service)
       tags:
       - participants
@@ -558,12 +522,6 @@ paths:
         schema:
           format: uuid
           type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
-          type: string
       responses:
         "204":
           description: Room deleted
@@ -579,6 +537,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Delete room and all associated data (admin)
       tags:
       - rooms
@@ -589,13 +549,6 @@ paths:
         in: path
         name: roomId
         required: true
-        schema:
-          format: uuid
-          type: string
-      - description: UUID of the current participant
-        in: header
-        name: X-Participant-Id
-        required: false
         schema:
           format: uuid
           type: string
@@ -624,12 +577,6 @@ paths:
         required: true
         schema:
           format: uuid
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
           type: string
       requestBody:
         content:
@@ -662,6 +609,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Update room
       tags:
       - rooms
@@ -675,12 +624,6 @@ paths:
         required: true
         schema:
           format: uuid
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
           type: string
       responses:
         "200":
@@ -701,6 +644,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Get room with ALL estimates (admin)
       tags:
       - rooms
@@ -714,12 +659,6 @@ paths:
         required: true
         schema:
           format: uuid
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
           type: string
       responses:
         "200":
@@ -740,6 +679,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Force reveal all estimates
       tags:
       - rooms
@@ -753,12 +694,6 @@ paths:
         required: true
         schema:
           format: uuid
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
           type: string
       responses:
         "200":
@@ -779,6 +714,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Reopen a revealed or closed room
       tags:
       - rooms
@@ -792,12 +729,6 @@ paths:
         required: true
         schema:
           format: uuid
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
           type: string
       - in: query
         name: revealVotes
@@ -824,6 +755,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Finish session and optionally reveal votes
       tags:
       - rooms
@@ -925,12 +858,6 @@ paths:
         schema:
           format: uuid
           type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
-          type: string
       responses:
         "200":
           content:
@@ -944,6 +871,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Export results as CSV
       tags:
       - rooms
@@ -957,12 +886,6 @@ paths:
         required: true
         schema:
           format: uuid
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
           type: string
       requestBody:
         content:
@@ -989,6 +912,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Access denied
+      security:
+      - bearerAuth: []
       summary: Create a task
       tags:
       - tasks
@@ -1002,12 +927,6 @@ paths:
         required: true
         schema:
           format: uuid
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
           type: string
       requestBody:
         content:
@@ -1030,6 +949,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ValidationErrorResponse"
           description: Invalid request
+      security:
+      - bearerAuth: []
       summary: Bulk import tasks
       tags:
       - tasks
@@ -1041,13 +962,6 @@ paths:
         in: path
         name: roomId
         required: true
-        schema:
-          format: uuid
-          type: string
-      - description: UUID of the current participant
-        in: header
-        name: X-Participant-Id
-        required: false
         schema:
           format: uuid
           type: string
@@ -1083,12 +997,6 @@ paths:
         required: true
         schema:
           format: uuid
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
           type: string
       requestBody:
         content:
@@ -1127,6 +1035,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Room is not LIVE type
+      security:
+      - bearerAuth: []
       summary: "Start a new round in a Live room (clears estimates, reopens)"
       tags:
       - rooms
@@ -1178,12 +1088,6 @@ paths:
         schema:
           format: uuid
           type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
-          type: string
       responses:
         "204":
           description: Task deleted
@@ -1193,6 +1097,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Delete a task
       tags:
       - tasks
@@ -1205,12 +1111,6 @@ paths:
         required: true
         schema:
           format: uuid
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
           type: string
       requestBody:
         content:
@@ -1237,6 +1137,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Update a task
       tags:
       - tasks
@@ -1250,12 +1152,6 @@ paths:
         required: true
         schema:
           format: uuid
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
           type: string
       requestBody:
         content:
@@ -1282,6 +1178,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Set or update the final agreed story points for a task
       tags:
       - tasks
@@ -1296,13 +1194,6 @@ paths:
         schema:
           format: uuid
           type: string
-      - description: UUID of the current participant
-        in: header
-        name: X-Participant-Id
-        required: false
-        schema:
-          format: uuid
-          type: string
       responses:
         "204":
           description: Estimate removed
@@ -1312,6 +1203,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Remove estimate (unvote)
       tags:
       - estimates
@@ -1322,13 +1215,6 @@ paths:
         in: path
         name: taskId
         required: true
-        schema:
-          format: uuid
-          type: string
-      - description: UUID of the current participant
-        in: header
-        name: X-Participant-Id
-        required: false
         schema:
           format: uuid
           type: string
@@ -1351,6 +1237,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ValidationErrorResponse"
           description: Invalid request
+      security:
+      - bearerAuth: []
       summary: Submit or update estimate
       tags:
       - estimates
@@ -1630,6 +1518,70 @@ paths:
       summary: Logout and clear session
       tags:
       - auth
+  /auth/guest/refresh:
+    post:
+      operationId: refreshGuestToken
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestTokenResponse"
+          description: Refreshed token
+        "401":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Invalid or expired token
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Participant no longer exists
+      security:
+      - bearerAuth: []
+      summary: Refresh a guest JWT token
+      tags:
+      - auth
+  /auth/guest/admin-exchange:
+    post:
+      operationId: exchangeAdminCode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCodeExchangeRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestTokenResponse"
+          description: Admin JWT token
+        "400":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Invalid request body
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Invalid admin code
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Project not found
+      summary: Exchange an admin code for a guest admin JWT
+      tags:
+      - projects
   /admin/users:
     get:
       description: Returns a paginated list of all users. Requires ADMIN role.
@@ -1888,12 +1840,6 @@ paths:
         schema:
           format: uuid
           type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
-        schema:
-          type: string
       responses:
         "200":
           content:
@@ -1913,6 +1859,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Resource not found
+      security:
+      - bearerAuth: []
       summary: Get analytics for a revealed/closed room
       tags:
       - analytics
@@ -1924,12 +1872,6 @@ paths:
         in: path
         name: slug
         required: true
-        schema:
-          type: string
-      - description: Admin code for project authorization
-        in: header
-        name: X-Admin-Code
-        required: false
         schema:
           type: string
       responses:
@@ -1945,6 +1887,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Project not found
+      security:
+      - bearerAuth: []
       summary: Get analytics across all revealed/closed rooms in a project
       tags:
       - analytics
@@ -1956,21 +1900,6 @@ components:
       name: slug
       required: true
       schema:
-        type: string
-    AdminCodeHeader:
-      description: Admin code for project authorization
-      in: header
-      name: X-Admin-Code
-      required: false
-      schema:
-        type: string
-    ParticipantIdHeader:
-      description: UUID of the current participant
-      in: header
-      name: X-Participant-Id
-      required: false
-      schema:
-        format: uuid
         type: string
     ParticipantIdPath:
       description: UUID of the participant
@@ -2045,8 +1974,10 @@ components:
         createdAt: 2000-01-23T04:56:07.000+00:00
         name: name
         adminCode: adminCode
+        tokenExpiresAt: 2000-01-23T04:56:07.000+00:00
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         slug: slug
+        token: token
       properties:
         id:
           format: uuid
@@ -2056,6 +1987,17 @@ components:
         slug:
           type: string
         adminCode:
+          type: string
+        token:
+          description: Guest admin JWT token (only returned on project creation for
+            guests)
+          minLength: 1
+          nullable: true
+          type: string
+        tokenExpiresAt:
+          description: Token expiration timestamp
+          format: date-time
+          nullable: true
           type: string
         createdAt:
           format: date-time
@@ -2201,7 +2143,9 @@ components:
         invitedRoomIds:
         - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        tokenExpiresAt: 2000-01-23T04:56:07.000+00:00
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        token: token
       properties:
         id:
           format: uuid
@@ -2215,6 +2159,17 @@ components:
             format: uuid
             type: string
           type: array
+        token:
+          description: Guest JWT token for this participant (only returned for guest
+            joins)
+          minLength: 1
+          nullable: true
+          type: string
+        tokenExpiresAt:
+          description: Token expiration timestamp
+          format: date-time
+          nullable: true
+          type: string
         createdAt:
           format: date-time
           type: string
@@ -2479,13 +2434,17 @@ components:
           invitedRoomIds:
           - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          tokenExpiresAt: 2000-01-23T04:56:07.000+00:00
           id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          token: token
         - createdAt: 2000-01-23T04:56:07.000+00:00
           nickname: nickname
           invitedRoomIds:
           - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          tokenExpiresAt: 2000-01-23T04:56:07.000+00:00
           id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          token: token
     FinishSessionResponse:
       example:
         autoAssignedEstimates:
@@ -3045,6 +3004,43 @@ components:
           type: string
       required:
       - newPassword
+      type: object
+    GuestTokenResponse:
+      example:
+        expiresAt: 2000-01-23T04:56:07.000+00:00
+        token: token
+      properties:
+        token:
+          description: Guest JWT token
+          minLength: 1
+          type: string
+        expiresAt:
+          description: Token expiration timestamp
+          format: date-time
+          type: string
+      required:
+      - expiresAt
+      - token
+      type: object
+    AdminCodeExchangeRequest:
+      example:
+        adminCode: adminCode
+        slug: slug
+      properties:
+        slug:
+          description: Project slug
+          maxLength: 50
+          minLength: 1
+          pattern: "^[a-z0-9]+$"
+          type: string
+        adminCode:
+          description: Admin code to exchange for a guest admin JWT
+          maxLength: 200
+          minLength: 1
+          type: string
+      required:
+      - adminCode
+      - slug
       type: object
     PagedUsersResponse:
       example:

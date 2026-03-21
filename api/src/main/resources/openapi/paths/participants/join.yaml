@@ -2,9 +2,10 @@ get:
   operationId: listProjectParticipants
   tags: [participants]
   summary: List project participants (admin only)
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/SlugPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   responses:
     '200':
       description: List of participants

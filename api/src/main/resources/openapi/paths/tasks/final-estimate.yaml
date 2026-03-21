@@ -2,9 +2,10 @@ put:
   operationId: setFinalEstimate
   tags: [tasks]
   summary: Set or update the final agreed story points for a task
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/TaskIdPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   requestBody:
     required: true
     content:

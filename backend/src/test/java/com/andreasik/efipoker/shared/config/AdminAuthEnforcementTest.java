@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.andreasik.efipoker.estimation.room.RoomEntity;
+import com.andreasik.efipoker.participant.ParticipantEntity;
 import com.andreasik.efipoker.project.ProjectEntity;
 import com.andreasik.efipoker.shared.test.BaseComponentTest;
 import com.andreasik.efipoker.shared.test.Fixtures;
@@ -30,11 +31,8 @@ class AdminAuthEnforcementTest extends BaseComponentTest {
   }
 
   @Nested
-  @DisplayName("Missing X-Admin-Code")
-  class MissingAdminCode {
-
-    // X-Admin-Code is optional in the OpenAPI spec, so missing header reaches the controller
-    // where validateAdminAccess throws UnauthorizedException -> 403 (Forbidden)
+  @DisplayName("Missing JWT")
+  class MissingJwt {
 
     @Test
     void should_reject_get_project_admin() throws Exception {
@@ -105,23 +103,32 @@ class AdminAuthEnforcementTest extends BaseComponentTest {
   }
 
   @Nested
-  @DisplayName("Wrong X-Admin-Code")
-  class WrongAdminCode {
+  @DisplayName("Non-admin JWT (participant only)")
+  class NonAdminJwt {
 
     @Test
     void should_reject_get_project_admin() throws Exception {
+      ParticipantEntity participant =
+          participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+      String participantJwt = testJwt.guestParticipantJwt(project, participant);
+
       mockMvc
           .perform(
               get("/api/v1/projects/{slug}/admin", project.getSlug())
-                  .header("X-Admin-Code", "wrong-code"))
+                  .header("Authorization", "Bearer " + participantJwt))
           .andExpect(status().isForbidden());
     }
 
     @Test
     void should_reject_post_reveal() throws Exception {
+      ParticipantEntity participant =
+          participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+      String participantJwt = testJwt.guestParticipantJwt(project, participant);
+
       mockMvc
           .perform(
-              post("/api/v1/rooms/{id}/reveal", room.getId()).header("X-Admin-Code", "wrong-code"))
+              post("/api/v1/rooms/{id}/reveal", room.getId())
+                  .header("Authorization", "Bearer " + participantJwt))
           .andExpect(status().isForbidden());
     }
   }

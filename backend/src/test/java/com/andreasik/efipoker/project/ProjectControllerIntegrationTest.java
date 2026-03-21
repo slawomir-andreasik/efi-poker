@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.andreasik.efipoker.participant.ParticipantEntity;
 import com.andreasik.efipoker.shared.test.BaseComponentTest;
 import com.andreasik.efipoker.shared.test.Fixtures;
 import com.jayway.jsonpath.JsonPath;
@@ -105,25 +106,24 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
   class GetProjectAdmin {
 
     @Test
-    void should_return_admin_view_with_correct_code() throws Exception {
+    void should_return_admin_view_with_valid_jwt() throws Exception {
       ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
+      String adminJwt = testJwt.guestAdminJwt(project);
 
       mockMvc
           .perform(
               get("/api/v1/projects/{slug}/admin", project.getSlug())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
+                  .header("Authorization", "Bearer " + adminJwt))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.adminCode").isNotEmpty());
     }
 
     @Test
-    void should_reject_wrong_admin_code_403() throws Exception {
+    void should_reject_missing_jwt_403() throws Exception {
       ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
 
       mockMvc
-          .perform(
-              get("/api/v1/projects/{slug}/admin", project.getSlug())
-                  .header("X-Admin-Code", "wrong-code"))
+          .perform(get("/api/v1/projects/{slug}/admin", project.getSlug()))
           .andExpect(status().isForbidden());
     }
   }
@@ -135,6 +135,7 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_update_project_200() throws Exception {
       ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
+      String adminJwt = testJwt.guestAdminJwt(project);
       // language=JSON
       String body =
           """
@@ -146,7 +147,7 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
               .perform(
                   patch("/api/v1/projects/{slug}", project.getSlug())
                       .contentType(MediaType.APPLICATION_JSON)
-                      .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                      .header("Authorization", "Bearer " + adminJwt)
                       .content(body))
               .andExpect(status().isOk())
               .andReturn()
@@ -159,7 +160,7 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
     }
 
     @Test
-    void should_reject_without_admin_code_403() throws Exception {
+    void should_reject_without_jwt_403() throws Exception {
       ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
       // language=JSON
       String body =
@@ -176,8 +177,11 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
     }
 
     @Test
-    void should_reject_wrong_admin_code_403() throws Exception {
+    void should_reject_non_admin_jwt_403() throws Exception {
       ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
+      ParticipantEntity participant =
+          participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+      String participantJwt = testJwt.guestParticipantJwt(project, participant);
       // language=JSON
       String body =
           """
@@ -188,13 +192,16 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
           .perform(
               patch("/api/v1/projects/{slug}", project.getSlug())
                   .contentType(MediaType.APPLICATION_JSON)
-                  .header("X-Admin-Code", "wrong-code")
+                  .header("Authorization", "Bearer " + participantJwt)
                   .content(body))
           .andExpect(status().isForbidden());
     }
 
     @Test
     void should_return_404_for_unknown_slug() throws Exception {
+      // Use a JWT from some project - the slug won't match anything
+      ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
+      String adminJwt = testJwt.guestAdminJwt(project);
       // language=JSON
       String body =
           """
@@ -205,7 +212,7 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
           .perform(
               patch("/api/v1/projects/{slug}", "nonexistent")
                   .contentType(MediaType.APPLICATION_JSON)
-                  .header("X-Admin-Code", "some-code")
+                  .header("Authorization", "Bearer " + adminJwt)
                   .content(body))
           .andExpect(status().isNotFound());
     }
@@ -213,6 +220,7 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_support_partial_update() throws Exception {
       ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
+      String adminJwt = testJwt.guestAdminJwt(project);
       // language=JSON
       String body =
           """
@@ -224,7 +232,7 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
               .perform(
                   patch("/api/v1/projects/{slug}", project.getSlug())
                       .contentType(MediaType.APPLICATION_JSON)
-                      .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                      .header("Authorization", "Bearer " + adminJwt)
                       .content(body))
               .andExpect(status().isOk())
               .andReturn()
@@ -242,11 +250,12 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_delete_project_204() throws Exception {
       ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
+      String adminJwt = testJwt.guestAdminJwt(project);
 
       mockMvc
           .perform(
               delete("/api/v1/projects/{slug}", project.getSlug())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
+                  .header("Authorization", "Bearer " + adminJwt))
           .andExpect(status().isNoContent());
 
       // Verify project is gone
@@ -256,7 +265,7 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
     }
 
     @Test
-    void should_reject_without_admin_code_403() throws Exception {
+    void should_reject_without_jwt_403() throws Exception {
       ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
 
       mockMvc
@@ -265,27 +274,34 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
     }
 
     @Test
-    void should_reject_wrong_admin_code_403() throws Exception {
+    void should_reject_non_admin_jwt_403() throws Exception {
       ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
+      ParticipantEntity participant =
+          participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+      String participantJwt = testJwt.guestParticipantJwt(project, participant);
 
       mockMvc
           .perform(
               delete("/api/v1/projects/{slug}", project.getSlug())
-                  .header("X-Admin-Code", "wrong-code"))
+                  .header("Authorization", "Bearer " + participantJwt))
           .andExpect(status().isForbidden());
     }
 
     @Test
     void should_return_404_for_unknown_slug() throws Exception {
+      ProjectEntity project = projectRepository.save(Fixtures.projectEntity());
+      String adminJwt = testJwt.guestAdminJwt(project);
+
       mockMvc
           .perform(
-              delete("/api/v1/projects/{slug}", "nonexistent").header("X-Admin-Code", "some-code"))
+              delete("/api/v1/projects/{slug}", "nonexistent")
+                  .header("Authorization", "Bearer " + adminJwt))
           .andExpect(status().isNotFound());
     }
 
     @Test
     void should_cascade_delete_rooms_and_tasks() throws Exception {
-      // Create project with room via API
+      // Create project via API (returns JWT token for guest admin)
       // language=JSON
       String projectBody =
           """
@@ -303,7 +319,7 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
               .getContentAsString();
 
       String cascadeSlug = JsonPath.read(createJson, "$.slug");
-      String cascadeAdmin = JsonPath.read(createJson, "$.adminCode");
+      String cascadeToken = JsonPath.read(createJson, "$.token");
 
       // language=JSON
       String roomBody =
@@ -314,7 +330,7 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
           .perform(
               post("/api/v1/projects/{slug}/rooms", cascadeSlug)
                   .contentType(MediaType.APPLICATION_JSON)
-                  .header("X-Admin-Code", cascadeAdmin)
+                  .header("Authorization", "Bearer " + cascadeToken)
                   .content(roomBody))
           .andExpect(status().isCreated());
 
@@ -322,7 +338,8 @@ class ProjectControllerIntegrationTest extends BaseComponentTest {
       // (would fail with 500/FK violation without cascade)
       mockMvc
           .perform(
-              delete("/api/v1/projects/{slug}", cascadeSlug).header("X-Admin-Code", cascadeAdmin))
+              delete("/api/v1/projects/{slug}", cascadeSlug)
+                  .header("Authorization", "Bearer " + cascadeToken))
           .andExpect(status().isNoContent());
     }
   }

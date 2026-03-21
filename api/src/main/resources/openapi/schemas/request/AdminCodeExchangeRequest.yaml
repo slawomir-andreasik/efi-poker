@@ -1,0 +1,16 @@
+type: object
+required:
+  - slug
+  - adminCode
+properties:
+  slug:
+    type: string
+    description: Project slug
+    minLength: 1
+    maxLength: 50
+    pattern: '^[a-z0-9]+$'
+  adminCode:
+    type: string
+    description: Admin code to exchange for a guest admin JWT
+    minLength: 1
+    maxLength: 200
