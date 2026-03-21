@@ -37,6 +37,7 @@ Security rules for Spring Boot + React + Nginx stack. Based on OWASP Top 10:2025
 - Timing-safe comparison: `passwordEncoder.matches()` or `MessageDigest.isEqual()` - never `String.equals()`
 - TLS everywhere: enforce HTTPS in production, HSTS with `preload`
 - JWT: HS512 or RS256 minimum, enforce expiration, rotate secrets periodically
+- Refresh tokens: httpOnly/Secure/SameSite=Strict cookies, SHA-256 hash before DB storage, rotate on every use, revoke all on logout
 - Never log or include secrets, tokens, or password hashes in API responses or error messages
 
 ## A05: Injection
@@ -67,6 +68,8 @@ Security rules for Spring Boot + React + Nginx stack. Based on OWASP Top 10:2025
 - Never reuse the same exception for both - HTTP status codes must be distinguishable
 - Generic error messages for auth failures (`"Invalid credentials"`) - no username enumeration
 - Session management: stateless JWT for APIs, short expiration, no sensitive data in token payload
+- Refresh token flow: access token (24h) in localStorage + refresh token (30/90 days) in httpOnly cookie. Silent refresh on 401. POST /auth/refresh requires no Authorization header (cookie-based)
+- Guest tokens: project-scoped JWT (90 days) with minimal claims (projectId, participantId, admin flag). Stored in localStorage per project, no refresh cookie
 - Account lockout or progressive delay after repeated failed login attempts
 - Production startup: reject default passwords, secrets, and placeholder OAuth/LDAP config
 

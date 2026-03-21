@@ -37,7 +37,7 @@ paths:
 ## Exception Patterns
 
 - `AuthenticationFailedException` → 401 Unauthorized (bad credentials, expired token) - for login/auth failures
-- `UnauthorizedException` → 403 Forbidden (wrong admin code, insufficient permissions) - for authorization failures
+- `UnauthorizedException` → 403 Forbidden (wrong admin code, insufficient permissions, invalid/expired refresh token) - for authorization failures
 - `ResourceNotFoundException` → 404 Not Found
 - Never reuse the same exception for 401 and 403 - HTTP status codes must be distinguishable
 - `NoResourceFoundException` (Spring's) → generic `"Not found"` - never expose framework internals

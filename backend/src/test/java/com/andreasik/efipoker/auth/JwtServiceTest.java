@@ -37,7 +37,7 @@ class JwtServiceTest extends BaseUnitTest {
 
   @BeforeEach
   void setUp() {
-    JwtProperties jwtProperties = new JwtProperties(SECRET, 3600, 7776000);
+    JwtProperties jwtProperties = new JwtProperties(SECRET, 3600, 7776000, 600, 1200);
 
     SecretKeySpec key = new SecretKeySpec(SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
 

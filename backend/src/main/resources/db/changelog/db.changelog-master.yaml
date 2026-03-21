@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/tables/estimates.yaml
   - include:
       file: db/changelog/tables/round_history.yaml
+  - include:
+      file: db/changelog/tables/refresh_tokens.yaml

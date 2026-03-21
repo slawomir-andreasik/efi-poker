@@ -57,6 +57,8 @@ app:
     secret: ${JWT_SECRET:dev-secret-change-in-production-must-be-at-least-64-chars-long-for-hs512}
     expiration: ${JWT_EXPIRATION:86400}
     guest-expiration: ${JWT_GUEST_EXPIRATION:7776000}
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:2592000}
+    refresh-remember-expiration: ${JWT_REFRESH_REMEMBER_EXPIRATION:7776000}
   registration:
     enabled: ${REGISTRATION_ENABLED:false}
   admin:

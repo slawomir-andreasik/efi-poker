@@ -17,7 +17,8 @@ class ProdSecurityValidatorTest extends BaseUnitTest {
   private static final String SECURE_DB_PASSWORD = "prod-db-password-123";
 
   private static final AdminProperties SECURE_ADMIN = new AdminProperties("admin", SECURE_PASSWORD);
-  private static final JwtProperties SECURE_JWT = new JwtProperties(SECURE_SECRET, 86400, 7776000);
+  private static final JwtProperties SECURE_JWT =
+      new JwtProperties(SECURE_SECRET, 86400, 7776000, 2592000, 7776000);
   private static final LdapProperties LDAP_DISABLED =
       new LdapProperties(
           false,
@@ -62,6 +63,8 @@ class ProdSecurityValidatorTest extends BaseUnitTest {
           new JwtProperties(
               "dev-secret-change-in-production-must-be-at-least-64-chars-long-for-hs512",
               86400,
+              7776000,
+              2592000,
               7776000);
       var v = validator(SECURE_ADMIN, jwt, SECURE_DB_PASSWORD, LDAP_DISABLED, AUTH0_DISABLED);
 
@@ -72,7 +75,8 @@ class ProdSecurityValidatorTest extends BaseUnitTest {
 
     @Test
     void should_fail_when_jwt_secret_is_too_short() {
-      var jwt = new JwtProperties("short-secret-only-32-characters!", 86400, 7776000);
+      var jwt =
+          new JwtProperties("short-secret-only-32-characters!", 86400, 7776000, 2592000, 7776000);
       var v = validator(SECURE_ADMIN, jwt, SECURE_DB_PASSWORD, LDAP_DISABLED, AUTH0_DISABLED);
 
       assertThatThrownBy(v::run)
