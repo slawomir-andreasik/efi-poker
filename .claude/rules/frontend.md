@@ -1,3 +1,10 @@
+---
+paths:
+  - "frontend/**/*.ts"
+  - "frontend/**/*.tsx"
+  - "frontend/**/*.css"
+---
+
 # Frontend Conventions
 
 ## Architecture

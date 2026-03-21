@@ -43,15 +43,19 @@ make db-reset        # drop + recreate database
 
 ## Code Style
 
-Commits: `type: summary` (max 72 chars). Types: feat, fix, chore, docs, refactor, test
+Commits: `type: summary` (max 72 chars). Types: feat, fix, chore, docs, refactor, test.
+No Oxford comma (no comma before "and" in lists).
 
-## Conventions (loaded automatically per file type)
+## Conventions
+
+Rules in `.claude/rules/` are scoped by file path - loaded automatically when working with matching files. `security.md` loads always.
 
 - [rules/api-contract.md](rules/api-contract.md) - OpenAPI modular workflow, schema rules.
   Changes affect both backend (generated interfaces) and frontend (api/types.ts)
 - [rules/java.md](rules/java.md) - Entity/domain split, JPA, MapStruct gotchas, query performance, testing.
   API spec changes require `make api-generate` before implementation
 - [rules/frontend.md](rules/frontend.md) - Project utilities, state management, layout, error handling
+- [rules/security.md](rules/security.md) - OWASP Top 10:2025 security conventions
 
 ## Contributing
 

@@ -33,9 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class RoomService {
 
-  /**
-   * Internal sentinel task title used by LIVE rooms for round-based voting. Never exposed to users.
-   */
+  /// Internal sentinel task title used by LIVE rooms for round-based voting.
+  /// Never exposed to users.
   public static final String PHANTOM_TASK_TITLE = "__live__";
 
   private static final String SLUG_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

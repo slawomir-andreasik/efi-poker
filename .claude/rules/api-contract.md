@@ -1,3 +1,10 @@
+---
+paths:
+  - "api/**/*.yaml"
+  - "api/**/*.yml"
+  - "frontend/src/api/types.ts"
+---
+
 # API Contract (OpenAPI First)
 
 ## Workflow

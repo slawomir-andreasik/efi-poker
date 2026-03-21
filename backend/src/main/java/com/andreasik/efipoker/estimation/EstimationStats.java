@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/** Static utility for computing estimation statistics from story point values. */
+/// Static utility for computing estimation statistics from story point values.
 public final class EstimationStats {
 
   private EstimationStats() {}

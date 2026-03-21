@@ -31,7 +31,7 @@ public class SecurityConfig {
   private final Auth0Properties auth0Properties;
   private final JwtAuthenticationConverter jwtAuthenticationConverter;
 
-  /** When {@code true}, disables Spring Security default headers (proxy provides them in prod). */
+  /// When `true`, disables Spring Security default headers (proxy provides them in prod).
   @Value("${app.security.proxy-managed-headers:false}")
   private boolean proxyManagedHeaders;
 

@@ -33,7 +33,7 @@ Security rules for Spring Boot + React + Nginx stack. Based on OWASP Top 10:2025
 ## A04: Cryptographic Failures
 
 - Passwords and secrets: BCrypt with strength 12+ - never plaintext, never MD5/SHA
-- Admin/API codes: hash before storage, return raw value only at creation time
+- Admin/API codes: hash before storage, return raw value only at creation time. BCrypt default strength (10) is acceptable for high-entropy codes like UUIDs (128-bit) where brute-force is infeasible
 - Timing-safe comparison: `passwordEncoder.matches()` or `MessageDigest.isEqual()` - never `String.equals()`
 - TLS everywhere: enforce HTTPS in production, HSTS with `preload`
 - JWT: HS512 or RS256 minimum, enforce expiration, rotate secrets periodically
