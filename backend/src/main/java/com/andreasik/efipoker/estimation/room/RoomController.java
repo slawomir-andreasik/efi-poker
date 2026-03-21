@@ -36,6 +36,7 @@ import com.andreasik.efipoker.participant.ParticipantService;
 import com.andreasik.efipoker.project.Project;
 import com.andreasik.efipoker.project.ProjectService;
 import com.andreasik.efipoker.shared.exception.UnauthorizedException;
+import com.andreasik.efipoker.shared.security.SecurityUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -64,10 +65,9 @@ public class RoomController implements RoomsApi {
   private final RoundHistoryService roundHistoryService;
 
   @Override
-  public ResponseEntity<RoomResponse> createRoom(
-      String slug, CreateRoomRequest createRoomRequest, String xAdminCode) {
+  public ResponseEntity<RoomResponse> createRoom(String slug, CreateRoomRequest createRoomRequest) {
     log.debug("POST /projects/{}/rooms type={}", slug, createRoomRequest.getRoomType());
-    Project project = projectService.validateAdminCode(slug, xAdminCode);
+    Project project = projectService.validateAdminAccessBySlug(slug);
 
     RoomType roomType = RoomType.valueOf(createRoomRequest.getRoomType().getValue());
     boolean autoReveal =
@@ -89,12 +89,13 @@ public class RoomController implements RoomsApi {
   }
 
   @Override
-  public ResponseEntity<List<RoomResponse>> listRooms(String slug, UUID xParticipantId) {
-    log.debug("GET /projects/{}/rooms participantId={}", slug, xParticipantId);
+  public ResponseEntity<List<RoomResponse>> listRooms(String slug) {
+    log.debug("GET /projects/{}/rooms", slug);
     Project project = projectService.getProjectBySlug(slug);
     List<Room> rooms = roomService.listByProject(project.id());
-    if (xParticipantId != null) {
-      Participant participant = participantService.getParticipant(project.id(), xParticipantId);
+    UUID participantId = SecurityUtils.getCurrentParticipantId();
+    if (participantId != null) {
+      Participant participant = participantService.getParticipant(project.id(), participantId);
       Set<UUID> invitedRoomIds = participant.invitedRoomIds();
       if (invitedRoomIds != null && !invitedRoomIds.isEmpty()) {
         rooms = rooms.stream().filter(r -> invitedRoomIds.contains(r.id())).toList();
@@ -104,10 +105,11 @@ public class RoomController implements RoomsApi {
   }
 
   @Override
-  public ResponseEntity<RoomDetailResponse> getRoom(UUID roomId, UUID xParticipantId) {
+  public ResponseEntity<RoomDetailResponse> getRoom(UUID roomId) {
     log.debug("GET /rooms/{}", roomId);
     Room room = roomService.getRoom(roomId);
-    return ResponseEntity.ok(buildDetailResponse(room, xParticipantId));
+    UUID participantId = SecurityUtils.getCurrentParticipantId();
+    return ResponseEntity.ok(buildDetailResponse(room, participantId));
   }
 
   @Override
@@ -118,9 +120,9 @@ public class RoomController implements RoomsApi {
   }
 
   @Override
-  public ResponseEntity<RoomAdminResponse> getRoomAdmin(UUID roomId, String xAdminCode) {
+  public ResponseEntity<RoomAdminResponse> getRoomAdmin(UUID roomId) {
     log.debug("GET /rooms/{}/admin", roomId);
-    Room room = roomService.validateAdminAndGetRoom(roomId, xAdminCode);
+    Room room = roomService.validateAdminAndGetRoom(roomId);
     List<Task> tasks = taskService.listByRoom(roomId);
     List<Participant> participants = participantService.listParticipants(room.project().id());
 
@@ -166,10 +168,9 @@ public class RoomController implements RoomsApi {
   }
 
   @Override
-  public ResponseEntity<RoomResponse> updateRoom(
-      UUID roomId, UpdateRoomRequest updateRoomRequest, String xAdminCode) {
+  public ResponseEntity<RoomResponse> updateRoom(UUID roomId, UpdateRoomRequest updateRoomRequest) {
     log.debug("PATCH /rooms/{}", roomId);
-    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId);
 
     Room updated =
         roomService.updateRoom(
@@ -186,34 +187,33 @@ public class RoomController implements RoomsApi {
   }
 
   @Override
-  public ResponseEntity<Void> deleteRoom(UUID roomId, String xAdminCode) {
+  public ResponseEntity<Void> deleteRoom(UUID roomId) {
     log.debug("DELETE /rooms/{}", roomId);
-    Room room = roomService.validateAdminAndGetRoom(roomId, xAdminCode);
+    Room room = roomService.validateAdminAndGetRoom(roomId);
     roomService.deleteRoom(room);
     return ResponseEntity.noContent().build();
   }
 
   @Override
-  public ResponseEntity<RoomDetailResponse> revealEstimates(UUID roomId, String xAdminCode) {
+  public ResponseEntity<RoomDetailResponse> revealEstimates(UUID roomId) {
     log.debug("POST /rooms/{}/reveal", roomId);
-    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId);
     Room revealed = roomService.revealRoom(roomId);
     return ResponseEntity.ok(buildDetailResponse(revealed, null));
   }
 
   @Override
-  public ResponseEntity<RoomDetailResponse> reopenRoom(UUID roomId, String xAdminCode) {
+  public ResponseEntity<RoomDetailResponse> reopenRoom(UUID roomId) {
     log.debug("POST /rooms/{}/reopen", roomId);
-    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId);
     Room reopened = roomService.reopenRoom(roomId);
     return ResponseEntity.ok(buildDetailResponse(reopened, null));
   }
 
   @Override
-  public ResponseEntity<FinishSessionResponse> finishSession(
-      UUID roomId, String xAdminCode, Boolean revealVotes) {
+  public ResponseEntity<FinishSessionResponse> finishSession(UUID roomId, Boolean revealVotes) {
     log.debug("POST /rooms/{}/finish revealVotes={}", roomId, revealVotes);
-    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId);
     boolean reveal = revealVotes == null || revealVotes;
     RoomService.FinishSessionResult result = roomService.finishSession(roomId, reveal);
 
@@ -367,9 +367,9 @@ public class RoomController implements RoomsApi {
   }
 
   @Override
-  public ResponseEntity<String> exportResults(UUID roomId, String xAdminCode) {
+  public ResponseEntity<String> exportResults(UUID roomId) {
     log.debug("GET /rooms/{}/export", roomId);
-    Room room = roomService.validateAdminAndGetRoom(roomId, xAdminCode);
+    Room room = roomService.validateAdminAndGetRoom(roomId);
 
     if (!RoomService.isRevealedStatus(room.status())) {
       throw new UnauthorizedException("Results are not available until estimates are revealed");
@@ -418,20 +418,21 @@ public class RoomController implements RoomsApi {
   }
 
   @Override
-  public ResponseEntity<LiveRoomStateResponse> getLiveRoomState(UUID roomId, UUID xParticipantId) {
+  public ResponseEntity<LiveRoomStateResponse> getLiveRoomState(UUID roomId) {
     log.debug("GET /rooms/{}/live", roomId);
     Room room = roomService.getRoom(roomId);
     if (RoomType.LIVE != room.roomType()) {
       throw new IllegalStateException("getLiveRoomState is only available for LIVE rooms");
     }
-    return ResponseEntity.ok(buildLiveRoomStateResponse(room, xParticipantId));
+    UUID participantId = SecurityUtils.getCurrentParticipantId();
+    return ResponseEntity.ok(buildLiveRoomStateResponse(room, participantId));
   }
 
   @Override
   public ResponseEntity<LiveRoomStateResponse> newRound(
-      UUID roomId, String xAdminCode, NewRoundRequest newRoundRequest) {
+      UUID roomId, NewRoundRequest newRoundRequest) {
     log.debug("POST /rooms/{}/new-round", roomId);
-    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId);
     String topic = newRoundRequest != null ? newRoundRequest.getTopic() : null;
     Room updated = roomService.newRound(roomId, topic);
     return ResponseEntity.ok(buildLiveRoomStateResponse(updated, null));

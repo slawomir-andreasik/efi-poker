@@ -42,8 +42,8 @@ export function JoinPage() {
     const auth = getAuth(slug);
     const identity = getIdentity();
 
-    const idToValidate = pid || auth.participantId;
-    if (!idToValidate) {
+    const hasExistingAuth = pid || auth.nickname;
+    if (!hasExistingAuth) {
       if (identity) {
         // Auto-join with stored identity name
         api<ParticipantResponse>(
@@ -53,7 +53,11 @@ export function JoinPage() {
         )
           .then((participant) => {
             if (cancelled) return;
-            saveAuth(slug, { participantId: participant.id, nickname: participant.nickname });
+            if (participant.token) {
+              saveAuth(slug, { guestToken: participant.token, nickname: participant.nickname });
+            } else {
+              saveAuth(slug, { nickname: participant.nickname });
+            }
             void navigate(`/p/${slug}${roomRedirect}`);
           })
           .catch((err) => {
@@ -70,29 +74,34 @@ export function JoinPage() {
       return;
     }
 
-    api<ParticipantResponse>(
-      `/projects/${slug}/participants/${idToValidate}`,
-      {},
-      slug,
-    )
-      .then((participant) => {
-        if (cancelled) return;
-        saveAuth(slug, { participantId: participant.id, nickname: participant.nickname });
-        setRestoredNickname(participant.nickname);
-        setMode('welcome-back');
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        if (err instanceof ApiError && err.status === 404 && slug) {
-          saveAuth(slug, { participantId: undefined, nickname: undefined });
-        }
-        if (pid) {
+    if (pid) {
+      // Validate participant by ID from URL param
+      api<ParticipantResponse>(
+        `/projects/${slug}/participants/${pid}`,
+        {},
+        slug,
+      )
+        .then((participant) => {
+          if (cancelled) return;
+          saveAuth(slug, { nickname: participant.nickname });
+          setRestoredNickname(participant.nickname);
+          setMode('welcome-back');
+        })
+        .catch((err: unknown) => {
+          if (cancelled) return;
+          if (err instanceof ApiError && err.status === 404 && slug) {
+            saveAuth(slug, { guestToken: undefined, nickname: undefined });
+          }
           showToast('Invalid or expired link. Please join with your nickname.');
-        } else if (!(err instanceof ApiError)) {
-          showToast(getErrorMessage(err));
-        }
-        setMode('join-form');
-      });
+          setMode('join-form');
+        });
+    } else if (auth.nickname) {
+      // Welcome back with stored nickname
+      setRestoredNickname(auth.nickname);
+      setMode('welcome-back');
+    } else {
+      setMode('join-form');
+    }
 
     return () => {
       cancelled = true;

@@ -15,6 +15,16 @@ properties:
     type: string
   adminCode:
     type: string
+  token:
+    type: string
+    nullable: true
+    minLength: 1
+    description: Guest admin JWT token (only returned on project creation for guests)
+  tokenExpiresAt:
+    type: string
+    format: date-time
+    nullable: true
+    description: Token expiration timestamp
   createdAt:
     type: string
     format: date-time

@@ -15,8 +15,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Order(Ordered.HIGHEST_PRECEDENCE + 2)
 public class TraceResponseFilter extends OncePerRequestFilter {
 
-  static final String TRACE_ID_HEADER = "X-Trace-Id";
-  static final String MDC_TRACE_ID = "traceId";
+  public static final String TRACE_ID_HEADER = "X-Trace-Id";
+  public static final String MDC_TRACE_ID = "traceId";
 
   @Override
   protected void doFilterInternal(

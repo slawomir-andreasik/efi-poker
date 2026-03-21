@@ -1,0 +1,35 @@
+post:
+  operationId: exchangeAdminCode
+  tags: [projects]
+  summary: Exchange an admin code for a guest admin JWT
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/request/AdminCodeExchangeRequest.yaml'
+  responses:
+    '200':
+      description: Admin JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/GuestTokenResponse.yaml'
+    '400':
+      description: Invalid request body
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '403':
+      description: Invalid admin code
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '404':
+      description: Project not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

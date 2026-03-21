@@ -43,7 +43,7 @@ src/
 | Modal shell | `<Modal isOpen onClose title>{children}</Modal>` (Escape + backdrop + ARIA) |
 | Role badge | `<RoleBadge isAdmin={bool} />` |
 | Dropdown dismiss | `useDropdownDismiss(ref, isOpen, onClose)` hook |
-| Auth fallback | `useProjectAuth(slug)` hook (adminCode + participant recovery for logged-in users) |
+| Auth fallback | `useProjectAuth(slug)` hook (guest JWT admin detection + owner recovery for logged-in users) |
 | URL safety | `isSafeUrl(url)` from `@/lib/linkify` - validates `http:`/`https:` protocol via `new URL()` |
 | Link rendering | `<Linkify text={str} />` from `@/lib/linkify` - renders URLs as links with protocol validation |
 

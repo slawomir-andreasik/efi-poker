@@ -1,6 +1,0 @@
-name: X-Admin-Code
-in: header
-required: false
-description: Admin code for project authorization
-schema:
-  type: string

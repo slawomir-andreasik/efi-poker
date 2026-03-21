@@ -1,5 +1,6 @@
 package com.andreasik.efipoker.shared.exception;
 
+import static com.andreasik.efipoker.shared.observability.TraceResponseFilter.MDC_TRACE_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.andreasik.efipoker.shared.test.BaseUnitTest;
@@ -22,7 +23,7 @@ class GlobalExceptionHandlerTest extends BaseUnitTest {
     @Test
     void should_include_trace_id_when_mdc_has_trace_id() {
       // Arrange
-      MDC.put("traceId", "abc123def456");
+      MDC.put(MDC_TRACE_ID, "abc123def456");
 
       try {
         // Act
@@ -30,7 +31,7 @@ class GlobalExceptionHandlerTest extends BaseUnitTest {
             handler.handleResourceNotFound(new ResourceNotFoundException("Project", "test-slug"));
 
         // Assert
-        assertThat(problem.getProperties()).containsEntry("traceId", "abc123def456");
+        assertThat(problem.getProperties()).containsEntry(MDC_TRACE_ID, "abc123def456");
       } finally {
         MDC.clear();
       }
@@ -52,7 +53,7 @@ class GlobalExceptionHandlerTest extends BaseUnitTest {
     @Test
     void should_not_include_trace_id_when_mdc_value_is_blank() {
       // Arrange
-      MDC.put("traceId", "  ");
+      MDC.put(MDC_TRACE_ID, "  ");
 
       try {
         // Act
@@ -69,14 +70,14 @@ class GlobalExceptionHandlerTest extends BaseUnitTest {
     @Test
     void should_include_trace_id_on_500_errors() {
       // Arrange
-      MDC.put("traceId", "trace-for-500");
+      MDC.put(MDC_TRACE_ID, "trace-for-500");
 
       try {
         // Act
         ProblemDetail problem = handler.handleGenericException(new RuntimeException("unexpected"));
 
         // Assert
-        assertThat(problem.getProperties()).containsEntry("traceId", "trace-for-500");
+        assertThat(problem.getProperties()).containsEntry(MDC_TRACE_ID, "trace-for-500");
       } finally {
         MDC.clear();
       }

@@ -2,9 +2,10 @@ post:
   operationId: finishSession
   tags: [rooms]
   summary: Finish session and optionally reveal votes
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/RoomIdPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
     - name: revealVotes
       in: query
       required: false

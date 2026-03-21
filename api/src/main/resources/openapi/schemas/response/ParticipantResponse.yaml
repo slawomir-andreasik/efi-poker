@@ -15,6 +15,16 @@ properties:
       type: string
       format: uuid
     description: Rooms this participant can access. Empty array means project-wide access.
+  token:
+    type: string
+    nullable: true
+    minLength: 1
+    description: Guest JWT token for this participant (only returned for guest joins)
+  tokenExpiresAt:
+    type: string
+    format: date-time
+    nullable: true
+    description: Token expiration timestamp
   createdAt:
     type: string
     format: date-time

@@ -4,11 +4,13 @@ import com.andreasik.efipoker.api.AuthApi;
 import com.andreasik.efipoker.api.model.AuthConfigResponse;
 import com.andreasik.efipoker.api.model.AuthResponse;
 import com.andreasik.efipoker.api.model.ChangePasswordRequest;
+import com.andreasik.efipoker.api.model.GuestTokenResponse;
 import com.andreasik.efipoker.api.model.LoginRequest;
 import com.andreasik.efipoker.api.model.RegisterRequest;
 import com.andreasik.efipoker.api.model.UserResponse;
 import com.andreasik.efipoker.shared.exception.AuthenticationFailedException;
 import com.andreasik.efipoker.shared.exception.UnauthorizedException;
+import com.andreasik.efipoker.shared.security.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.net.URLEncoder;
@@ -25,6 +27,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -135,6 +138,24 @@ public class AuthController implements AuthApi {
         userId, changePasswordRequest.getCurrentPassword(), changePasswordRequest.getNewPassword());
 
     return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  public ResponseEntity<GuestTokenResponse> refreshGuestToken() {
+    log.debug("POST /auth/guest/refresh");
+    if (!SecurityUtils.isGuestToken()) {
+      throw new UnauthorizedException("Guest token required");
+    }
+
+    Jwt currentToken = SecurityUtils.getCurrentJwt();
+    if (currentToken == null) {
+      throw new UnauthorizedException("Invalid token");
+    }
+
+    String token = jwtService.refreshGuestToken(currentToken);
+    Instant expiresAt = jwtService.getGuestTokenExpiresAt();
+
+    return ResponseEntity.ok(new GuestTokenResponse().token(token).expiresAt(expiresAt));
   }
 
   // OAuth2 endpoints are handled by Spring Security's oauth2Login() filter.

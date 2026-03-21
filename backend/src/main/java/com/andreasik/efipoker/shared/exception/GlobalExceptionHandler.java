@@ -1,5 +1,6 @@
 package com.andreasik.efipoker.shared.exception;
 
+import com.andreasik.efipoker.shared.observability.TraceResponseFilter;
 import jakarta.validation.ConstraintViolationException;
 import java.util.HashMap;
 import java.util.Map;
@@ -162,9 +163,9 @@ public class GlobalExceptionHandler {
   }
 
   private ProblemDetail withTraceId(ProblemDetail problem) {
-    String traceId = MDC.get("traceId");
+    String traceId = MDC.get(TraceResponseFilter.MDC_TRACE_ID);
     if (traceId != null && !traceId.isBlank()) {
-      problem.setProperty("traceId", traceId);
+      problem.setProperty(TraceResponseFilter.MDC_TRACE_ID, traceId);
     }
     return problem;
   }

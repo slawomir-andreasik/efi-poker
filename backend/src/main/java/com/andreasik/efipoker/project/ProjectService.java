@@ -4,14 +4,13 @@ import com.andreasik.efipoker.auth.UserEntity;
 import com.andreasik.efipoker.shared.event.ProjectCreatedEvent;
 import com.andreasik.efipoker.shared.exception.ResourceNotFoundException;
 import com.andreasik.efipoker.shared.exception.UnauthorizedException;
+import com.andreasik.efipoker.shared.security.SecurityUtils;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -103,13 +102,18 @@ public class ProjectService implements ProjectApi {
         projectRepository
             .findBySlug(slug)
             .orElseThrow(() -> new ResourceNotFoundException("Project", slug));
-    if (isSiteAdmin()
+    if (SecurityUtils.isSiteAdmin()
         || isOwner(entity, currentUserId)
         || adminCodeMatches(entity.getAdminCode(), adminCode)) {
       return projectEntityMapper.toDomain(entity);
     }
     log.warn("Invalid admin access for project: slug={}", slug);
     throw new UnauthorizedException("Invalid admin code for project: " + slug);
+  }
+
+  @Override
+  public UUID validateAdminCodeAndGetProjectId(String slug, String adminCode, UUID currentUserId) {
+    return validateAdminAccess(slug, adminCode, currentUserId).id();
   }
 
   public void validateAdminCodeForProject(UUID projectId, String adminCode) {
@@ -121,19 +125,13 @@ public class ProjectService implements ProjectApi {
         projectRepository
             .findById(projectId)
             .orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
-    if (isSiteAdmin()
+    if (SecurityUtils.isSiteAdmin()
         || isOwner(entity, currentUserId)
         || adminCodeMatches(entity.getAdminCode(), adminCode)) {
       return;
     }
     log.warn("Invalid admin code for project: id={}", projectId);
     throw new UnauthorizedException("Invalid admin code");
-  }
-
-  private boolean isSiteAdmin() {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    return auth != null
-        && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
   }
 
   private boolean isOwner(ProjectEntity entity, UUID userId) {
@@ -183,6 +181,43 @@ public class ProjectService implements ProjectApi {
     if (!projectRepository.existsById(projectId)) {
       throw new ResourceNotFoundException("Project", projectId);
     }
+  }
+
+  /// JWT-aware admin validation by slug. Checks: site admin, project owner, or guest admin JWT.
+  public Project validateAdminAccessBySlug(String slug) {
+    ProjectEntity entity =
+        projectRepository
+            .findBySlug(slug)
+            .orElseThrow(() -> new ResourceNotFoundException("Project", slug));
+    validateAdminAccessInternal(entity);
+    return projectEntityMapper.toDomain(entity);
+  }
+
+  @Override
+  public void validateAdminAccessForProject(UUID projectId) {
+    ProjectEntity entity =
+        projectRepository
+            .findById(projectId)
+            .orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
+    validateAdminAccessInternal(entity);
+  }
+
+  private void validateAdminAccessInternal(ProjectEntity entity) {
+    if (SecurityUtils.isSiteAdmin()) {
+      return;
+    }
+    UUID currentUserId = SecurityUtils.getCurrentUserId();
+    if (isOwner(entity, currentUserId)) {
+      return;
+    }
+    if (SecurityUtils.isGuestAdmin()) {
+      UUID tokenProjectId = SecurityUtils.getProjectIdFromToken();
+      if (tokenProjectId != null && tokenProjectId.equals(entity.getId())) {
+        return;
+      }
+    }
+    log.warn("Admin access denied for project: id={}", entity.getId());
+    throw new UnauthorizedException("Admin access required");
   }
 
   private boolean adminCodeMatches(String stored, String provided) {

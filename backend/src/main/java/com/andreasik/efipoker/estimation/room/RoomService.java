@@ -135,6 +135,16 @@ public class RoomService {
     return roomEntityMapper.toDomain(entity);
   }
 
+  /// JWT-aware admin validation. Uses SecurityUtils to check admin access.
+  public Room validateAdminAndGetRoom(UUID roomId) {
+    RoomEntity entity =
+        roomRepository
+            .findById(roomId)
+            .orElseThrow(() -> new ResourceNotFoundException("Room", roomId));
+    projectApi.validateAdminAccessForProject(entity.getProject().getId());
+    return roomEntityMapper.toDomain(entity);
+  }
+
   @Transactional
   public Room updateRoom(UpdateRoomCommand command) {
     RoomEntity entity =

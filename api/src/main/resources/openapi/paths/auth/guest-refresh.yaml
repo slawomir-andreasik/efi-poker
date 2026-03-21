@@ -1,26 +1,24 @@
 post:
-  operationId: reopenRoom
-  tags: [rooms]
-  summary: Reopen a revealed or closed room
+  operationId: refreshGuestToken
+  tags: [auth]
+  summary: Refresh a guest JWT token
   security:
     - bearerAuth: []
-  parameters:
-    - $ref: '../../parameters/RoomIdPath.yaml'
   responses:
     '200':
-      description: Room reopened
+      description: Refreshed token
       content:
         application/json:
           schema:
-            $ref: '../../schemas/response/RoomDetailResponse.yaml'
-    '403':
-      description: Access denied
+            $ref: '../../schemas/response/GuestTokenResponse.yaml'
+    '401':
+      description: Invalid or expired token
       content:
         application/problem+json:
           schema:
             $ref: '../../schemas/common/error/ProblemDetail.yaml'
     '404':
-      description: Resource not found
+      description: Participant no longer exists
       content:
         application/problem+json:
           schema:

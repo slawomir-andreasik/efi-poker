@@ -23,10 +23,12 @@ import org.springframework.http.MediaType;
 class ParticipantControllerIntegrationTest extends BaseComponentTest {
 
   private ProjectEntity project;
+  private String adminJwt;
 
   @BeforeEach
   void setUp() {
     project = projectRepository.save(Fixtures.projectEntity());
+    adminJwt = testJwt.guestAdminJwt(project);
   }
 
   @Nested
@@ -128,7 +130,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               get("/api/v1/projects/{slug}/participants", project.getSlug())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
+                  .header("Authorization", "Bearer " + adminJwt))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.length()").value(2))
           .andExpect(jsonPath("$[0].nickname").isNotEmpty())
@@ -140,24 +142,28 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               get("/api/v1/projects/{slug}/participants", project.getSlug())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
+                  .header("Authorization", "Bearer " + adminJwt))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test
-    void should_reject_without_admin_code_403() throws Exception {
+    void should_reject_without_jwt_403() throws Exception {
       mockMvc
           .perform(get("/api/v1/projects/{slug}/participants", project.getSlug()))
           .andExpect(status().isForbidden());
     }
 
     @Test
-    void should_reject_invalid_admin_code_403() throws Exception {
+    void should_reject_non_admin_jwt_403() throws Exception {
+      ParticipantEntity participant =
+          participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+      String participantJwt = testJwt.guestParticipantJwt(project, participant);
+
       mockMvc
           .perform(
               get("/api/v1/projects/{slug}/participants", project.getSlug())
-                  .header("X-Admin-Code", "wrong-code"))
+                  .header("Authorization", "Bearer " + participantJwt))
           .andExpect(status().isForbidden());
     }
 
@@ -166,7 +172,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               get("/api/v1/projects/{slug}/participants", "nonexistent")
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
+                  .header("Authorization", "Bearer " + adminJwt))
           .andExpect(status().isNotFound());
     }
   }
@@ -246,6 +252,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
     void should_update_nickname_200() throws Exception {
       ParticipantEntity participant =
           participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+      String participantJwt = testJwt.guestParticipantJwt(project, participant);
       // language=JSON
       String body =
           """
@@ -258,7 +265,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
                       "/api/v1/projects/{slug}/participants/{participantId}",
                       project.getSlug(),
                       participant.getId())
-                  .header("X-Participant-Id", participant.getId())
+                  .header("Authorization", "Bearer " + participantJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk())
@@ -276,6 +283,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
     void should_return_same_when_nickname_unchanged() throws Exception {
       ParticipantEntity participant =
           participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+      String participantJwt = testJwt.guestParticipantJwt(project, participant);
       // language=JSON
       String body =
           """
@@ -288,7 +296,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
                       "/api/v1/projects/{slug}/participants/{participantId}",
                       project.getSlug(),
                       participant.getId())
-                  .header("X-Participant-Id", participant.getId())
+                  .header("Authorization", "Bearer " + participantJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk())
@@ -300,6 +308,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
       ParticipantEntity alice =
           participantRepository.save(Fixtures.participantEntity(project, "Alice"));
       participantRepository.save(Fixtures.participantEntity(project, "Bob"));
+      String aliceJwt = testJwt.guestParticipantJwt(project, alice);
       // language=JSON
       String body =
           """
@@ -312,14 +321,14 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
                       "/api/v1/projects/{slug}/participants/{participantId}",
                       project.getSlug(),
                       alice.getId())
-                  .header("X-Participant-Id", alice.getId())
+                  .header("Authorization", "Bearer " + aliceJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isConflict());
     }
 
     @Test
-    void should_reject_without_participant_header_403() throws Exception {
+    void should_reject_without_jwt_403() throws Exception {
       ParticipantEntity participant =
           participantRepository.save(Fixtures.participantEntity(project, "Alice"));
       // language=JSON
@@ -343,6 +352,10 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
     void should_reject_mismatched_participant_id_403() throws Exception {
       ParticipantEntity participant =
           participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+      // Create a JWT for a different participant
+      ParticipantEntity other =
+          participantRepository.save(Fixtures.participantEntity(project, "Other"));
+      String otherJwt = testJwt.guestParticipantJwt(project, other);
       // language=JSON
       String body =
           """
@@ -355,7 +368,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
                       "/api/v1/projects/{slug}/participants/{participantId}",
                       project.getSlug(),
                       participant.getId())
-                  .header("X-Participant-Id", UUID.randomUUID())
+                  .header("Authorization", "Bearer " + otherJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isForbidden());
@@ -364,6 +377,10 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
     @Test
     void should_return_404_for_nonexistent_participant() throws Exception {
       UUID fakeId = UUID.randomUUID();
+      // Create a JWT with the fake participant ID (it won't exist in DB)
+      ParticipantEntity fakeParticipant =
+          ParticipantEntity.builder().id(fakeId).project(project).nickname("Fake").build();
+      String fakeJwt = testJwt.guestParticipantJwt(project, fakeParticipant);
       // language=JSON
       String body =
           """
@@ -376,7 +393,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
                       "/api/v1/projects/{slug}/participants/{participantId}",
                       project.getSlug(),
                       fakeId)
-                  .header("X-Participant-Id", fakeId)
+                  .header("Authorization", "Bearer " + fakeJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isNotFound());
@@ -398,7 +415,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
                       "/api/v1/projects/{slug}/participants/{participantId}",
                       project.getSlug(),
                       participant.getId())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
+                  .header("Authorization", "Bearer " + adminJwt))
           .andExpect(status().isNoContent());
 
       assertThat(participantRepository.findByIdAndProjectId(participant.getId(), project.getId()))
@@ -406,7 +423,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
     }
 
     @Test
-    void should_reject_without_admin_code_403() throws Exception {
+    void should_reject_without_jwt_403() throws Exception {
       ParticipantEntity participant =
           participantRepository.save(Fixtures.participantEntity(project, "Alice"));
 
@@ -420,9 +437,10 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
     }
 
     @Test
-    void should_reject_invalid_admin_code_403() throws Exception {
+    void should_reject_non_admin_jwt_403() throws Exception {
       ParticipantEntity participant =
           participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+      String participantJwt = testJwt.guestParticipantJwt(project, participant);
 
       mockMvc
           .perform(
@@ -430,7 +448,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
                       "/api/v1/projects/{slug}/participants/{participantId}",
                       project.getSlug(),
                       participant.getId())
-                  .header("X-Admin-Code", "wrong-code"))
+                  .header("Authorization", "Bearer " + participantJwt))
           .andExpect(status().isForbidden());
     }
 
@@ -442,7 +460,7 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
                       "/api/v1/projects/{slug}/participants/{participantId}",
                       project.getSlug(),
                       UUID.randomUUID())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
+                  .header("Authorization", "Bearer " + adminJwt))
           .andExpect(status().isNotFound());
     }
   }

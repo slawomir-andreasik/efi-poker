@@ -3,7 +3,7 @@ package com.andreasik.efipoker.estimation.room;
 import com.andreasik.efipoker.api.AnalyticsApi;
 import com.andreasik.efipoker.api.model.ProjectAnalyticsResponse;
 import com.andreasik.efipoker.api.model.RoomAnalyticsResponse;
-import com.andreasik.efipoker.project.ProjectApi;
+import com.andreasik.efipoker.project.ProjectService;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,20 +17,19 @@ public class AnalyticsController implements AnalyticsApi {
 
   private final AnalyticsService analyticsService;
   private final RoomService roomService;
-  private final ProjectApi projectApi;
+  private final ProjectService projectService;
 
   @Override
-  public ResponseEntity<RoomAnalyticsResponse> getRoomAnalytics(UUID roomId, String xAdminCode) {
+  public ResponseEntity<RoomAnalyticsResponse> getRoomAnalytics(UUID roomId) {
     log.debug("Get room analytics: roomId={}", roomId);
-    roomService.validateAdminAndGetRoom(roomId, xAdminCode);
+    roomService.validateAdminAndGetRoom(roomId);
     return ResponseEntity.ok(analyticsService.computeRoomAnalytics(roomId));
   }
 
   @Override
-  public ResponseEntity<ProjectAnalyticsResponse> getProjectAnalytics(
-      String slug, String xAdminCode) {
+  public ResponseEntity<ProjectAnalyticsResponse> getProjectAnalytics(String slug) {
     log.debug("Get project analytics: slug={}", slug);
-    projectApi.validateAdminCodeBySlug(slug, xAdminCode);
+    projectService.validateAdminAccessBySlug(slug);
     return ResponseEntity.ok(analyticsService.computeProjectAnalytics(slug));
   }
 }

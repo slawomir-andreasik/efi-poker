@@ -12,7 +12,6 @@ import com.andreasik.efipoker.participant.ParticipantEntity;
 import com.andreasik.efipoker.project.ProjectEntity;
 import com.andreasik.efipoker.shared.test.BaseComponentTest;
 import com.andreasik.efipoker.shared.test.Fixtures;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,6 +24,7 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
   private ProjectEntity project;
   private TaskEntity task;
   private ParticipantEntity participant;
+  private String participantJwt;
 
   @BeforeEach
   void setUp() {
@@ -32,6 +32,7 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
     RoomEntity room = roomRepository.save(Fixtures.roomEntity(project));
     task = taskRepository.save(Fixtures.taskEntity(room));
     participant = participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+    participantJwt = testJwt.guestParticipantJwt(project, participant);
   }
 
   @Nested
@@ -49,7 +50,7 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/tasks/{id}/estimates", task.getId())
-                  .header("X-Participant-Id", participant.getId().toString())
+                  .header("Authorization", "Bearer " + participantJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk())
@@ -72,7 +73,7 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/tasks/{id}/estimates", task.getId())
-                  .header("X-Participant-Id", participant.getId().toString())
+                  .header("Authorization", "Bearer " + participantJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body1))
           .andExpect(status().isOk());
@@ -80,7 +81,7 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/tasks/{id}/estimates", task.getId())
-                  .header("X-Participant-Id", participant.getId().toString())
+                  .header("Authorization", "Bearer " + participantJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body2))
           .andExpect(status().isOk())
@@ -88,7 +89,7 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
     }
 
     @Test
-    void should_reject_invalid_participant_403() throws Exception {
+    void should_reject_missing_jwt_403() throws Exception {
       // language=JSON
       String body =
           """
@@ -98,7 +99,6 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/tasks/{id}/estimates", task.getId())
-                  .header("X-Participant-Id", UUID.randomUUID().toString())
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isForbidden());
@@ -115,7 +115,7 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/tasks/{id}/estimates", task.getId())
-                  .header("X-Participant-Id", participant.getId().toString())
+                  .header("Authorization", "Bearer " + participantJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isBadRequest());
@@ -132,7 +132,7 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/tasks/{id}/estimates", task.getId())
-                  .header("X-Participant-Id", participant.getId().toString())
+                  .header("Authorization", "Bearer " + participantJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk())
@@ -150,7 +150,7 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/tasks/{id}/estimates", task.getId())
-                  .header("X-Participant-Id", participant.getId().toString())
+                  .header("Authorization", "Bearer " + participantJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk())
@@ -168,7 +168,7 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/tasks/{id}/estimates", task.getId())
-                  .header("X-Participant-Id", participant.getId().toString())
+                  .header("Authorization", "Bearer " + participantJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk())
@@ -191,7 +191,7 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/tasks/{id}/estimates", task.getId())
-                  .header("X-Participant-Id", participant.getId().toString())
+                  .header("Authorization", "Bearer " + participantJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk());
@@ -200,7 +200,7 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               delete("/api/v1/tasks/{id}/estimates", task.getId())
-                  .header("X-Participant-Id", participant.getId().toString()))
+                  .header("Authorization", "Bearer " + participantJwt))
           .andExpect(status().isNoContent());
 
       // Assert
@@ -213,16 +213,14 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               delete("/api/v1/tasks/{id}/estimates", task.getId())
-                  .header("X-Participant-Id", participant.getId().toString()))
+                  .header("Authorization", "Bearer " + participantJwt))
           .andExpect(status().isNoContent());
     }
 
     @Test
-    void should_reject_invalid_participant_403() throws Exception {
+    void should_reject_missing_jwt_403() throws Exception {
       mockMvc
-          .perform(
-              delete("/api/v1/tasks/{id}/estimates", task.getId())
-                  .header("X-Participant-Id", UUID.randomUUID().toString()))
+          .perform(delete("/api/v1/tasks/{id}/estimates", task.getId()))
           .andExpect(status().isForbidden());
     }
   }

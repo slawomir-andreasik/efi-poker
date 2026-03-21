@@ -2,9 +2,10 @@ post:
   operationId: newRound
   tags: [rooms]
   summary: Start a new round in a Live room (clears estimates, reopens)
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/RoomIdPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   requestBody:
     required: false
     content:

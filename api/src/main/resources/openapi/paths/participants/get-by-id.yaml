@@ -22,10 +22,11 @@ patch:
   operationId: updateParticipant
   tags: [participants]
   summary: Update participant nickname (self-service)
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/SlugPath.yaml'
     - $ref: '../../parameters/ParticipantIdPath.yaml'
-    - $ref: '../../parameters/ParticipantIdHeader.yaml'
   requestBody:
     required: true
     content:
@@ -67,10 +68,11 @@ delete:
   operationId: deleteParticipant
   tags: [participants]
   summary: Delete participant (admin only)
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/SlugPath.yaml'
     - $ref: '../../parameters/ParticipantIdPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   responses:
     '204':
       description: Participant deleted

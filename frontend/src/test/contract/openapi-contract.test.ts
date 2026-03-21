@@ -193,13 +193,30 @@ describe('OpenAPI contract: response schemas', () => {
     expect(fields).not.toContain('value');
   });
 
-  it('ParticipantResponse has correct fields', () => {
+  it('ParticipantResponse has correct fields including token', () => {
     const fields = getSchemaFields('ParticipantResponse');
     expect(fields).toContain('id');
     expect(fields).toContain('nickname');
     expect(fields).toContain('invitedRoomIds');
     expect(fields).toContain('createdAt');
+    expect(fields).toContain('token');
+    expect(fields).toContain('tokenExpiresAt');
     expect(fields).not.toContain('role');
+  });
+
+  it('ProjectAdminResponse has token and tokenExpiresAt fields', () => {
+    const fields = getSchemaFields('ProjectAdminResponse');
+    expect(fields).toContain('token');
+    expect(fields).toContain('tokenExpiresAt');
+  });
+
+  it('GuestTokenResponse has token and expiresAt fields', () => {
+    const fields = getSchemaFields('GuestTokenResponse');
+    expect(fields).toContain('token');
+    expect(fields).toContain('expiresAt');
+    const required = getRequiredFields('GuestTokenResponse');
+    expect(required).toContain('token');
+    expect(required).toContain('expiresAt');
   });
 });
 

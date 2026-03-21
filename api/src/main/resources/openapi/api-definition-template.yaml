@@ -100,6 +100,10 @@ paths:
     $ref: './paths/auth/oauth2-callback.yaml'
   /auth/logout:
     $ref: './paths/auth/logout.yaml'
+  /auth/guest/refresh:
+    $ref: './paths/auth/guest-refresh.yaml'
+  /auth/guest/admin-exchange:
+    $ref: './paths/auth/guest-admin-exchange.yaml'
   /admin/users:
     $ref: './paths/admin/users.yaml'
   /admin/users/{id}:

@@ -22,7 +22,7 @@ public final class Fixtures {
 
   private static final BCryptPasswordEncoder ENCODER = new BCryptPasswordEncoder();
 
-  /// Well-known raw admin code for integration tests. Use in X-Admin-Code headers.
+  /// Well-known raw admin code for integration tests (used by admin code exchange endpoint).
   public static final String TEST_ADMIN_CODE = "test-admin-code-for-integration-tests";
 
   private static final String TEST_ADMIN_CODE_HASH = ENCODER.encode(TEST_ADMIN_CODE);

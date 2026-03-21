@@ -26,11 +26,13 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
 
   private ProjectEntity project;
   private RoomEntity room;
+  private String adminJwt;
 
   @BeforeEach
   void setUp() {
     project = projectRepository.save(Fixtures.projectEntity());
     room = roomRepository.save(Fixtures.roomEntity(project));
+    adminJwt = testJwt.guestAdminJwt(project);
   }
 
   @Nested
@@ -48,7 +50,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{id}/tasks", room.getId())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                  .header("Authorization", "Bearer " + adminJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isCreated())
@@ -57,7 +59,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
     }
 
     @Test
-    void should_reject_wrong_admin_code_403() throws Exception {
+    void should_reject_missing_jwt_403() throws Exception {
       // language=JSON
       String body =
           """
@@ -67,7 +69,6 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{id}/tasks", room.getId())
-                  .header("X-Admin-Code", "wrong-code")
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isForbidden());
@@ -84,7 +85,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{id}/tasks", room.getId())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                  .header("Authorization", "Bearer " + adminJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isBadRequest());
@@ -98,7 +99,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{id}/tasks", room.getId())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                  .header("Authorization", "Bearer " + adminJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isBadRequest());
@@ -113,7 +114,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{id}/tasks", room.getId())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                  .header("Authorization", "Bearer " + adminJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isBadRequest());
@@ -136,7 +137,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
           mockMvc
               .perform(
                   post("/api/v1/rooms/{id}/tasks/import", room.getId())
-                      .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                      .header("Authorization", "Bearer " + adminJwt)
                       .contentType(MediaType.APPLICATION_JSON)
                       .content(body))
               .andExpect(status().isCreated())
@@ -153,7 +154,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
     }
 
     @Test
-    void should_reject_wrong_admin_code_403() throws Exception {
+    void should_reject_missing_jwt_403() throws Exception {
       // language=JSON
       String body =
           """
@@ -163,7 +164,6 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               post("/api/v1/rooms/{id}/tasks/import", room.getId())
-                  .header("X-Admin-Code", "wrong-code")
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isForbidden());
@@ -192,7 +192,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               patch("/api/v1/tasks/{id}", task.getId())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                  .header("Authorization", "Bearer " + adminJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk())
@@ -200,7 +200,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
     }
 
     @Test
-    void should_reject_wrong_admin_code_403() throws Exception {
+    void should_reject_missing_jwt_403() throws Exception {
       // language=JSON
       String body =
           """
@@ -210,7 +210,6 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               patch("/api/v1/tasks/{id}", task.getId())
-                  .header("X-Admin-Code", "wrong-code")
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isForbidden());
@@ -227,7 +226,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               patch("/api/v1/tasks/{id}", UUID.randomUUID())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                  .header("Authorization", "Bearer " + adminJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isNotFound());
@@ -246,7 +245,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
           mockMvc
               .perform(
                   patch("/api/v1/tasks/{id}", randomId)
-                      .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                      .header("Authorization", "Bearer " + adminJwt)
                       .contentType(MediaType.APPLICATION_JSON)
                       .content(body))
               .andExpect(status().isNotFound())
@@ -283,7 +282,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               put("/api/v1/tasks/{id}/final-estimate", task.getId())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                  .header("Authorization", "Bearer " + adminJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk())
@@ -308,7 +307,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               put("/api/v1/tasks/{id}/final-estimate", task.getId())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                  .header("Authorization", "Bearer " + adminJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isOk())
@@ -329,14 +328,14 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               put("/api/v1/tasks/{id}/final-estimate", openTask.getId())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                  .header("Authorization", "Bearer " + adminJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isForbidden());
     }
 
     @Test
-    void should_reject_wrong_admin_code_403() throws Exception {
+    void should_reject_missing_jwt_403() throws Exception {
       // language=JSON
       String body =
           """
@@ -346,7 +345,6 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               put("/api/v1/tasks/{id}/final-estimate", task.getId())
-                  .header("X-Admin-Code", "wrong-code")
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isForbidden());
@@ -363,7 +361,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               put("/api/v1/tasks/{id}/final-estimate", task.getId())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                  .header("Authorization", "Bearer " + adminJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isBadRequest());
@@ -380,7 +378,7 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               put("/api/v1/tasks/{id}/final-estimate", UUID.randomUUID())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE)
+                  .header("Authorization", "Bearer " + adminJwt)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(body))
           .andExpect(status().isNotFound());
@@ -403,17 +401,15 @@ class TaskControllerIntegrationTest extends BaseComponentTest {
       mockMvc
           .perform(
               delete("/api/v1/tasks/{id}", task.getId())
-                  .header("X-Admin-Code", Fixtures.TEST_ADMIN_CODE))
+                  .header("Authorization", "Bearer " + adminJwt))
           .andExpect(status().isNoContent());
 
       assertThat(taskRepository.findById(task.getId())).isEmpty();
     }
 
     @Test
-    void should_reject_wrong_admin_code_403() throws Exception {
-      mockMvc
-          .perform(delete("/api/v1/tasks/{id}", task.getId()).header("X-Admin-Code", "wrong-code"))
-          .andExpect(status().isForbidden());
+    void should_reject_missing_jwt_403() throws Exception {
+      mockMvc.perform(delete("/api/v1/tasks/{id}", task.getId())).andExpect(status().isForbidden());
     }
   }
 }

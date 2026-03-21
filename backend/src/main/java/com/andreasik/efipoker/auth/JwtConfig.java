@@ -40,7 +40,19 @@ public class JwtConfig {
     JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
     converter.setJwtGrantedAuthoritiesConverter(
         jwt -> {
-          String role = jwt.getClaimAsString("role");
+          String tokenType = jwt.getClaimAsString(JwtService.CLAIM_TYPE);
+
+          if (JwtService.TOKEN_TYPE_GUEST.equals(tokenType)) {
+            Boolean isAdmin = jwt.getClaim(JwtService.CLAIM_ADMIN);
+            if (Boolean.TRUE.equals(isAdmin)) {
+              return List.of(
+                  new SimpleGrantedAuthority("ROLE_GUEST"),
+                  new SimpleGrantedAuthority("ROLE_PROJECT_ADMIN"));
+            }
+            return List.of(new SimpleGrantedAuthority("ROLE_GUEST"));
+          }
+
+          String role = jwt.getClaimAsString(JwtService.CLAIM_ROLE);
           if (role != null) {
             return List.of(new SimpleGrantedAuthority("ROLE_" + role));
           }

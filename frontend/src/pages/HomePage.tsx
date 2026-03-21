@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueries } from '@tanstack/react-query';
-import { api, ApiError, saveAuth, getAllProjects, removeProject, getIdentity, setIdentity, getJwt } from '@/api/client';
+import { api, ApiError, saveAuth, getAllProjects, removeProject, getIdentity, setIdentity, getJwt, isGuestAdmin } from '@/api/client';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { queryKeys } from '@/api/queryKeys';
 import { projectApi, authApi } from '@/api/queries';
@@ -147,7 +147,11 @@ export function HomePage() {
     try {
       const project = await createProject.mutateAsync({ name });
 
-      saveAuth(project.slug, { adminCode: project.adminCode, projectName: project.name });
+      saveAuth(project.slug, {
+        adminCode: project.adminCode,
+        projectName: project.name,
+        ...(project.token && { guestToken: project.token }),
+      });
 
       try {
         const participant = await api<ParticipantResponse>(
@@ -155,7 +159,11 @@ export function HomePage() {
           { method: 'POST', body: { nickname: identity } },
           project.slug,
         );
-        saveAuth(project.slug, { participantId: participant.id, nickname: participant.nickname });
+        if (participant.token) {
+          saveAuth(project.slug, { guestToken: participant.token, nickname: participant.nickname });
+        } else {
+          saveAuth(project.slug, { nickname: participant.nickname });
+        }
       } catch {
         // Auto-join failed, admin can join manually from the project page
       }
@@ -325,7 +333,7 @@ export function HomePage() {
                     <span className="text-sm font-medium text-efi-text-primary truncate">
                       {project.auth.projectName ?? project.slug}
                     </span>
-                    <RoleBadge isAdmin={Boolean(project.auth.adminCode)} />
+                    <RoleBadge isAdmin={Boolean(project.auth.adminCode) || isGuestAdmin(project.auth)} />
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {project.loading ? (

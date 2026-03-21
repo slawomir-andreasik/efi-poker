@@ -99,6 +99,8 @@ export interface ProjectAdminResponse {
   name: string;
   slug: string;
   adminCode: string;
+  token?: string;
+  tokenExpiresAt?: string;
   createdAt: string;
 }
 
@@ -245,6 +247,8 @@ export interface EstimateResponse {
 export interface ParticipantResponse {
   id: string;
   nickname: string;
+  token?: string;
+  tokenExpiresAt?: string;
   invitedRoomIds?: string[];
   createdAt: string;
 }
@@ -446,4 +450,16 @@ export interface RoundHistoryEntry {
   voteCount: number;
   votes: RoundHistoryVote[];
   completedAt: string;
+}
+
+// Guest JWT
+
+export interface GuestTokenResponse {
+  token: string;
+  expiresAt: string;
+}
+
+export interface AdminCodeExchangeRequest {
+  slug: string;
+  adminCode: string;
 }

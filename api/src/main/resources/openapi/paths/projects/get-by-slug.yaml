@@ -21,9 +21,10 @@ patch:
   operationId: updateProject
   tags: [projects]
   summary: Update project (admin)
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/SlugPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   requestBody:
     required: true
     content:
@@ -59,9 +60,10 @@ delete:
   operationId: deleteProject
   tags: [projects]
   summary: Delete project and all associated data (admin)
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/SlugPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   responses:
     '204':
       description: Project deleted

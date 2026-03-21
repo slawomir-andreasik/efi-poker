@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useLocation, matchPath } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getAuth, getLastActiveSlug } from '@/api/client';
+import { getAuth, getLastActiveSlug, isGuestAdmin } from '@/api/client';
 import { queryKeys } from '@/api/queryKeys';
 import { projectApi } from '@/api/queries';
 import type { RoomResponse } from '@/api/types';
@@ -31,7 +31,7 @@ export function useBreadcrumbs(): UseBreadcrumbsResult {
 
   const effectiveSlug = slug ?? getLastActiveSlug() ?? undefined;
   const auth = effectiveSlug ? getAuth(effectiveSlug) : {};
-  const isAdmin = Boolean(auth.adminCode);
+  const isAdmin = Boolean(auth.adminCode) || isGuestAdmin(auth);
   const projectName = auth.projectName ?? slug ?? '';
 
   // Fetch rooms for room title (TanStack cache deduplicates with other queries)

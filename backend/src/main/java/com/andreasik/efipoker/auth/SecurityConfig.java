@@ -1,10 +1,12 @@
 package com.andreasik.efipoker.auth;
 
 import com.andreasik.efipoker.shared.exception.ErrorType;
+import com.andreasik.efipoker.shared.observability.TraceResponseFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +18,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -79,21 +82,11 @@ public class SecurityConfig {
                     .anyRequest()
                     .permitAll())
         .oauth2ResourceServer(
-            oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
-        .exceptionHandling(
-            ex ->
-                ex.authenticationEntryPoint(
-                    (request, response, authException) -> {
-                      ProblemDetail problem =
-                          ProblemDetail.forStatusAndDetail(
-                              HttpStatus.UNAUTHORIZED, "Authentication required");
-                      problem.setTitle("Unauthorized");
-                      problem.setType(ErrorType.UNAUTHORIZED.uri());
-
-                      response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                      response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
-                      response.getWriter().write(objectMapper.writeValueAsString(problem));
-                    }));
+            oauth2 ->
+                oauth2
+                    .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter))
+                    .authenticationEntryPoint(problemDetailEntryPoint()))
+        .exceptionHandling(ex -> ex.authenticationEntryPoint(problemDetailEntryPoint()));
 
     if (auth0Properties.enabled()) {
       http.oauth2Login(
@@ -107,19 +100,31 @@ public class SecurityConfig {
     return http.build();
   }
 
+  private AuthenticationEntryPoint problemDetailEntryPoint() {
+    return (request, response, authException) -> {
+      ProblemDetail problem =
+          ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Authentication required");
+      problem.setTitle("Unauthorized");
+      problem.setType(ErrorType.UNAUTHORIZED.uri());
+
+      String traceId = MDC.get(TraceResponseFilter.MDC_TRACE_ID);
+      if (traceId != null && !traceId.isBlank()) {
+        problem.setProperty(TraceResponseFilter.MDC_TRACE_ID, traceId);
+      }
+
+      response.setStatus(HttpStatus.UNAUTHORIZED.value());
+      response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+      response.getWriter().write(objectMapper.writeValueAsString(problem));
+    };
+  }
+
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
     configuration.setAllowedOrigins(Arrays.asList(appProperties.cors().origins().split(",")));
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(
-        List.of(
-            "Content-Type",
-            "Authorization",
-            "X-Admin-Code",
-            "X-Participant-Id",
-            "traceparent",
-            "tracestate"));
+        List.of("Content-Type", "Authorization", "traceparent", "tracestate"));
     configuration.setExposedHeaders(List.of("X-Trace-Id"));
     configuration.setAllowCredentials(true);
     configuration.setMaxAge(3600L);

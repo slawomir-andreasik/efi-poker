@@ -44,6 +44,13 @@ class ProdSecurityValidator implements CommandLineRunner {
               + "Set JWT_SECRET environment variable before starting in production.");
     }
 
+    if (jwtProperties.secret() != null && jwtProperties.secret().length() < 64) {
+      throw new IllegalStateException(
+          "JWT secret is too short (%d chars). HS512 requires at least 64 characters. "
+                  .formatted(jwtProperties.secret().length())
+              + "Set JWT_SECRET to a secure random string of 64+ characters.");
+    }
+
     if ("changeme".equals(dbPassword)) {
       throw new IllegalStateException(
           "Database password is set to default 'changeme'. "

@@ -2,9 +2,10 @@ get:
   operationId: getProjectAdmin
   tags: [projects]
   summary: Get project with admin data
+  security:
+    - bearerAuth: []
   parameters:
     - $ref: '../../parameters/SlugPath.yaml'
-    - $ref: '../../parameters/AdminCodeHeader.yaml'
   responses:
     '200':
       description: Project admin info

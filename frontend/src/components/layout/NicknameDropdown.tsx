@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDropdownDismiss } from '@/hooks/useDropdownDismiss';
 import { ChevronDown, ChevronUp, Pencil, KeyRound, LogOut } from 'lucide-react';
-import { updateNickname } from '@/api/client';
+import { updateNickname, getParticipantIdFromToken } from '@/api/client';
 import { useToast } from '@/components/Toast';
 import { getErrorMessage } from '@/utils/error';
 import { TextInput } from '@/components/TextInput';
@@ -9,14 +9,13 @@ import { TextInput } from '@/components/TextInput';
 interface NicknameDropdownProps {
   displayName: string;
   slug: string | undefined;
-  participantId: string | undefined;
   onNicknameChanged: (newNickname: string) => void;
   onLogout?: () => void;
   onPasswordClick?: () => void;
   isLoggedIn?: boolean;
 }
 
-export function NicknameDropdown({ displayName, slug, participantId, onNicknameChanged, onLogout, onPasswordClick, isLoggedIn }: NicknameDropdownProps) {
+export function NicknameDropdown({ displayName, slug, onNicknameChanged, onLogout, onPasswordClick, isLoggedIn }: NicknameDropdownProps) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [newName, setNewName] = useState(displayName);
@@ -40,6 +39,7 @@ export function NicknameDropdown({ displayName, slug, participantId, onNicknameC
     }
   }, [editing]);
 
+  const participantId = slug ? getParticipantIdFromToken(slug) : undefined;
   const canEditNickname = Boolean(slug && participantId);
   const canOpenDropdown = canEditNickname || Boolean(onLogout) || Boolean(onPasswordClick);
 
