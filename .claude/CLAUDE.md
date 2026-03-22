@@ -57,6 +57,21 @@ Rules in `.claude/rules/` are scoped by file path - loaded automatically when wo
 - [rules/frontend.md](rules/frontend.md) - Project utilities, state management, layout, error handling
 - [rules/security.md](rules/security.md) - OWASP Top 10:2025 security conventions
 
+## Branching Model
+
+- `dev` - active development branch (PRs target this)
+- `main` - releases only (merged from `dev`, tagged)
+- Feature branches from `dev`
+
+## Auth Architecture
+
+Dual JWT model with refresh tokens:
+- **User JWT** (24h) - short-lived access token in localStorage
+- **Refresh token** (30/90 days) - httpOnly/Secure/SameSite=Strict cookie, rotated on every use
+- **Guest JWT** (90 days) - project-scoped, stateless, stored in localStorage per project
+- Login with "Remember me" extends refresh token to 90 days
+- Silent refresh on 401 - frontend deduplicates concurrent refresh attempts
+
 ## Contributing
 
 1. Fork + clone, create feature branch from `dev`
