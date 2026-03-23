@@ -1,5 +1,5 @@
 import { ArrowUp } from 'lucide-react';
-import type { SortField, SortDirection } from '@/hooks/useSortedTasks';
+import type { SortDirection, SortField } from '@/hooks/useSortedTasks';
 
 interface SortControlsProps {
   sortField: SortField;
@@ -53,7 +53,9 @@ export function SortControls({
         title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
         aria-label={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
       >
-        <ArrowUp className={`w-3.5 h-3.5 transition-transform ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
+        <ArrowUp
+          className={`w-3.5 h-3.5 transition-transform ${sortDirection === 'desc' ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {/* Only unestimated filter */}

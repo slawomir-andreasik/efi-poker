@@ -1,28 +1,29 @@
 import { api } from './client';
 import type {
-  ProjectResponse,
+  AdminUserResponse,
+  AuthConfigResponse,
+  LiveRoomStateResponse,
+  PagedUsersResponse,
+  ParticipantProgressResponse,
+  ParticipantResponse,
   ProjectAdminResponse,
-  RoomResponse,
-  RoomDetailResponse,
+  ProjectAnalyticsResponse,
+  ProjectResponse,
   RoomAdminResponse,
+  RoomAnalyticsResponse,
+  RoomDetailResponse,
+  RoomResponse,
   RoomResultsResponse,
   RoomSlugResponse,
-  ParticipantResponse,
-  ParticipantProgressResponse,
-  LiveRoomStateResponse,
   RoundHistoryEntry,
-  AuthConfigResponse,
   UserResponse,
-  PagedUsersResponse,
-  AdminUserResponse,
-  RoomAnalyticsResponse,
-  ProjectAnalyticsResponse,
 } from './types';
 
 export const projectApi = {
   detail: (slug: string) => api<ProjectResponse>(`/projects/${slug}`, {}, slug),
   rooms: (slug: string) => api<RoomResponse[]>(`/projects/${slug}/rooms`, {}, slug),
-  participants: (slug: string) => api<ParticipantResponse[]>(`/projects/${slug}/participants`, {}, slug),
+  participants: (slug: string) =>
+    api<ParticipantResponse[]>(`/projects/${slug}/participants`, {}, slug),
   admin: (slug: string) => api<ProjectAdminResponse>(`/projects/${slug}/admin`, {}, slug),
   myParticipant: (slug: string) => api<ParticipantResponse>(`/projects/${slug}/participants/me`),
 };
@@ -34,7 +35,8 @@ export const roomApi = {
   results: (id: string, slug: string) => api<RoomResultsResponse>(`/rooms/${id}/results`, {}, slug),
   history: (id: string, slug: string) => api<RoundHistoryEntry[]>(`/rooms/${id}/history`, {}, slug),
   resultsExport: (id: string, slug: string) => api<string>(`/rooms/${id}/results/export`, {}, slug),
-  participantProgress: (id: string, slug: string) => api<ParticipantProgressResponse>(`/rooms/${id}/participant-progress`, {}, slug),
+  participantProgress: (id: string, slug: string) =>
+    api<ParticipantProgressResponse>(`/rooms/${id}/participant-progress`, {}, slug),
   bySlug: (slug: string) => api<RoomSlugResponse>(`/rooms/by-slug/${slug}`),
 };
 
@@ -57,6 +59,5 @@ export const adminApi = {
 export const analyticsApi = {
   room: (roomId: string, slug: string) =>
     api<RoomAnalyticsResponse>(`/rooms/${roomId}/analytics`, {}, slug),
-  project: (slug: string) =>
-    api<ProjectAnalyticsResponse>(`/projects/${slug}/analytics`, {}, slug),
+  project: (slug: string) => api<ProjectAnalyticsResponse>(`/projects/${slug}/analytics`, {}, slug),
 };

@@ -1,10 +1,10 @@
-import { useMemo, memo } from 'react';
-import { Users } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { queryKeys } from '@/api/queryKeys';
+import { Users } from 'lucide-react';
+import { memo, useMemo } from 'react';
 import { roomApi } from '@/api/queries';
-import { CollapsibleSection } from '@/components/CollapsibleSection';
+import { queryKeys } from '@/api/queryKeys';
 import type { ParticipantProgressEntry } from '@/api/types';
+import { CollapsibleSection } from '@/components/CollapsibleSection';
 
 interface ParticipantProgressProps {
   roomId: string;
@@ -40,11 +40,22 @@ export function ParticipantProgress({ roomId, slug }: ParticipantProgressProps) 
   );
 }
 
-const ParticipantRow = memo(function ParticipantRow({ participant }: { participant: ParticipantProgressEntry }) {
+const ParticipantRow = memo(function ParticipantRow({
+  participant,
+}: {
+  participant: ParticipantProgressEntry;
+}) {
   const { nickname, votedCount, totalTasks, hasCommentedAll } = participant;
   const pct = totalTasks > 0 ? (votedCount / totalTasks) * 100 : 0;
 
-  const barColor = pct >= 100 ? 'bg-green-500' : pct >= 50 ? 'bg-amber-500' : pct > 0 ? 'bg-red-400' : 'bg-white/10';
+  const barColor =
+    pct >= 100
+      ? 'bg-green-500'
+      : pct >= 50
+        ? 'bg-amber-500'
+        : pct > 0
+          ? 'bg-red-400'
+          : 'bg-white/10';
 
   return (
     <div className="flex items-center gap-3">

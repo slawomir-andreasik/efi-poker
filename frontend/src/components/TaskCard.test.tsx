@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TaskCard } from './TaskCard';
 
 const baseProps = {
@@ -40,14 +40,7 @@ describe('TaskCard - comment feature', () => {
   });
 
   it('should not show comment textarea when revealed', () => {
-    render(
-      <TaskCard
-        {...baseProps}
-        revealed
-        commentRequired
-        allEstimates={[]}
-      />,
-    );
+    render(<TaskCard {...baseProps} revealed commentRequired allEstimates={[]} />);
 
     expect(screen.queryByPlaceholderText('Add your comment...')).toBeNull();
   });
@@ -62,13 +55,7 @@ describe('TaskCard - comment feature', () => {
     const user = userEvent.setup();
     const onEstimate = vi.fn();
 
-    render(
-      <TaskCard
-        {...baseProps}
-        onEstimate={onEstimate}
-        commentTemplate="Risks:"
-      />,
-    );
+    render(<TaskCard {...baseProps} onEstimate={onEstimate} commentTemplate="Risks:" />);
 
     // Type a comment
     const textarea = screen.getByRole('textbox');
@@ -85,13 +72,7 @@ describe('TaskCard - comment feature', () => {
     const user = userEvent.setup();
     const onEstimate = vi.fn();
 
-    render(
-      <TaskCard
-        {...baseProps}
-        onEstimate={onEstimate}
-        commentRequired
-      />,
-    );
+    render(<TaskCard {...baseProps} onEstimate={onEstimate} commentRequired />);
 
     // Click SP - should submit immediately (backend validates comment)
     await user.click(screen.getByRole('button', { name: '8' }));
@@ -105,14 +86,7 @@ describe('TaskCard - comment feature', () => {
     const user = userEvent.setup();
     const onEstimate = vi.fn();
 
-    render(
-      <TaskCard
-        {...baseProps}
-        onEstimate={onEstimate}
-        commentRequired
-        selectedSp="5"
-      />,
-    );
+    render(<TaskCard {...baseProps} onEstimate={onEstimate} commentRequired selectedSp="5" />);
 
     // Type comment and blur
     const textarea = screen.getByPlaceholderText('Add your comment...');
@@ -128,8 +102,21 @@ describe('TaskCard - comment feature', () => {
         {...baseProps}
         revealed
         allEstimates={[
-          { id: 'e1', participantId: 'p1', participantNickname: 'Alice', storyPoints: '5', comment: 'Low risk', createdAt: '' },
-          { id: 'e2', participantId: 'p2', participantNickname: 'Bob', storyPoints: '8', createdAt: '' },
+          {
+            id: 'e1',
+            participantId: 'p1',
+            participantNickname: 'Alice',
+            storyPoints: '5',
+            comment: 'Low risk',
+            createdAt: '',
+          },
+          {
+            id: 'e2',
+            participantId: 'p2',
+            participantNickname: 'Bob',
+            storyPoints: '8',
+            createdAt: '',
+          },
         ]}
         averagePoints={6.5}
         medianPoints={6.5}
@@ -142,13 +129,7 @@ describe('TaskCard - comment feature', () => {
   });
 
   it('should initialize comment from myComment prop', () => {
-    render(
-      <TaskCard
-        {...baseProps}
-        commentRequired
-        myComment="Previously saved comment"
-      />,
-    );
+    render(<TaskCard {...baseProps} commentRequired myComment="Previously saved comment" />);
 
     const textarea = screen.getByRole('textbox');
     expect((textarea as HTMLTextAreaElement).value).toBe('Previously saved comment');
@@ -158,13 +139,7 @@ describe('TaskCard - comment feature', () => {
     const user = userEvent.setup();
     const onEstimate = vi.fn();
 
-    render(
-      <TaskCard
-        {...baseProps}
-        onEstimate={onEstimate}
-        commentRequired
-      />,
-    );
+    render(<TaskCard {...baseProps} onEstimate={onEstimate} commentRequired />);
 
     const textarea = screen.getByPlaceholderText('Add your comment...');
     await user.type(textarea, 'Draft comment');
@@ -181,13 +156,7 @@ describe('TaskCard - comment feature', () => {
   it('should restore comment from localStorage draft', () => {
     localStorage.setItem('efi-draft-comments', JSON.stringify({ 'task-1': 'Saved draft' }));
 
-    render(
-      <TaskCard
-        {...baseProps}
-        commentRequired
-        commentTemplate="Template text"
-      />,
-    );
+    render(<TaskCard {...baseProps} commentRequired commentTemplate="Template text" />);
 
     const textarea = screen.getByRole('textbox');
     expect((textarea as HTMLTextAreaElement).value).toBe('Saved draft');
@@ -197,13 +166,7 @@ describe('TaskCard - comment feature', () => {
     const user = userEvent.setup();
     localStorage.setItem('efi-draft-comments', JSON.stringify({ 'task-1': 'My draft' }));
 
-    render(
-      <TaskCard
-        {...baseProps}
-        onEstimate={vi.fn()}
-        commentRequired
-      />,
-    );
+    render(<TaskCard {...baseProps} onEstimate={vi.fn()} commentRequired />);
 
     await user.click(screen.getByRole('button', { name: '5' }));
 

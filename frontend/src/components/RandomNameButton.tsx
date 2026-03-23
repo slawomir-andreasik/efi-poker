@@ -6,7 +6,10 @@ interface RandomNameButtonProps {
   generator?: () => string;
 }
 
-export function RandomNameButton({ onGenerate, generator = generateNickname }: RandomNameButtonProps) {
+export function RandomNameButton({
+  onGenerate,
+  generator = generateNickname,
+}: RandomNameButtonProps) {
   return (
     <button
       type="button"

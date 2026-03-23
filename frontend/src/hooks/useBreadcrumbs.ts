@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
-import { useLocation, matchPath } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { matchPath, useLocation } from 'react-router-dom';
 import { getAuth, getLastActiveSlug, isGuestAdmin } from '@/api/client';
-import { queryKeys } from '@/api/queryKeys';
 import { projectApi } from '@/api/queries';
+import { queryKeys } from '@/api/queryKeys';
 import type { RoomResponse } from '@/api/types';
 
 export interface BreadcrumbSegment {
@@ -62,9 +62,13 @@ export function useBreadcrumbs(): UseBreadcrumbsResult {
     } else {
       const isJoinPage = path === `/p/${slug}/join`;
       const isResultsPage = slug && roomId ? path === `/p/${slug}/r/${roomId}/results` : false;
-      const isRoomAnalyticsPage = slug && roomId ? path === `/p/${slug}/r/${roomId}/analytics` : false;
+      const isRoomAnalyticsPage =
+        slug && roomId ? path === `/p/${slug}/r/${roomId}/analytics` : false;
       const isProjectAnalyticsPage = path === `/p/${slug}/analytics`;
-      const isRoomPage = slug && roomId ? path.startsWith(`/p/${slug}/r/${roomId}`) && !isResultsPage && !isRoomAnalyticsPage : false;
+      const isRoomPage =
+        slug && roomId
+          ? path.startsWith(`/p/${slug}/r/${roomId}`) && !isResultsPage && !isRoomAnalyticsPage
+          : false;
       const isProjectPage = path === `/p/${slug}`;
 
       if (isProjectPage) {
@@ -114,8 +118,17 @@ export function useBreadcrumbs(): UseBreadcrumbsResult {
     }
 
     return result;
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- granular deps avoid re-render on every poll (currentRoom ref changes each cycle)
-  }, [path, slug, roomId, currentRoom?.id, currentRoom?.title, currentRoom?.status, currentRoom?.roomType, projectName]);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: granular deps avoid re-render on every poll (currentRoom ref changes each cycle)
+  }, [
+    path,
+    slug,
+    roomId,
+    currentRoom?.id,
+    currentRoom?.title,
+    currentRoom?.status,
+    currentRoom?.roomType,
+    projectName,
+  ]);
 
   return { segments, slug, roomId, currentRoom, isAdmin };
 }

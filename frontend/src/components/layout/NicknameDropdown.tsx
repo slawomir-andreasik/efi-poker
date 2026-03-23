@@ -1,10 +1,10 @@
+import { ChevronDown, ChevronUp, KeyRound, LogOut, Pencil } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useDropdownDismiss } from '@/hooks/useDropdownDismiss';
-import { ChevronDown, ChevronUp, Pencil, KeyRound, LogOut } from 'lucide-react';
-import { updateNickname, getParticipantIdFromToken } from '@/api/client';
-import { useToast } from '@/components/Toast';
-import { getErrorMessage } from '@/utils/error';
+import { getParticipantIdFromToken, updateNickname } from '@/api/client';
 import { TextInput } from '@/components/TextInput';
+import { useToast } from '@/components/Toast';
+import { useDropdownDismiss } from '@/hooks/useDropdownDismiss';
+import { getErrorMessage } from '@/utils/error';
 
 interface NicknameDropdownProps {
   displayName: string;
@@ -15,7 +15,14 @@ interface NicknameDropdownProps {
   isLoggedIn?: boolean;
 }
 
-export function NicknameDropdown({ displayName, slug, onNicknameChanged, onLogout, onPasswordClick, isLoggedIn }: NicknameDropdownProps) {
+export function NicknameDropdown({
+  displayName,
+  slug,
+  onNicknameChanged,
+  onLogout,
+  onPasswordClick,
+  isLoggedIn,
+}: NicknameDropdownProps) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [newName, setNewName] = useState(displayName);
@@ -90,19 +97,19 @@ export function NicknameDropdown({ displayName, slug, onNicknameChanged, onLogou
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        type="button"
         onClick={handleToggle}
         className={`flex items-center gap-2 text-xs transition-colors ${
-          canOpenDropdown
-            ? 'cursor-pointer hover:text-efi-text-primary'
-            : 'cursor-default'
+          canOpenDropdown ? 'cursor-pointer hover:text-efi-text-primary' : 'cursor-default'
         }`}
       >
         <span className="text-efi-text-secondary max-w-32 sm:max-w-40 truncate">{displayName}</span>
-        {canOpenDropdown && (
-          open
-            ? <ChevronUp className="w-3 h-3 text-efi-text-tertiary" />
-            : <ChevronDown className="w-3 h-3 text-efi-text-tertiary" />
-        )}
+        {canOpenDropdown &&
+          (open ? (
+            <ChevronUp className="w-3 h-3 text-efi-text-tertiary" />
+          ) : (
+            <ChevronDown className="w-3 h-3 text-efi-text-tertiary" />
+          ))}
       </button>
 
       {open && (
@@ -116,7 +123,7 @@ export function NicknameDropdown({ displayName, slug, onNicknameChanged, onLogou
                 ref={inputRef}
                 type="text"
                 value={newName}
-                onChange={e => setNewName(e.target.value)}
+                onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={handleKeyDown}
                 maxLength={100}
                 disabled={saving}
@@ -125,6 +132,7 @@ export function NicknameDropdown({ displayName, slug, onNicknameChanged, onLogou
               />
               <div className="flex gap-2 mt-2">
                 <button
+                  type="button"
                   onClick={() => void handleSave()}
                   disabled={saving || !newName.trim()}
                   className="flex-1 px-2.5 py-1 rounded-md text-xs font-medium bg-efi-gold/15 text-efi-gold hover:bg-efi-gold/25 transition-colors disabled:opacity-50 cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
@@ -132,6 +140,7 @@ export function NicknameDropdown({ displayName, slug, onNicknameChanged, onLogou
                   {saving ? 'Saving...' : 'Save'}
                 </button>
                 <button
+                  type="button"
                   onClick={() => setEditing(false)}
                   disabled={saving}
                   className="px-2.5 py-1 rounded-md text-xs text-efi-text-secondary hover:text-efi-text-primary hover:bg-white/8 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
@@ -144,6 +153,7 @@ export function NicknameDropdown({ displayName, slug, onNicknameChanged, onLogou
             <div className="py-1">
               {canEditNickname && (
                 <button
+                  type="button"
                   onClick={handleEditClick}
                   className="w-full text-left px-3 py-2 text-sm text-efi-text-secondary hover:text-efi-text-primary hover:bg-white/6 transition-colors flex items-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
                 >
@@ -153,7 +163,11 @@ export function NicknameDropdown({ displayName, slug, onNicknameChanged, onLogou
               )}
               {isLoggedIn && onPasswordClick && (
                 <button
-                  onClick={() => { setOpen(false); onPasswordClick(); }}
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    onPasswordClick();
+                  }}
                   className="w-full text-left px-3 py-2 text-sm text-efi-text-secondary hover:text-efi-text-primary hover:bg-white/6 transition-colors flex items-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
                 >
                   <KeyRound className="w-3.5 h-3.5" />
@@ -162,7 +176,11 @@ export function NicknameDropdown({ displayName, slug, onNicknameChanged, onLogou
               )}
               {onLogout && (
                 <button
-                  onClick={() => { setOpen(false); onLogout(); }}
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    onLogout();
+                  }}
                   className="w-full text-left px-3 py-2 text-sm text-efi-text-secondary hover:text-efi-error hover:bg-white/6 transition-colors flex items-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
                 >
                   <LogOut className="w-3.5 h-3.5" />

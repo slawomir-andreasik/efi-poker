@@ -1,6 +1,6 @@
+import type { RoomType, TaskWithEstimateResponse } from '@/api/types';
 import { CountdownTimer } from './CountdownTimer';
 import { ProgressStats } from './ProgressStats';
-import type { TaskWithEstimateResponse, RoomType } from '@/api/types';
 
 interface RoomSidebarProps {
   deadline?: string;
@@ -15,7 +15,9 @@ export function RoomSidebar({ deadline, roomType, tasks, isRevealed }: RoomSideb
       {/* Deadline card - visible only on desktop for Async rooms (mobile shows it in the header) */}
       {roomType === 'ASYNC' && deadline && (
         <div className="hidden lg:block rounded-xl glass-whisper p-4">
-          <h3 className="text-xs font-medium text-efi-text-secondary uppercase tracking-wider mb-2">Deadline</h3>
+          <h3 className="text-xs font-medium text-efi-text-secondary uppercase tracking-wider mb-2">
+            Deadline
+          </h3>
           <CountdownTimer deadline={deadline} />
         </div>
       )}

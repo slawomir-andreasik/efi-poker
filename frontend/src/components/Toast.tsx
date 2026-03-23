@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
+import { createContext, type ReactNode, useCallback, useContext, useRef, useState } from 'react';
 
 type ToastType = 'error' | 'success' | 'info';
 
@@ -26,15 +26,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const showToast = useCallback((message: string, type: ToastType = 'error') => {
-    const id = nextId.current++;
-    setToasts((prev) => [...prev.slice(-(MAX_VISIBLE - 1)), { id, message, type }]);
-    setTimeout(() => removeToast(id), AUTO_DISMISS_MS);
-  }, [removeToast]);
+  const showToast = useCallback(
+    (message: string, type: ToastType = 'error') => {
+      const id = nextId.current++;
+      setToasts((prev) => [...prev.slice(-(MAX_VISIBLE - 1)), { id, message, type }]);
+      setTimeout(() => removeToast(id), AUTO_DISMISS_MS);
+    },
+    [removeToast],
+  );
 
   // Expose for e2e tests (dev only, tree-shaken in prod)
   if (process.env.NODE_ENV !== 'production') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).__showToast = showToast;
   }
 
@@ -59,6 +61,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 <Icon className={`w-5 h-5 shrink-0 ${typeIcons[toast.type].color}`} />
                 <span className="flex-1">{toast.message}</span>
                 <button
+                  type="button"
                   onClick={() => removeToast(toast.id)}
                   className="text-efi-text-tertiary hover:text-efi-text-primary shrink-0 cursor-pointer p-1.5 rounded hover:bg-white/8 transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                   aria-label="Dismiss"

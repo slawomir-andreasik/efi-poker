@@ -1,9 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { EstimateButtons } from './EstimateButtons';
-import { SP_VALUES } from '@/api/types';
+import { describe, expect, it, vi } from 'vitest';
 import type { StoryPoints } from '@/api/types';
+import { SP_VALUES } from '@/api/types';
+import { EstimateButtons } from './EstimateButtons';
 
 describe('EstimateButtons', () => {
   it('should render all story point values as strings', () => {

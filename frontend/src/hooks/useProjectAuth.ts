@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAuth, getJwt, saveAuth, isGuestAdmin, type ProjectAuth } from '@/api/client';
-import { queryKeys } from '@/api/queryKeys';
+import { useEffect, useMemo, useState } from 'react';
+import { getAuth, getJwt, isGuestAdmin, type ProjectAuth, saveAuth } from '@/api/client';
 import { projectApi } from '@/api/queries';
+import { queryKeys } from '@/api/queryKeys';
 
 interface UseProjectAuthResult {
   auth: ProjectAuth;

@@ -16,7 +16,6 @@ paths:
 - Dead code: `bun run knip` (unused exports, deps)
 - Suppress rules: `// biome-ignore lint/category/ruleName: reason` (always include reason)
 - CSS files excluded from Biome (Tailwind `@theme` syntax not supported)
-- Every `<button>` must have explicit `type="button"` or `type="submit"`
 
 ## Architecture
 

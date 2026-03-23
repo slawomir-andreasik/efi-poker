@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { queryKeys } from '@/api/queryKeys';
-import { authApi } from '@/api/queries';
 import { getJwt } from '@/api/client';
+import { authApi } from '@/api/queries';
+import { queryKeys } from '@/api/queryKeys';
 
 export function useCurrentUser() {
   const jwt = getJwt();

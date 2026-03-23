@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react';
+import { ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useBreadcrumbs } from '@/hooks/useBreadcrumbs';
-import { statusBadge, roomTypeBadge, statusLabel } from '@/utils/roomBadges';
-import { RoomSwitcherDropdown } from './RoomSwitcherDropdown';
+import { roomTypeBadge, statusBadge, statusLabel } from '@/utils/roomBadges';
 import { ProjectSwitcherDropdown } from './ProjectSwitcherDropdown';
+import { RoomSwitcherDropdown } from './RoomSwitcherDropdown';
 
 export function Breadcrumbs() {
   const { segments, slug, roomId, currentRoom } = useBreadcrumbs();
@@ -50,41 +50,45 @@ export function Breadcrumbs() {
           const isMiddle = segments.length > 2 && i > 0 && !isLast;
 
           return (
-            <span key={seg.path || seg.label} className={`flex items-center gap-1.5 min-w-0 ${isMiddle ? 'hidden sm:flex' : ''}`}>
+            <span
+              key={seg.path || seg.label}
+              className={`flex items-center gap-1.5 min-w-0 ${isMiddle ? 'hidden sm:flex' : ''}`}
+            >
               <ChevronRight className="w-3.5 h-3.5 text-efi-text-tertiary/40 shrink-0" />
 
               {seg.dropdownType === 'project' ? (
                 // Project switcher dropdown
                 <div className="relative min-w-0">
                   <button
+                    type="button"
                     onClick={toggleProjectSwitcher}
                     className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-sm font-medium text-efi-text-secondary hover:text-efi-text-primary hover:bg-white/8 transition-colors cursor-pointer max-w-36 sm:max-w-48 truncate"
                   >
                     <span className="truncate">{seg.label}</span>
-                    {projectSwitcherOpen
-                      ? <ChevronUp className="w-3 h-3 shrink-0 text-efi-text-tertiary" />
-                      : <ChevronDown className="w-3 h-3 shrink-0 text-efi-text-tertiary" />
-                    }
+                    {projectSwitcherOpen ? (
+                      <ChevronUp className="w-3 h-3 shrink-0 text-efi-text-tertiary" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3 shrink-0 text-efi-text-tertiary" />
+                    )}
                   </button>
                   {projectSwitcherOpen && (
-                    <ProjectSwitcherDropdown
-                      currentSlug={slug}
-                      onClose={closeProjectSwitcher}
-                    />
+                    <ProjectSwitcherDropdown currentSlug={slug} onClose={closeProjectSwitcher} />
                   )}
                 </div>
               ) : seg.dropdownType === 'room' && slug ? (
                 // Room switcher dropdown
                 <div className="relative min-w-0">
                   <button
+                    type="button"
                     onClick={toggleRoomSwitcher}
                     className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-sm font-medium text-efi-text-secondary hover:text-efi-text-primary hover:bg-white/8 transition-colors cursor-pointer max-w-36 sm:max-w-48 truncate"
                   >
                     <span className="truncate">{seg.label}</span>
-                    {roomSwitcherOpen
-                      ? <ChevronUp className="w-3 h-3 shrink-0 text-efi-text-tertiary" />
-                      : <ChevronDown className="w-3 h-3 shrink-0 text-efi-text-tertiary" />
-                    }
+                    {roomSwitcherOpen ? (
+                      <ChevronUp className="w-3 h-3 shrink-0 text-efi-text-tertiary" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3 shrink-0 text-efi-text-tertiary" />
+                    )}
                   </button>
                   {roomSwitcherOpen && (
                     <RoomSwitcherDropdown
@@ -113,10 +117,14 @@ export function Breadcrumbs() {
               {/* Room badges - desktop only */}
               {seg.badges && currentRoom && (
                 <div className="hidden sm:flex items-center gap-1 shrink-0">
-                  <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${statusBadge(currentRoom.status)}`}>
+                  <span
+                    className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${statusBadge(currentRoom.status)}`}
+                  >
                     {statusLabel(currentRoom.status)}
                   </span>
-                  <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${roomTypeBadge(currentRoom.roomType)}`}>
+                  <span
+                    className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${roomTypeBadge(currentRoom.roomType)}`}
+                  >
                     {currentRoom.roomType === 'LIVE' ? 'Live' : 'Async'}
                   </span>
                 </div>

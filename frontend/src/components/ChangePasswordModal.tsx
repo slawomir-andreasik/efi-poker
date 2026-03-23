@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useChangePassword } from '@/api/mutations';
+import { Modal } from '@/components/Modal';
+import { ButtonSpinner } from '@/components/Spinner';
+import { TextInput } from '@/components/TextInput';
 import { useToast } from '@/components/Toast';
 import { getErrorMessage } from '@/utils/error';
 import { logger } from '@/utils/logger';
-import { ButtonSpinner } from '@/components/Spinner';
-import { TextInput } from '@/components/TextInput';
-import { Modal } from '@/components/Modal';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -29,7 +29,8 @@ export function ChangePasswordModal({ isOpen, onClose, hasPassword }: ChangePass
   }, [isOpen]);
 
   const passwordsMatch = newPassword === confirmPassword;
-  const isValid = newPassword.length >= 8 && passwordsMatch && (!hasPassword || currentPassword.length >= 8);
+  const isValid =
+    newPassword.length >= 8 && passwordsMatch && (!hasPassword || currentPassword.length >= 8);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,7 +50,11 @@ export function ChangePasswordModal({ isOpen, onClose, hasPassword }: ChangePass
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={hasPassword ? 'Change Password' : 'Set Password'}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={hasPassword ? 'Change Password' : 'Set Password'}
+    >
       {!hasPassword && (
         <p className="text-xs text-efi-text-tertiary mb-4">
           Set a local password to log in with username and password in addition to Auth0.
@@ -59,7 +64,10 @@ export function ChangePasswordModal({ isOpen, onClose, hasPassword }: ChangePass
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3">
         {hasPassword && (
           <div>
-            <label htmlFor="current-password" className="block text-sm font-medium text-efi-text-secondary mb-1">
+            <label
+              htmlFor="current-password"
+              className="block text-sm font-medium text-efi-text-secondary mb-1"
+            >
               Current Password
             </label>
             <TextInput
@@ -76,7 +84,10 @@ export function ChangePasswordModal({ isOpen, onClose, hasPassword }: ChangePass
         )}
 
         <div>
-          <label htmlFor="new-password" className="block text-sm font-medium text-efi-text-secondary mb-1">
+          <label
+            htmlFor="new-password"
+            className="block text-sm font-medium text-efi-text-secondary mb-1"
+          >
             New Password
           </label>
           <TextInput
@@ -93,7 +104,10 @@ export function ChangePasswordModal({ isOpen, onClose, hasPassword }: ChangePass
         </div>
 
         <div>
-          <label htmlFor="confirm-password" className="block text-sm font-medium text-efi-text-secondary mb-1">
+          <label
+            htmlFor="confirm-password"
+            className="block text-sm font-medium text-efi-text-secondary mb-1"
+          >
             Confirm Password
           </label>
           <TextInput
@@ -124,7 +138,15 @@ export function ChangePasswordModal({ isOpen, onClose, hasPassword }: ChangePass
             disabled={!isValid || changePassword.isPending}
             className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none flex items-center gap-2"
           >
-            {changePassword.isPending ? <><ButtonSpinner /> Saving...</> : (hasPassword ? 'Change Password' : 'Set Password')}
+            {changePassword.isPending ? (
+              <>
+                <ButtonSpinner /> Saving...
+              </>
+            ) : hasPassword ? (
+              'Change Password'
+            ) : (
+              'Set Password'
+            )}
           </button>
         </div>
       </form>

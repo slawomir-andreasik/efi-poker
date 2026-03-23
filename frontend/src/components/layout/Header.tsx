@@ -1,18 +1,26 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate, matchPath } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getAuth, setLastActiveSlug, getLastActiveSlug, getIdentity, getJwt, clearAllStorage, isGuestAdmin } from '@/api/client';
-import { queryKeys } from '@/api/queryKeys';
-import { projectApi } from '@/api/queries';
-import { useAuthConfig } from '@/hooks/useAuthConfig';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Copy, Menu } from 'lucide-react';
-import { useToast } from '@/components/Toast';
-import { copyRoomLink } from '@/utils/clipboard';
-import { NicknameDropdown } from './NicknameDropdown';
-import { MobileSidebar } from './MobileSidebar';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { Link, matchPath, useLocation, useNavigate } from 'react-router-dom';
+import {
+  clearAllStorage,
+  getAuth,
+  getIdentity,
+  getJwt,
+  getLastActiveSlug,
+  isGuestAdmin,
+  setLastActiveSlug,
+} from '@/api/client';
+import { projectApi } from '@/api/queries';
+import { queryKeys } from '@/api/queryKeys';
 import { ChangePasswordModal } from '@/components/ChangePasswordModal';
 import { RoleBadge } from '@/components/RoleBadge';
+import { useToast } from '@/components/Toast';
+import { useAuthConfig } from '@/hooks/useAuthConfig';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { copyRoomLink } from '@/utils/clipboard';
+import { MobileSidebar } from './MobileSidebar';
+import { NicknameDropdown } from './NicknameDropdown';
 
 export function Header() {
   const location = useLocation();
@@ -39,18 +47,20 @@ export function Header() {
   // Close sidebar on route change (useLayoutEffect to prevent flash)
   useLayoutEffect(() => {
     setSidebarOpen(false);
-  }, [location.pathname]);
+  }, []);
 
   const effectiveSlug = slug ?? getLastActiveSlug() ?? undefined;
-  const auth = useMemo(() => effectiveSlug ? getAuth(effectiveSlug) : {}, [effectiveSlug]);
-  const [displayName, setDisplayName] = useState(auth.nickname || getIdentity() || currentUser?.username || null);
+  const auth = useMemo(() => (effectiveSlug ? getAuth(effectiveSlug) : {}), [effectiveSlug]);
+  const [displayName, setDisplayName] = useState(
+    auth.nickname || getIdentity() || currentUser?.username || null,
+  );
   const isAdmin = Boolean(auth.adminCode) || isGuestAdmin(auth);
 
   // Sync displayName when slug/user changes
   useEffect(() => {
     const currentAuth = effectiveSlug ? getAuth(effectiveSlug) : {};
     setDisplayName(currentAuth.nickname || getIdentity() || currentUser?.username || null);
-  }, [effectiveSlug, location.pathname, currentUser?.username]);
+  }, [effectiveSlug, currentUser?.username]);
 
   // Fetch rooms for share button (TanStack cache deduplicates with Breadcrumbs)
   const { data: rooms } = useQuery({
@@ -82,7 +92,11 @@ export function Header() {
 
   return (
     <>
-      <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} onLogout={jwt ? handleLogout : undefined} />
+      <MobileSidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onLogout={jwt ? handleLogout : undefined}
+      />
       <header className="border-b border-white/6 bg-efi-graphite glass-whisper sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2">
           {/* Left: hamburger + logo */}
@@ -98,19 +112,24 @@ export function Header() {
             </button>
 
             <Link to="/" className="flex items-center gap-1.5 no-underline group shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" className="w-5 h-5 shrink-0" aria-hidden="true">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 64 64"
+                className="w-5 h-5 shrink-0"
+                aria-hidden="true"
+              >
                 <defs>
                   <linearGradient id="hdr-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#141418"/>
-                    <stop offset="100%" stopColor="#0B0B0F"/>
+                    <stop offset="0%" stopColor="#141418" />
+                    <stop offset="100%" stopColor="#0B0B0F" />
                   </linearGradient>
                   <linearGradient id="hdr-e" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#C8D0DC"/>
-                    <stop offset="100%" stopColor="#8A92A0"/>
+                    <stop offset="0%" stopColor="#C8D0DC" />
+                    <stop offset="100%" stopColor="#8A92A0" />
                   </linearGradient>
                 </defs>
-                <rect width="64" height="64" rx="14" fill="url(#hdr-bg)"/>
-                <path d="M17 12 H47 V20 H26 V28 H43 V36 H26 V44 H47 V52 H17 Z" fill="url(#hdr-e)"/>
+                <rect width="64" height="64" rx="14" fill="url(#hdr-bg)" />
+                <path d="M17 12 H47 V20 H26 V28 H43 V36 H26 V44 H47 V52 H17 Z" fill="url(#hdr-e)" />
               </svg>
               <span className="text-sm sm:text-xl font-bold bg-gradient-to-r from-efi-gold via-efi-gold-light to-efi-gold bg-clip-text text-transparent">
                 EFI Poker
@@ -150,29 +169,36 @@ export function Header() {
                 slug={effectiveSlug}
                 onNicknameChanged={setDisplayName}
                 onLogout={jwt ? handleLogout : handleGuestLogout}
-                onPasswordClick={jwt && currentUser?.authProvider !== 'LDAP' ? () => setPasswordModalOpen(true) : undefined}
+                onPasswordClick={
+                  jwt && currentUser?.authProvider !== 'LDAP'
+                    ? () => setPasswordModalOpen(true)
+                    : undefined
+                }
                 isLoggedIn={Boolean(jwt)}
               />
             )}
 
-            {!displayName && !jwt && location.pathname !== '/login' && location.pathname !== '/register' && (
-              <div className="flex items-center gap-2">
-                <Link
-                  to="/login"
-                  className="text-xs px-2.5 py-1 rounded-lg font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 transition-opacity no-underline"
-                >
-                  Login
-                </Link>
-                {registrationEnabled && (
+            {!displayName &&
+              !jwt &&
+              location.pathname !== '/login' &&
+              location.pathname !== '/register' && (
+                <div className="flex items-center gap-2">
                   <Link
-                    to="/register"
-                    className="text-xs px-2.5 py-1 rounded-lg text-efi-text-secondary hover:text-efi-text-primary hover:bg-white/8 transition-colors border border-white/10 no-underline"
+                    to="/login"
+                    className="text-xs px-2.5 py-1 rounded-lg font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 transition-opacity no-underline"
                   >
-                    Register
+                    Login
                   </Link>
-                )}
-              </div>
-            )}
+                  {registrationEnabled && (
+                    <Link
+                      to="/register"
+                      className="text-xs px-2.5 py-1 rounded-lg text-efi-text-secondary hover:text-efi-text-primary hover:bg-white/8 transition-colors border border-white/10 no-underline"
+                    >
+                      Register
+                    </Link>
+                  )}
+                </div>
+              )}
           </div>
         </div>
       </header>

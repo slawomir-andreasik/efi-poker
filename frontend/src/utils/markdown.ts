@@ -46,7 +46,7 @@ export function formatResultsAsMarkdown(
   const lines: string[] = [`# Results: ${roomTitle}`, ''];
 
   if (tasks.length === 0) {
-    return lines.join('\n').trimEnd() + '\n';
+    return `${lines.join('\n').trimEnd()}\n`;
   }
 
   for (const task of tasks) renderTask(task, participants, lines);
@@ -54,7 +54,9 @@ export function formatResultsAsMarkdown(
   const agreed = tasks.filter((t) => isConsensus(t));
   const totalSp = tasks.reduce((sum, t) => sum + getTaskSp(t), 0);
   lines.push('---');
-  lines.push(`**Summary:** ${tasks.length} tasks | ${totalSp} SP | Consensus: ${agreed.length}/${tasks.length}`);
+  lines.push(
+    `**Summary:** ${tasks.length} tasks | ${totalSp} SP | Consensus: ${agreed.length}/${tasks.length}`,
+  );
 
-  return lines.join('\n').trimEnd() + '\n';
+  return `${lines.join('\n').trimEnd()}\n`;
 }

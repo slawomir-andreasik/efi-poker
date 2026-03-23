@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useRegister } from '@/api/mutations';
-import { useToast } from '@/components/Toast';
-import { getErrorMessage } from '@/utils/error';
 import { ButtonSpinner } from '@/components/Spinner';
+import { TextInput } from '@/components/TextInput';
+import { useToast } from '@/components/Toast';
 import { useAuthConfig } from '@/hooks/useAuthConfig';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { TextInput } from '@/components/TextInput';
+import { getErrorMessage } from '@/utils/error';
 
 export function RegisterPage() {
   useDocumentTitle('Register');
@@ -58,7 +58,10 @@ export function RegisterPage() {
 
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3">
             <div>
-              <label htmlFor="reg-username" className="block text-sm font-medium text-efi-text-secondary mb-1">
+              <label
+                htmlFor="reg-username"
+                className="block text-sm font-medium text-efi-text-secondary mb-1"
+              >
                 Username
               </label>
               <TextInput
@@ -76,7 +79,10 @@ export function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="reg-password" className="block text-sm font-medium text-efi-text-secondary mb-1">
+              <label
+                htmlFor="reg-password"
+                className="block text-sm font-medium text-efi-text-secondary mb-1"
+              >
                 Password
               </label>
               <input
@@ -90,12 +96,17 @@ export function RegisterPage() {
                 className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
               />
               {passwordTooShort && (
-                <p className="text-xs text-efi-error mt-1">Password must be at least 8 characters</p>
+                <p className="text-xs text-efi-error mt-1">
+                  Password must be at least 8 characters
+                </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="reg-email" className="block text-sm font-medium text-efi-text-secondary mb-1">
+              <label
+                htmlFor="reg-email"
+                className="block text-sm font-medium text-efi-text-secondary mb-1"
+              >
                 Email <span className="text-efi-text-tertiary">(optional)</span>
               </label>
               <TextInput
@@ -115,7 +126,13 @@ export function RegisterPage() {
               disabled={register.isPending || !username.trim() || !password || password.length < 8}
               className="w-full py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none flex items-center justify-center gap-2"
             >
-              {register.isPending ? <><ButtonSpinner /> Creating account...</> : 'Create account'}
+              {register.isPending ? (
+                <>
+                  <ButtonSpinner /> Creating account...
+                </>
+              ) : (
+                'Create account'
+              )}
             </button>
           </form>
         </div>

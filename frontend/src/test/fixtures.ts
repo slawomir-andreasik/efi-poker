@@ -1,4 +1,12 @@
-import type { ProjectAdminResponse, ProjectResponse, RoomResponse, ParticipantResponse, RoomDetailResponse, RoomResultsResponse, ParticipantProgressResponse } from '@/api/types';
+import type {
+  ParticipantProgressResponse,
+  ParticipantResponse,
+  ProjectAdminResponse,
+  ProjectResponse,
+  RoomDetailResponse,
+  RoomResponse,
+  RoomResultsResponse,
+} from '@/api/types';
 
 export function mockProject(overrides?: Partial<ProjectResponse>): ProjectResponse {
   return {
@@ -72,7 +80,9 @@ export function mockRoomResults(overrides?: Partial<RoomResultsResponse>): RoomR
   };
 }
 
-export function mockParticipantProgress(overrides?: Partial<ParticipantProgressResponse>): ParticipantProgressResponse {
+export function mockParticipantProgress(
+  overrides?: Partial<ParticipantProgressResponse>,
+): ParticipantProgressResponse {
   return {
     roomId: 'room-1',
     slug: 'A3X-K7B',

@@ -1,29 +1,41 @@
-import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Check, Trash2, Eye, RotateCw, Square } from 'lucide-react';
-import { InlineConfirmAction } from '@/components/InlineConfirmAction';
-import { getAuth, getJwt } from '@/api/client';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { queryKeys } from '@/api/queryKeys';
+import { Check, Eye, RotateCw, Square, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  clearDraftComment,
+  getAuth,
+  getDraftComment,
+  getJwt,
+  saveDraftComment,
+} from '@/api/client';
+import {
+  useDeleteEstimate,
+  useFinishSession,
+  useNewRound,
+  useRevealRoom,
+  useSubmitEstimate,
+  useUpdateRoom,
+} from '@/api/mutations';
 import { roomApi } from '@/api/queries';
-import { useRevealRoom, useNewRound, useSubmitEstimate, useDeleteEstimate, useUpdateRoom, useFinishSession } from '@/api/mutations';
-import { logger } from '@/utils/logger';
-import { useToast } from '@/components/Toast';
-import { Spinner, ButtonSpinner } from '@/components/Spinner';
-import { RoundHistoryPanel } from '@/components/RoundHistoryPanel';
-import { EstimateButtons } from '@/components/EstimateButtons';
-import { AdminJoinBanner } from '@/components/AdminJoinBanner';
+import { queryKeys } from '@/api/queryKeys';
+import type { AutoAssignedEstimate, RoomDetailResponse, StoryPoints } from '@/api/types';
 import { SP_NOT_APPLICABLE } from '@/api/types';
-import type { StoryPoints, RoomDetailResponse, AutoAssignedEstimate } from '@/api/types';
-import { FinishSessionDialog } from '@/components/FinishSessionDialog';
-import { getErrorMessage } from '@/utils/error';
-import { useSaveIndicator } from '@/hooks/useSaveIndicator';
-import { useDeleteRoomAction } from '@/hooks/useDeleteRoomAction';
-import { TextInput } from '@/components/TextInput';
+import { AdminJoinBanner } from '@/components/AdminJoinBanner';
 import { CommentInput } from '@/components/CommentInput';
+import { EstimateButtons } from '@/components/EstimateButtons';
+import { FinishSessionDialog } from '@/components/FinishSessionDialog';
+import { InlineConfirmAction } from '@/components/InlineConfirmAction';
 import { RoomSettings } from '@/components/RoomSettings';
+import { RoundHistoryPanel } from '@/components/RoundHistoryPanel';
 import { ShareButton } from '@/components/ShareButton';
-import { getDraftComment, clearDraftComment, saveDraftComment } from '@/api/client';
+import { ButtonSpinner, Spinner } from '@/components/Spinner';
+import { TextInput } from '@/components/TextInput';
+import { useToast } from '@/components/Toast';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useDeleteRoomAction } from '@/hooks/useDeleteRoomAction';
+import { useSaveIndicator } from '@/hooks/useSaveIndicator';
+import { getErrorMessage } from '@/utils/error';
+import { logger } from '@/utils/logger';
 
 interface LiveRoomViewProps {
   slug: string;
@@ -129,7 +141,11 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
       if (isUnvote) {
         await deleteEstimate.mutateAsync(liveState.taskId);
       } else {
-        await submitEstimate.mutateAsync({ taskId: liveState.taskId, storyPoints: value, comment: comment.trim() || undefined });
+        await submitEstimate.mutateAsync({
+          taskId: liveState.taskId,
+          storyPoints: value,
+          comment: comment.trim() || undefined,
+        });
         clearDraftComment(liveState.taskId);
         showSaveIndicator();
       }
@@ -238,8 +254,12 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-2 flex-wrap min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-efi-text-primary truncate min-w-0">{initialRoom.title}</h1>
-              <span className="shrink-0 text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">{initialRoom.slug}</span>
+              <h1 className="text-xl sm:text-2xl font-bold text-efi-text-primary truncate min-w-0">
+                {initialRoom.title}
+              </h1>
+              <span className="shrink-0 text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">
+                {initialRoom.slug}
+              </span>
               <span className="shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-efi-live/20 text-efi-live border border-efi-live/30">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-efi-live opacity-75" />
@@ -279,7 +299,9 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
       {/* Admin controls */}
       {isAdmin && (
         <div className="glass-frost rounded-xl p-4 mb-6 border border-efi-info/20">
-          <h2 className="text-xs font-semibold text-efi-text-secondary uppercase tracking-wider mb-3">Admin Controls</h2>
+          <h2 className="text-xs font-semibold text-efi-text-secondary uppercase tracking-wider mb-3">
+            Admin Controls
+          </h2>
           {!isRevealed ? (
             <div className="flex flex-col sm:flex-row gap-3">
               <TextInput
@@ -304,7 +326,15 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                 disabled={revealRoom.isPending}
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
               >
-                {revealRoom.isPending ? <><ButtonSpinner /> Revealing...</> : <><Eye className="w-4 h-4" /> Reveal</>}
+                {revealRoom.isPending ? (
+                  <>
+                    <ButtonSpinner /> Revealing...
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-4 h-4" /> Reveal
+                  </>
+                )}
               </button>
               {finishButton}
             </div>
@@ -324,7 +354,15 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                 disabled={newRound.isPending}
                 className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-info/30 text-efi-info hover:bg-efi-info/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
               >
-                {newRound.isPending ? <><ButtonSpinner /> Starting...</> : <><RotateCw className="w-4 h-4" /> New Round</>}
+                {newRound.isPending ? (
+                  <>
+                    <ButtonSpinner /> Starting...
+                  </>
+                ) : (
+                  <>
+                    <RotateCw className="w-4 h-4" /> New Round
+                  </>
+                )}
               </button>
               {finishButton}
             </div>
@@ -384,69 +422,88 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                   hasTemplate={Boolean(liveState?.commentTemplate)}
                   onCommentSave={(newComment) => {
                     if (liveState?.taskId) {
-                      void submitEstimate.mutateAsync({
-                        taskId: liveState.taskId,
-                        storyPoints: selectedEstimate || undefined,
-                        comment: newComment || undefined,
-                      }).then(() => {
-                        clearDraftComment(liveState.taskId!);
-                        showSaveIndicator();
-                      }).catch((err) => {
-                        showToast(getErrorMessage(err));
-                      });
+                      void submitEstimate
+                        .mutateAsync({
+                          taskId: liveState.taskId,
+                          storyPoints: selectedEstimate || undefined,
+                          comment: newComment || undefined,
+                        })
+                        .then(() => {
+                          clearDraftComment(liveState.taskId!);
+                          showSaveIndicator();
+                        })
+                        .catch((err) => {
+                          showToast(getErrorMessage(err));
+                        });
                     }
                   }}
                   saving={saving}
                 />
               )}
               {!hasParticipant && (
-                <p className="text-xs text-efi-text-tertiary mt-2">Join as a voter above to submit estimates.</p>
+                <p className="text-xs text-efi-text-tertiary mt-2">
+                  Join as a voter above to submit estimates.
+                </p>
               )}
             </div>
           )}
 
           {/* Results */}
           {isRevealed && results && (
-              <div className="glass-frost rounded-xl p-4 space-y-4">
-                <div className="flex gap-6">
-                  {results.averagePoints != null && (
-                    <div>
-                      <p className="text-xs text-efi-text-secondary">Average</p>
-                      <p className="text-2xl font-bold text-efi-gold">{results.averagePoints.toFixed(1)}</p>
-                    </div>
-                  )}
-                  {results.medianPoints != null && (
-                    <div>
-                      <p className="text-xs text-efi-text-secondary">Median</p>
-                      <p className="text-2xl font-bold text-efi-text-primary">{results.medianPoints.toFixed(1)}</p>
-                    </div>
-                  )}
-                </div>
-
-                {results.estimates.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-2 border-t border-white/8">
-                    {results.estimates.map((est) => {
-                      const isQuestion = est.storyPoints === '?';
-                      const estIsNA = est.storyPoints === SP_NOT_APPLICABLE;
-                      return (
-                        <div key={est.id} className="flex flex-col items-center gap-1 max-w-[140px]">
-                          <span className={`text-xs truncate max-w-full ${isQuestion ? 'text-efi-warning/70' : estIsNA ? 'text-efi-text-tertiary' : 'text-efi-text-secondary'}`}>{est.participantNickname}</span>
-                          <span className={`text-lg font-bold rounded-lg w-12 h-12 flex items-center justify-center ${isQuestion
-                              ? 'text-efi-warning bg-efi-warning/20 border border-efi-warning/40'
-                              : estIsNA ? 'text-efi-text-tertiary bg-white/4 border border-white/8'
-                              : 'text-efi-gold bg-efi-gold/10 border border-efi-gold/30'
-                            }`}>
-                            {est.storyPoints}
-                          </span>
-                          {est.comment && (
-                            <p className="text-xs text-efi-text-secondary mt-1 text-center max-w-[140px] break-words line-clamp-3">{est.comment}</p>
-                          )}
-                        </div>
-                      );
-                    })}
+            <div className="glass-frost rounded-xl p-4 space-y-4">
+              <div className="flex gap-6">
+                {results.averagePoints != null && (
+                  <div>
+                    <p className="text-xs text-efi-text-secondary">Average</p>
+                    <p className="text-2xl font-bold text-efi-gold">
+                      {results.averagePoints.toFixed(1)}
+                    </p>
+                  </div>
+                )}
+                {results.medianPoints != null && (
+                  <div>
+                    <p className="text-xs text-efi-text-secondary">Median</p>
+                    <p className="text-2xl font-bold text-efi-text-primary">
+                      {results.medianPoints.toFixed(1)}
+                    </p>
                   </div>
                 )}
               </div>
+
+              {results.estimates.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-white/8">
+                  {results.estimates.map((est) => {
+                    const isQuestion = est.storyPoints === '?';
+                    const estIsNA = est.storyPoints === SP_NOT_APPLICABLE;
+                    return (
+                      <div key={est.id} className="flex flex-col items-center gap-1 max-w-[140px]">
+                        <span
+                          className={`text-xs truncate max-w-full ${isQuestion ? 'text-efi-warning/70' : estIsNA ? 'text-efi-text-tertiary' : 'text-efi-text-secondary'}`}
+                        >
+                          {est.participantNickname}
+                        </span>
+                        <span
+                          className={`text-lg font-bold rounded-lg w-12 h-12 flex items-center justify-center ${
+                            isQuestion
+                              ? 'text-efi-warning bg-efi-warning/20 border border-efi-warning/40'
+                              : estIsNA
+                                ? 'text-efi-text-tertiary bg-white/4 border border-white/8'
+                                : 'text-efi-gold bg-efi-gold/10 border border-efi-gold/30'
+                          }`}
+                        >
+                          {est.storyPoints}
+                        </span>
+                        {est.comment && (
+                          <p className="text-xs text-efi-text-secondary mt-1 text-center max-w-[140px] break-words line-clamp-3">
+                            {est.comment}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
 
           {isRevealed && !results && (
@@ -458,30 +515,37 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
 
         {/* Right: participants */}
         <aside className="lg:sticky lg:top-[var(--nav-total-height)]">
-            <div className="glass-whisper rounded-2xl p-4 border border-efi-info/20">
-              <h2 className="text-xs font-semibold text-efi-text-secondary uppercase tracking-wider mb-3">
-                Participants ({participants.length})
-              </h2>
-              {participants.length > 0 ? (
-                <div className="space-y-2">
-                  {participants.map((p) => (
-                    <div key={p.participantId} className="flex items-center gap-2 bg-efi-well rounded-lg px-3 py-2">
-                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${p.hasVoted ? 'bg-efi-success' : 'bg-white/20'}`} />
-                      <span className={`text-sm flex-1 truncate ${p.hasVoted ? 'text-efi-text-primary' : 'text-efi-text-secondary'}`}>
-                        {p.nickname}
-                      </span>
-                      {p.hasVoted ? (
-                        <Check className="w-4 h-4 text-efi-success flex-shrink-0" />
-                      ) : (
-                        <span className="text-xs text-efi-text-tertiary">waiting</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-efi-text-tertiary">No participants yet.</p>
-              )}
-            </div>
+          <div className="glass-whisper rounded-2xl p-4 border border-efi-info/20">
+            <h2 className="text-xs font-semibold text-efi-text-secondary uppercase tracking-wider mb-3">
+              Participants ({participants.length})
+            </h2>
+            {participants.length > 0 ? (
+              <div className="space-y-2">
+                {participants.map((p) => (
+                  <div
+                    key={p.participantId}
+                    className="flex items-center gap-2 bg-efi-well rounded-lg px-3 py-2"
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full flex-shrink-0 ${p.hasVoted ? 'bg-efi-success' : 'bg-white/20'}`}
+                    />
+                    <span
+                      className={`text-sm flex-1 truncate ${p.hasVoted ? 'text-efi-text-primary' : 'text-efi-text-secondary'}`}
+                    >
+                      {p.nickname}
+                    </span>
+                    {p.hasVoted ? (
+                      <Check className="w-4 h-4 text-efi-success flex-shrink-0" />
+                    ) : (
+                      <span className="text-xs text-efi-text-tertiary">waiting</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-efi-text-tertiary">No participants yet.</p>
+            )}
+          </div>
         </aside>
       </div>
 
@@ -500,7 +564,10 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
         onFinish={(revealVotes) => void handleFinishSession(revealVotes)}
         onCancel={() => setShowFinishDialog(false)}
         autoAssigned={autoAssigned}
-        onDismissAutoAssigned={() => { setAutoAssigned(null); setShowFinishDialog(false); }}
+        onDismissAutoAssigned={() => {
+          setAutoAssigned(null);
+          setShowFinishDialog(false);
+        }}
       />
     </div>
   );

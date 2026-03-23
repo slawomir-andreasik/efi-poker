@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLogin } from '@/api/mutations';
-import { useAuthConfig } from '@/hooks/useAuthConfig';
-import { useToast } from '@/components/Toast';
-import { getErrorMessage } from '@/utils/error';
 import { ButtonSpinner } from '@/components/Spinner';
-import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { TextInput } from '@/components/TextInput';
+import { useToast } from '@/components/Toast';
+import { useAuthConfig } from '@/hooks/useAuthConfig';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { getErrorMessage } from '@/utils/error';
 
 export function LoginPage() {
   useDocumentTitle('Login');
@@ -44,14 +44,21 @@ export function LoginPage() {
 
       <div className="w-full max-w-sm animate-[fade-in-up_0.6s_ease-out_0.15s_both] motion-reduce:animate-none">
         <div className="glass-frost rounded-2xl p-4 sm:p-6">
-          <h2 className={`text-lg font-semibold text-efi-text-primary ${ldapEnabled ? 'mb-1' : 'mb-4'}`}>Log in</h2>
+          <h2
+            className={`text-lg font-semibold text-efi-text-primary ${ldapEnabled ? 'mb-1' : 'mb-4'}`}
+          >
+            Log in
+          </h2>
           {ldapEnabled && (
             <p className="text-xs text-efi-text-tertiary mb-3">Use your corporate credentials</p>
           )}
 
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3">
             <div>
-              <label htmlFor="login-username" className="block text-sm font-medium text-efi-text-secondary mb-1">
+              <label
+                htmlFor="login-username"
+                className="block text-sm font-medium text-efi-text-secondary mb-1"
+              >
                 Username
               </label>
               <TextInput
@@ -68,7 +75,10 @@ export function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="login-password" className="block text-sm font-medium text-efi-text-secondary mb-1">
+              <label
+                htmlFor="login-password"
+                className="block text-sm font-medium text-efi-text-secondary mb-1"
+              >
                 Password
               </label>
               <input
@@ -98,7 +108,13 @@ export function LoginPage() {
               disabled={login.isPending || !username.trim() || !password}
               className="w-full py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none flex items-center justify-center gap-2"
             >
-              {login.isPending ? <><ButtonSpinner /> Logging in...</> : 'Log in'}
+              {login.isPending ? (
+                <>
+                  <ButtonSpinner /> Logging in...
+                </>
+              ) : (
+                'Log in'
+              )}
             </button>
           </form>
 

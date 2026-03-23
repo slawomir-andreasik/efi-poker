@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
-import { useParams, Navigate, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { queryKeys } from '@/api/queryKeys';
+import { useEffect, useState } from 'react';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { ApiError, api, getAuth, saveAuth } from '@/api/client';
 import { roomApi } from '@/api/queries';
-import { ApiError, getAuth, api, saveAuth } from '@/api/client';
+import { queryKeys } from '@/api/queryKeys';
+import type { ParticipantResponse } from '@/api/types';
 import { Spinner } from '@/components/Spinner';
 import { TraceCopyButton } from '@/components/TraceCopyButton';
 import { getErrorMessage } from '@/utils/error';
 import { logger } from '@/utils/logger';
-import type { ParticipantResponse } from '@/api/types';
 
 export function RoomJoinRedirectPage() {
   const { roomSlug } = useParams<{ roomSlug: string }>();
@@ -36,7 +36,10 @@ export function RoomJoinRedirectPage() {
       )
         .then((participant) => {
           if (participant.token) {
-            saveAuth(data.projectSlug, { guestToken: participant.token, nickname: participant.nickname });
+            saveAuth(data.projectSlug, {
+              guestToken: participant.token,
+              nickname: participant.nickname,
+            });
           } else {
             saveAuth(data.projectSlug, { nickname: participant.nickname });
           }
@@ -76,7 +79,9 @@ export function RoomJoinRedirectPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <p className="text-efi-error">{getErrorMessage(error)}</p>
         {error instanceof ApiError && error.traceId && <TraceCopyButton traceId={error.traceId} />}
-        <Link to="/" className="text-sm text-efi-gold-light hover:text-white transition-colors">Back to Home</Link>
+        <Link to="/" className="text-sm text-efi-gold-light hover:text-white transition-colors">
+          Back to Home
+        </Link>
       </div>
     );
   }
@@ -89,6 +94,8 @@ export function RoomJoinRedirectPage() {
     return null;
   }
 
-  logger.debug(`Room redirect: no participant, redirecting to join for project=${data.projectSlug}`);
+  logger.debug(
+    `Room redirect: no participant, redirecting to join for project=${data.projectSlug}`,
+  );
   return <Navigate to={`/p/${data.projectSlug}/join?room=${data.roomId}`} replace />;
 }

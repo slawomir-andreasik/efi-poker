@@ -1,5 +1,5 @@
-import { logger } from '@/utils/logger';
 import { getTracingHeaders } from '@/lib/tracing';
+import { logger } from '@/utils/logger';
 
 const BASE_URL = '/api/v1';
 
@@ -81,7 +81,10 @@ export function getAllProjects(): Record<string, ProjectAuth> {
 
 export function removeProject(slug: string) {
   try {
-    const projects = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Record<string, unknown>;
+    const projects = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Record<
+      string,
+      unknown
+    >;
     delete projects[slug];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
   } catch {
@@ -91,7 +94,10 @@ export function removeProject(slug: string) {
 
 export function getAuth(slug: string): ProjectAuth {
   try {
-    const projects = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Record<string, ProjectAuth>;
+    const projects = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Record<
+      string,
+      ProjectAuth
+    >;
     return projects[slug] || {};
   } catch {
     return {};
@@ -108,7 +114,7 @@ async function silentRefresh(): Promise<string | null> {
       credentials: 'include',
     });
     if (res.ok) {
-      const data = await res.json() as { token: string; expiresAt: string };
+      const data = (await res.json()) as { token: string; expiresAt: string };
       setJwt(data.token);
       return data.token;
     }
@@ -121,7 +127,11 @@ async function silentRefresh(): Promise<string | null> {
   return null;
 }
 
-export async function api<T>(path: string, options: RequestOptions = {}, slug?: string): Promise<T> {
+export async function api<T>(
+  path: string,
+  options: RequestOptions = {},
+  slug?: string,
+): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -130,11 +140,11 @@ export async function api<T>(path: string, options: RequestOptions = {}, slug?: 
   // Auth priority: user JWT > per-project guest JWT
   const jwt = getJwt();
   if (jwt) {
-    headers['Authorization'] = `Bearer ${jwt}`;
+    headers.Authorization = `Bearer ${jwt}`;
   } else if (slug) {
     const auth = getAuth(slug);
     if (auth.guestToken) {
-      headers['Authorization'] = `Bearer ${auth.guestToken}`;
+      headers.Authorization = `Bearer ${auth.guestToken}`;
     }
   }
 
@@ -143,12 +153,13 @@ export async function api<T>(path: string, options: RequestOptions = {}, slug?: 
   logger.debug(`API ${method} ${path}`);
   Object.assign(headers, getTracingHeaders());
 
-  const doFetch = () => fetch(`${BASE_URL}${path}`, {
-    method,
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-    signal: AbortSignal.timeout(30_000),
-  });
+  const doFetch = () =>
+    fetch(`${BASE_URL}${path}`, {
+      method,
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      signal: AbortSignal.timeout(30_000),
+    });
 
   let response: Response;
   try {
@@ -162,20 +173,22 @@ export async function api<T>(path: string, options: RequestOptions = {}, slug?: 
   if (response.status === 401 && jwt) {
     logger.info(`User JWT expired, attempting silent refresh for ${method} ${path}`);
     if (!refreshPromise) {
-      refreshPromise = silentRefresh().finally(() => { refreshPromise = null; });
+      refreshPromise = silentRefresh().finally(() => {
+        refreshPromise = null;
+      });
     }
     const newToken = await refreshPromise;
     if (newToken) {
-      headers['Authorization'] = `Bearer ${newToken}`;
+      headers.Authorization = `Bearer ${newToken}`;
       response = await doFetch();
     } else {
-      delete headers['Authorization'];
+      delete headers.Authorization;
     }
   } else if (response.status === 401 && !jwt && slug) {
     // Guest JWT expired - clear per-project auth and retry without auth
     logger.warn(`Guest JWT expired/invalid, clearing and retrying ${method} ${path}`);
     saveAuth(slug, { guestToken: undefined });
-    delete headers['Authorization'];
+    delete headers.Authorization;
     try {
       response = await doFetch();
     } catch (err) {
@@ -187,12 +200,23 @@ export async function api<T>(path: string, options: RequestOptions = {}, slug?: 
   if (!response.ok) {
     const traceId = response.headers.get('X-Trace-Id') ?? undefined;
     if (response.status >= 500) {
-      logger.error(`API server error ${method} ${path}: ${response.status}${traceId ? ` traceId=${traceId}` : ''}`);
+      logger.error(
+        `API server error ${method} ${path}: ${response.status}${traceId ? ` traceId=${traceId}` : ''}`,
+      );
     } else {
-      logger.warn(`API error ${method} ${path}: ${response.status}${traceId ? ` traceId=${traceId}` : ''}`);
+      logger.warn(
+        `API error ${method} ${path}: ${response.status}${traceId ? ` traceId=${traceId}` : ''}`,
+      );
     }
-    const error = await response.json().catch(() => ({ title: 'Request failed' })) as { detail?: string; title?: string };
-    throw new ApiError(error.detail || error.title || `HTTP ${response.status}`, response.status, traceId);
+    const error = (await response.json().catch(() => ({ title: 'Request failed' }))) as {
+      detail?: string;
+      title?: string;
+    };
+    throw new ApiError(
+      error.detail || error.title || `HTTP ${response.status}`,
+      response.status,
+      traceId,
+    );
   }
 
   if (response.status === 204) return undefined as T;
@@ -256,7 +280,10 @@ export function removeIdentity(): void {
 
 function updateDrafts(fn: (drafts: Record<string, string>) => void): void {
   try {
-    const drafts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DRAFT_COMMENTS) || '{}') as Record<string, string>;
+    const drafts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DRAFT_COMMENTS) || '{}') as Record<
+      string,
+      string
+    >;
     fn(drafts);
     localStorage.setItem(STORAGE_KEYS.DRAFT_COMMENTS, JSON.stringify(drafts));
   } catch {
@@ -276,7 +303,10 @@ export function saveDraftComment(taskId: string, comment: string): void {
 
 export function getDraftComment(taskId: string): string | null {
   try {
-    const drafts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DRAFT_COMMENTS) || '{}') as Record<string, string>;
+    const drafts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DRAFT_COMMENTS) || '{}') as Record<
+      string,
+      string
+    >;
     return drafts[taskId] ?? null;
   } catch {
     return null;
@@ -299,7 +329,11 @@ export function clearAllStorage(): void {
   sessionStorage.clear();
 }
 
-export async function updateNickname(slug: string, participantId: string, nickname: string): Promise<{ id: string; nickname: string }> {
+export async function updateNickname(
+  slug: string,
+  participantId: string,
+  nickname: string,
+): Promise<{ id: string; nickname: string }> {
   const result = await api<{ id: string; nickname: string }>(
     `/projects/${slug}/participants/${participantId}`,
     { method: 'PATCH', body: { nickname } },

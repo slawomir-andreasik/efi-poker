@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { formatResultsAsMarkdown } from './markdown';
+import { describe, expect, it } from 'vitest';
 import type { TaskEstimate } from '@/components/ResultsTable';
+import { formatResultsAsMarkdown } from './markdown';
 
 function task(overrides: Partial<TaskEstimate> = {}): TaskEstimate {
   return {
@@ -58,11 +58,7 @@ describe('formatResultsAsMarkdown', () => {
   });
 
   it('should include final estimate when present', () => {
-    const md = formatResultsAsMarkdown(
-      'Sprint',
-      [task({ finalEstimate: '5' })],
-      ['Alice', 'Bob'],
-    );
+    const md = formatResultsAsMarkdown('Sprint', [task({ finalEstimate: '5' })], ['Alice', 'Bob']);
 
     expect(md).toContain('> Avg: 4.0 | Med: 4 | Final: 5');
   });
@@ -90,11 +86,7 @@ describe('formatResultsAsMarkdown', () => {
   });
 
   it('should include final estimate of zero', () => {
-    const md = formatResultsAsMarkdown(
-      'Sprint',
-      [task({ finalEstimate: '0' })],
-      ['Alice', 'Bob'],
-    );
+    const md = formatResultsAsMarkdown('Sprint', [task({ finalEstimate: '0' })], ['Alice', 'Bob']);
 
     expect(md).toContain('Final: 0');
   });
@@ -131,11 +123,7 @@ describe('formatResultsAsMarkdown', () => {
   });
 
   it('should handle question mark votes', () => {
-    const md = formatResultsAsMarkdown(
-      'Sprint',
-      [task({ estimates: { Alice: '?' } })],
-      ['Alice'],
-    );
+    const md = formatResultsAsMarkdown('Sprint', [task({ estimates: { Alice: '?' } })], ['Alice']);
 
     expect(md).toContain('- Alice: **?**');
   });

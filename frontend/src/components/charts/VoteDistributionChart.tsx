@@ -1,13 +1,12 @@
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
-import { TOOLTIP_STYLE, CURSOR_STYLE, GRID_STROKE, AXIS_TICK, AXIS_LINE, COLORS } from './chartTheme';
+  AXIS_LINE,
+  AXIS_TICK,
+  COLORS,
+  CURSOR_STYLE,
+  GRID_STROKE,
+  TOOLTIP_STYLE,
+} from './chartTheme';
 
 interface VoteDistributionChartProps {
   distribution: Record<string, number>;
@@ -29,18 +28,8 @@ export function VoteDistributionChart({ distribution }: VoteDistributionChartPro
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
-        <XAxis
-          dataKey="value"
-          tick={AXIS_TICK}
-          axisLine={AXIS_LINE}
-          tickLine={false}
-        />
-        <YAxis
-          tick={AXIS_TICK}
-          axisLine={false}
-          tickLine={false}
-          allowDecimals={false}
-        />
+        <XAxis dataKey="value" tick={AXIS_TICK} axisLine={AXIS_LINE} tickLine={false} />
+        <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} allowDecimals={false} />
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
           cursor={CURSOR_STYLE}

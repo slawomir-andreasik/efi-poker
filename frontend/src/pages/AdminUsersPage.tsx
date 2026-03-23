@@ -1,18 +1,23 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { KeyRound, Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { queryKeys } from '@/api/queryKeys';
+import {
+  useAdminCreateUser,
+  useAdminDeleteUser,
+  useAdminResetPassword,
+  useAdminUpdateUser,
+} from '@/api/mutations';
 import { adminApi } from '@/api/queries';
-import { useAdminCreateUser, useAdminUpdateUser, useAdminDeleteUser, useAdminResetPassword } from '@/api/mutations';
+import { queryKeys } from '@/api/queryKeys';
+import type { AdminUserResponse, UserRole } from '@/api/types';
+import { ButtonSpinner, Spinner } from '@/components/Spinner';
+import { TextInput } from '@/components/TextInput';
+import { useToast } from '@/components/Toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { useToast } from '@/components/Toast';
 import { getErrorMessage } from '@/utils/error';
 import { logger } from '@/utils/logger';
-import { Pencil, Trash2, KeyRound } from 'lucide-react';
-import { Spinner, ButtonSpinner } from '@/components/Spinner';
-import { TextInput } from '@/components/TextInput';
-import type { AdminUserResponse, UserRole } from '@/api/types';
 
 const PAGE_SIZE = 20;
 
@@ -159,11 +164,19 @@ export function AdminUsersPage() {
 
       {/* Create user form */}
       {showCreate && (
-        <form onSubmit={(e) => void handleCreate(e)} className="glass-frost rounded-2xl p-4 sm:p-6 mb-6">
+        <form
+          onSubmit={(e) => void handleCreate(e)}
+          className="glass-frost rounded-2xl p-4 sm:p-6 mb-6"
+        >
           <h2 className="text-base font-semibold text-efi-text-primary mb-3">New User</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label htmlFor="new-username" className="block text-sm font-medium text-efi-text-secondary mb-1">Username</label>
+              <label
+                htmlFor="new-username"
+                className="block text-sm font-medium text-efi-text-secondary mb-1"
+              >
+                Username
+              </label>
               <TextInput
                 id="new-username"
                 type="text"
@@ -177,7 +190,12 @@ export function AdminUsersPage() {
               />
             </div>
             <div>
-              <label htmlFor="new-password" className="block text-sm font-medium text-efi-text-secondary mb-1">Password</label>
+              <label
+                htmlFor="new-password"
+                className="block text-sm font-medium text-efi-text-secondary mb-1"
+              >
+                Password
+              </label>
               <input
                 id="new-password"
                 type="password"
@@ -190,7 +208,10 @@ export function AdminUsersPage() {
               />
             </div>
             <div>
-              <label htmlFor="new-email" className="block text-sm font-medium text-efi-text-secondary mb-1">
+              <label
+                htmlFor="new-email"
+                className="block text-sm font-medium text-efi-text-secondary mb-1"
+              >
                 Email <span className="text-efi-text-tertiary">(optional)</span>
               </label>
               <TextInput
@@ -204,7 +225,12 @@ export function AdminUsersPage() {
               />
             </div>
             <div>
-              <label htmlFor="new-role" className="block text-sm font-medium text-efi-text-secondary mb-1">Role</label>
+              <label
+                htmlFor="new-role"
+                className="block text-sm font-medium text-efi-text-secondary mb-1"
+              >
+                Role
+              </label>
               <select
                 id="new-role"
                 value={newRole}
@@ -221,7 +247,13 @@ export function AdminUsersPage() {
             disabled={createUser.isPending || !newUsername.trim() || newPassword.length < 8}
             className="mt-4 px-6 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none flex items-center gap-2"
           >
-            {createUser.isPending ? <><ButtonSpinner /> Creating...</> : 'Create User'}
+            {createUser.isPending ? (
+              <>
+                <ButtonSpinner /> Creating...
+              </>
+            ) : (
+              'Create User'
+            )}
           </button>
         </form>
       )}
@@ -245,7 +277,11 @@ export function AdminUsersPage() {
         {search && (
           <button
             type="button"
-            onClick={() => { setSearch(''); setSearchInput(''); setPage(0); }}
+            onClick={() => {
+              setSearch('');
+              setSearchInput('');
+              setPage(0);
+            }}
             className="px-3 py-2 rounded-lg text-sm text-efi-text-tertiary hover:text-efi-text-secondary transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
           >
             Clear
@@ -270,12 +306,24 @@ export function AdminUsersPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/10 text-left">
-                  <th className="px-4 py-3 text-xs font-semibold text-efi-text-secondary uppercase tracking-wider">Username</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-efi-text-secondary uppercase tracking-wider hidden sm:table-cell">Email</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-efi-text-secondary uppercase tracking-wider">Role</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-efi-text-secondary uppercase tracking-wider hidden sm:table-cell">Provider</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-efi-text-secondary uppercase tracking-wider hidden md:table-cell">Created</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-efi-text-secondary uppercase tracking-wider w-28">Actions</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-efi-text-secondary uppercase tracking-wider">
+                    Username
+                  </th>
+                  <th className="px-4 py-3 text-xs font-semibold text-efi-text-secondary uppercase tracking-wider hidden sm:table-cell">
+                    Email
+                  </th>
+                  <th className="px-4 py-3 text-xs font-semibold text-efi-text-secondary uppercase tracking-wider">
+                    Role
+                  </th>
+                  <th className="px-4 py-3 text-xs font-semibold text-efi-text-secondary uppercase tracking-wider hidden sm:table-cell">
+                    Provider
+                  </th>
+                  <th className="px-4 py-3 text-xs font-semibold text-efi-text-secondary uppercase tracking-wider hidden md:table-cell">
+                    Created
+                  </th>
+                  <th className="px-4 py-3 text-xs font-semibold text-efi-text-secondary uppercase tracking-wider w-28">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -291,7 +339,7 @@ export function AdminUsersPage() {
                           className="rounded bg-efi-well border border-efi-gold-light/20 px-2 py-1 text-efi-text-primary text-base w-full focus:outline-none focus:border-efi-gold"
                         />
                       ) : (
-                        user.email ?? <span className="text-efi-text-tertiary">-</span>
+                        (user.email ?? <span className="text-efi-text-tertiary">-</span>)
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -305,16 +353,20 @@ export function AdminUsersPage() {
                           <option value="ADMIN">ADMIN</option>
                         </select>
                       ) : (
-                        <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${
-                          user.role === 'ADMIN'
-                            ? 'bg-efi-gold/20 text-efi-gold-light border-efi-gold/30'
-                            : 'bg-white/8 text-efi-text-secondary border-white/10'
-                        }`}>
+                        <span
+                          className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${
+                            user.role === 'ADMIN'
+                              ? 'bg-efi-gold/20 text-efi-gold-light border-efi-gold/30'
+                              : 'bg-white/8 text-efi-text-secondary border-white/10'
+                          }`}
+                        >
                           {user.role}
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-efi-text-tertiary text-xs hidden sm:table-cell">{user.authProvider}</td>
+                    <td className="px-4 py-3 text-efi-text-tertiary text-xs hidden sm:table-cell">
+                      {user.authProvider}
+                    </td>
                     <td className="px-4 py-3 text-efi-text-tertiary text-xs hidden md:table-cell">
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
@@ -355,8 +407,7 @@ export function AdminUsersPage() {
                             Cancel
                           </button>
                         </div>
-                      ) : (
-                        resetPasswordId === user.id ? (
+                      ) : resetPasswordId === user.id ? (
                         <div className="flex items-center gap-1">
                           <TextInput
                             type="password"
@@ -377,7 +428,10 @@ export function AdminUsersPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => { setResetPasswordId(null); setResetPasswordValue(''); }}
+                            onClick={() => {
+                              setResetPasswordId(null);
+                              setResetPasswordValue('');
+                            }}
                             className="text-xs px-2 py-1 rounded text-efi-text-tertiary hover:text-efi-text-secondary transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                           >
                             Cancel
@@ -412,7 +466,6 @@ export function AdminUsersPage() {
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                      )
                       )}
                     </td>
                   </tr>

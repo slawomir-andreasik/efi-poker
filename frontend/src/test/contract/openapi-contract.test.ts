@@ -3,10 +3,11 @@
  * Parses the flattened api-definition.yaml and checks field names, required fields,
  * and enum values against our manual type definitions.
  */
-import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
+
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import yaml from 'js-yaml';
+import { describe, expect, it } from 'vitest';
 
 interface OpenApiProperty {
   type?: string;
@@ -29,15 +30,24 @@ interface OpenApiSpec {
   components: {
     schemas: Record<string, OpenApiSchema>;
   };
-  paths: Record<string, Record<string, {
-    operationId?: string;
-    requestBody?: {
-      content: Record<string, { schema: OpenApiProperty }>;
-    };
-    responses?: Record<string, {
-      content?: Record<string, { schema: OpenApiProperty }>;
-    }>;
-  }>>;
+  paths: Record<
+    string,
+    Record<
+      string,
+      {
+        operationId?: string;
+        requestBody?: {
+          content: Record<string, { schema: OpenApiProperty }>;
+        };
+        responses?: Record<
+          string,
+          {
+            content?: Record<string, { schema: OpenApiProperty }>;
+          }
+        >;
+      }
+    >
+  >;
 }
 
 const specPath = resolve(__dirname, '../../../../api/src/main/resources/api-definition.yaml');
@@ -48,9 +58,10 @@ function resolveSchema(schema: OpenApiSchema): OpenApiSchema {
   if (!schema.allOf) return schema;
   const merged: OpenApiSchema = { type: 'object', properties: {}, required: [] };
   for (const part of schema.allOf) {
-    const resolved = '$ref' in part
-      ? schemas[((part as { $ref: string }).$ref as string).replace('#/components/schemas/', '')]
-      : part as OpenApiSchema;
+    const resolved =
+      '$ref' in part
+        ? schemas[((part as { $ref: string }).$ref as string).replace('#/components/schemas/', '')]
+        : (part as OpenApiSchema);
     if (!resolved) continue;
     const inner = resolveSchema(resolved);
     Object.assign(merged.properties!, inner.properties ?? {});
@@ -270,18 +281,18 @@ describe('OpenAPI contract: request schemas', () => {
 
 describe('OpenAPI contract: enums', () => {
   it('StoryPoints enum has correct values', () => {
-    const schema = schemas['StoryPoints'];
+    const schema = schemas.StoryPoints;
     expect(schema?.enum).toEqual(['0', '0.5', '1', '2', '3', '5', '8', '13', '21', '?', 'N/A']);
     expect(schema?.type).toBe('string');
   });
 
   it('RoomStatus enum has correct values', () => {
-    const schema = schemas['RoomStatus'];
+    const schema = schemas.RoomStatus;
     expect(schema?.enum).toEqual(['OPEN', 'REVEALED', 'CLOSED']);
   });
 
   it('RoomType enum has correct values', () => {
-    const schema = schemas['RoomType'];
+    const schema = schemas.RoomType;
     expect(schema?.enum).toEqual(['ASYNC', 'LIVE']);
   });
 });
@@ -315,9 +326,7 @@ describe('OpenAPI contract: API paths exist', () => {
   });
 
   it('no nested project/room/task paths exist (old wrong pattern)', () => {
-    const nested = paths.filter((p) =>
-      p.match(/\/projects\/\{slug\}\/rooms\/\{roomId\}/)
-    );
+    const nested = paths.filter((p) => p.match(/\/projects\/\{slug\}\/rooms\/\{roomId\}/));
     expect(nested).toEqual([]);
   });
 });
@@ -329,7 +338,7 @@ describe('OpenAPI quality rules', () => {
         name.endsWith('Response') ||
         name.endsWith('Entry') ||
         name.endsWith('Status') ||
-        name === 'RoundHistoryVote'
+        name === 'RoundHistoryVote',
     );
     const missing: string[] = [];
     for (const name of responseSchemaNames) {
@@ -380,10 +389,7 @@ describe('OpenAPI quality rules', () => {
       const hasIdParam = /\{(roomId|taskId|id|participantId)\}/.test(path);
       if (!hasIdParam) continue;
       for (const [method, operation] of Object.entries(methods)) {
-        if (
-          ['get', 'patch', 'put', 'delete'].includes(method) &&
-          !operation.responses?.['404']
-        ) {
+        if (['get', 'patch', 'put', 'delete'].includes(method) && !operation.responses?.['404']) {
           violations.push(`${method.toUpperCase()} ${path}`);
         }
       }
@@ -396,10 +402,7 @@ describe('OpenAPI quality rules', () => {
     for (const [path, methods] of Object.entries(spec.paths)) {
       for (const [method, operation] of Object.entries(methods)) {
         for (const [code, response] of Object.entries(operation.responses ?? {})) {
-          if (
-            ['400', '401', '403', '404', '409'].includes(code) &&
-            !response.content
-          ) {
+          if (['400', '401', '403', '404', '409'].includes(code) && !response.content) {
             violations.push(`${method.toUpperCase()} ${path} ${code}`);
           }
         }

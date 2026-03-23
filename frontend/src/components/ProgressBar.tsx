@@ -15,7 +15,9 @@ export function ProgressBar({ voted, total }: ProgressBarProps) {
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <span className={`text-xs font-medium whitespace-nowrap ${allVoted ? 'text-efi-success' : 'text-efi-text-secondary'}`}>
+      <span
+        className={`text-xs font-medium whitespace-nowrap ${allVoted ? 'text-efi-success' : 'text-efi-text-secondary'}`}
+      >
         {voted}/{total}
       </span>
     </div>

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { queryKeys } from '@/api/queryKeys';
 import { authApi } from '@/api/queries';
+import { queryKeys } from '@/api/queryKeys';
 
 export function useAuthConfig() {
   const { data } = useQuery({

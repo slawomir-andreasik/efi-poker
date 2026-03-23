@@ -8,9 +8,7 @@ export function CountdownTimer({ deadline }: CountdownTimerProps) {
   const { days, hours, minutes, seconds, isExpired } = useCountdown(deadline);
 
   if (isExpired) {
-    return (
-      <span className="text-efi-error font-semibold">Expired</span>
-    );
+    return <span className="text-efi-error font-semibold">Expired</span>;
   }
 
   const parts: string[] = [];
@@ -19,9 +17,5 @@ export function CountdownTimer({ deadline }: CountdownTimerProps) {
   parts.push(`${minutes}m`);
   if (days === 0) parts.push(`${seconds}s`);
 
-  return (
-    <span className="text-efi-champagne font-mono font-semibold">
-      {parts.join(' ')}
-    </span>
-  );
+  return <span className="text-efi-champagne font-mono font-semibold">{parts.join(' ')}</span>;
 }

@@ -1,6 +1,6 @@
 import { memo } from 'react';
-import { SP_VALUES, SP_NOT_APPLICABLE } from '@/api/types';
 import type { StoryPoints } from '@/api/types';
+import { SP_NOT_APPLICABLE, SP_VALUES } from '@/api/types';
 
 interface EstimateButtonsProps {
   selectedValue: StoryPoints | null;
@@ -8,7 +8,11 @@ interface EstimateButtonsProps {
   disabled?: boolean;
 }
 
-export const EstimateButtons = memo(function EstimateButtons({ selectedValue, onSelect, disabled = false }: EstimateButtonsProps) {
+export const EstimateButtons = memo(function EstimateButtons({
+  selectedValue,
+  onSelect,
+  disabled = false,
+}: EstimateButtonsProps) {
   return (
     <div className="flex flex-wrap gap-2">
       {SP_VALUES.map((value) => {
@@ -16,6 +20,7 @@ export const EstimateButtons = memo(function EstimateButtons({ selectedValue, on
         const isNA = value === SP_NOT_APPLICABLE;
         return (
           <button
+            type="button"
             key={value}
             onClick={() => onSelect(isSelected ? null : value)}
             disabled={disabled}

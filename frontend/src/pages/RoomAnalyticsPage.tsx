@@ -1,24 +1,28 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { ApiError } from '@/api/client';
-import { queryKeys } from '@/api/queryKeys';
 import { analyticsApi } from '@/api/queries';
-import { getErrorMessage } from '@/utils/error';
-import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { PageSpinner } from '@/components/PageSpinner';
-import { NotFoundState } from '@/components/NotFoundState';
-import { TraceCopyButton } from '@/components/TraceCopyButton';
-import { SummaryCard } from '@/components/charts/SummaryCard';
-import { VoteDistributionChart } from '@/components/charts/VoteDistributionChart';
+import { queryKeys } from '@/api/queryKeys';
 import { AvgVsFinalChart } from '@/components/charts/AvgVsFinalChart';
 import { ParticipationMatrix } from '@/components/charts/ParticipationMatrix';
+import { SummaryCard } from '@/components/charts/SummaryCard';
+import { VoteDistributionChart } from '@/components/charts/VoteDistributionChart';
+import { NotFoundState } from '@/components/NotFoundState';
+import { PageSpinner } from '@/components/PageSpinner';
+import { TraceCopyButton } from '@/components/TraceCopyButton';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { getErrorMessage } from '@/utils/error';
 
 export function RoomAnalyticsPage() {
   const { slug, roomId } = useParams<{ slug: string; roomId: string }>();
   const [selectedTaskId, setSelectedTaskId] = useState<string>('');
 
-  const { data: analytics, isLoading, error } = useQuery({
+  const {
+    data: analytics,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: queryKeys.analytics.room(roomId!),
     queryFn: () => analyticsApi.room(roomId!, slug!),
     enabled: Boolean(roomId && slug),
@@ -48,9 +52,7 @@ export function RoomAnalyticsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <p className="text-efi-error">{getErrorMessage(error)}</p>
-        {error instanceof ApiError && error.traceId && (
-          <TraceCopyButton traceId={error.traceId} />
-        )}
+        {error instanceof ApiError && error.traceId && <TraceCopyButton traceId={error.traceId} />}
         <Link
           to={slug && roomId ? `/p/${slug}/r/${roomId}/results` : '/'}
           className="text-sm text-efi-gold-light hover:text-efi-gold transition-colors no-underline hover:underline"
@@ -62,9 +64,7 @@ export function RoomAnalyticsPage() {
   }
 
   const summary = analytics?.summary;
-  const participationRatePct = summary
-    ? Math.round(summary.participationRate)
-    : 0;
+  const participationRatePct = summary ? Math.round(summary.participationRate) : 0;
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-8">
@@ -115,9 +115,7 @@ export function RoomAnalyticsPage() {
             </select>
           </div>
           <div className="glass-frost rounded-xl p-4">
-            <VoteDistributionChart
-              distribution={selectedTask?.voteDistribution ?? {}}
-            />
+            <VoteDistributionChart distribution={selectedTask?.voteDistribution ?? {}} />
           </div>
         </section>
       )}
@@ -140,10 +138,7 @@ export function RoomAnalyticsPage() {
           <h2 className="text-base font-semibold text-efi-text-primary mb-4">
             Participation Matrix
           </h2>
-          <ParticipationMatrix
-            matrix={analytics!.participationMatrix}
-            tasks={tasks}
-          />
+          <ParticipationMatrix matrix={analytics?.participationMatrix ?? []} tasks={tasks} />
         </section>
       )}
     </div>

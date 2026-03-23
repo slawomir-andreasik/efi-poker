@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { api, saveAuth, getAuth, getIdentity, ApiError } from '@/api/client';
+import { ApiError, api, getAuth, getIdentity, saveAuth } from '@/api/client';
 import { useJoinProject } from '@/api/mutations';
-import { logger } from '@/utils/logger';
-import { getErrorMessage } from '@/utils/error';
-import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { useToast } from '@/components/Toast';
-import { Spinner, ButtonSpinner } from '@/components/Spinner';
-import { RandomNameButton } from '@/components/RandomNameButton';
-import { TextInput } from '@/components/TextInput';
 import type { ParticipantResponse } from '@/api/types';
+import { RandomNameButton } from '@/components/RandomNameButton';
+import { ButtonSpinner, Spinner } from '@/components/Spinner';
+import { TextInput } from '@/components/TextInput';
+import { useToast } from '@/components/Toast';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { getErrorMessage } from '@/utils/error';
+import { logger } from '@/utils/logger';
 
 type Mode = 'loading' | 'welcome-back' | 'join-form';
 
@@ -18,7 +18,7 @@ export function JoinPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const projectName = slug ? getAuth(slug).projectName ?? slug : undefined;
+  const projectName = slug ? (getAuth(slug).projectName ?? slug) : undefined;
   useDocumentTitle('Join', projectName);
 
   const roomParam = searchParams.get('room');
@@ -68,7 +68,9 @@ export function JoinPage() {
             }
             setMode('join-form');
           });
-        return () => { cancelled = true; };
+        return () => {
+          cancelled = true;
+        };
       }
       setMode('join-form');
       return;
@@ -76,11 +78,7 @@ export function JoinPage() {
 
     if (pid) {
       // Validate participant by ID from URL param
-      api<ParticipantResponse>(
-        `/projects/${slug}/participants/${pid}`,
-        {},
-        slug,
-      )
+      api<ParticipantResponse>(`/projects/${slug}/participants/${pid}`, {}, slug)
         .then((participant) => {
           if (cancelled) return;
           saveAuth(slug, { nickname: participant.nickname });
@@ -106,7 +104,7 @@ export function JoinPage() {
     return () => {
       cancelled = true;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- roomRedirect derived from roomParam (already in deps)
+    // biome-ignore lint/correctness/useExhaustiveDependencies: roomRedirect derived from roomParam (already in deps)
   }, [slug, searchParams, showToast, navigate, roomParam]);
 
   async function handleJoin(e: React.FormEvent) {
@@ -130,7 +128,9 @@ export function JoinPage() {
       <div className="flex flex-col items-center justify-center min-h-[80vh] gap-3">
         <Spinner />
         {identity && (
-          <p className="text-sm text-efi-text-secondary">Joining as <span className="text-efi-text-primary font-medium">{identity}</span>...</p>
+          <p className="text-sm text-efi-text-secondary">
+            Joining as <span className="text-efi-text-primary font-medium">{identity}</span>...
+          </p>
         )}
       </div>
     );
@@ -140,9 +140,12 @@ export function JoinPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
         <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-efi-text-primary mb-2">Welcome back!</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-efi-text-primary mb-2">
+            Welcome back!
+          </h1>
           <p className="text-efi-text-secondary">
-            Continuing as <span className="text-efi-gold-light font-medium">{restoredNickname}</span>
+            Continuing as{' '}
+            <span className="text-efi-gold-light font-medium">{restoredNickname}</span>
           </p>
         </div>
 
@@ -170,20 +173,25 @@ export function JoinPage() {
     <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
       <div className="text-center mb-6 sm:mb-8 animate-[fade-in-up_0.6s_ease-out] motion-reduce:animate-none">
         <h1 className="text-2xl sm:text-3xl font-bold text-efi-text-primary mb-2">Join Project</h1>
-        <p className="text-efi-text-secondary">
-          Enter your nickname to join the planning session
-        </p>
+        <p className="text-efi-text-secondary">Enter your nickname to join the planning session</p>
       </div>
 
       {roomParam && (
         <div className="w-full max-w-sm mb-4 px-3 py-2.5 rounded-lg border border-efi-gold-light/15 bg-efi-gold/5 text-xs text-efi-text-secondary animate-[fade-in-up_0.6s_ease-out_0.1s_both] motion-reduce:animate-none">
-          <span className="text-efi-gold-light font-medium">Room link</span> - you will only have access to this room, not the entire project.
+          <span className="text-efi-gold-light font-medium">Room link</span> - you will only have
+          access to this room, not the entire project.
         </div>
       )}
 
-      <form onSubmit={(e) => void handleJoin(e)} className="w-full max-w-sm animate-[fade-in-up_0.6s_ease-out_0.15s_both] motion-reduce:animate-none">
+      <form
+        onSubmit={(e) => void handleJoin(e)}
+        className="w-full max-w-sm animate-[fade-in-up_0.6s_ease-out_0.15s_both] motion-reduce:animate-none"
+      >
         <div className="glass-frost rounded-2xl p-4 sm:p-6">
-          <label htmlFor="nickname" className="block text-sm font-medium text-efi-text-secondary mb-2">
+          <label
+            htmlFor="nickname"
+            className="block text-sm font-medium text-efi-text-secondary mb-2"
+          >
             Your Nickname
           </label>
           <div className="flex items-center gap-1">
@@ -204,7 +212,13 @@ export function JoinPage() {
             disabled={joinProject.isPending || !nickname.trim()}
             className="w-full mt-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none flex items-center justify-center gap-2"
           >
-            {joinProject.isPending ? <><ButtonSpinner /> Joining...</> : 'Join'}
+            {joinProject.isPending ? (
+              <>
+                <ButtonSpinner /> Joining...
+              </>
+            ) : (
+              'Join'
+            )}
           </button>
         </div>
       </form>

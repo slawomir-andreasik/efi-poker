@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { getErrorMessage } from './error';
+import { describe, expect, it } from 'vitest';
 import { ApiError } from '@/api/client';
+import { getErrorMessage } from './error';
 
 describe('getErrorMessage', () => {
   it('should extract message from Error', () => {
