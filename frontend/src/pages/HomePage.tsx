@@ -1,22 +1,32 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useQuery, useQueries } from '@tanstack/react-query';
-import { api, ApiError, saveAuth, getAllProjects, removeProject, getIdentity, setIdentity, getJwt, isGuestAdmin } from '@/api/client';
-import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { queryKeys } from '@/api/queryKeys';
-import { projectApi, authApi } from '@/api/queries';
-import { useCreateProject } from '@/api/mutations';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { BarChart3, ChevronRight, Clock, Info, Plus, Target } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import type { ProjectAuth } from '@/api/client';
-import { useToast } from '@/components/Toast';
-import { getErrorMessage } from '@/utils/error';
-import { Info, ChevronRight, Plus, Target, Clock, BarChart3 } from 'lucide-react';
-import { Spinner } from '@/components/Spinner';
-import { RoleBadge } from '@/components/RoleBadge';
-import { RandomNameButton } from '@/components/RandomNameButton';
-import { JoinByCodeModal } from '@/components/JoinByCodeModal';
+import {
+  ApiError,
+  api,
+  getAllProjects,
+  getIdentity,
+  getJwt,
+  isGuestAdmin,
+  removeProject,
+  saveAuth,
+  setIdentity,
+} from '@/api/client';
+import { useCreateProject } from '@/api/mutations';
+import { authApi, projectApi } from '@/api/queries';
+import { queryKeys } from '@/api/queryKeys';
+import type { ParticipantResponse, RoomResponse } from '@/api/types';
 import { CreateProjectModal } from '@/components/CreateProjectModal';
+import { JoinByCodeModal } from '@/components/JoinByCodeModal';
+import { RandomNameButton } from '@/components/RandomNameButton';
+import { RoleBadge } from '@/components/RoleBadge';
+import { Spinner } from '@/components/Spinner';
 import { TextInput } from '@/components/TextInput';
-import type { RoomResponse, ParticipantResponse } from '@/api/types';
+import { useToast } from '@/components/Toast';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { getErrorMessage } from '@/utils/error';
 
 interface ProjectEntry {
   slug: string;
@@ -114,21 +124,23 @@ export function HomePage() {
     if (removedSlugs.size > 0) {
       setProjectEntries((prev) => prev.filter((p) => !removedSlugs.has(p.slug)));
     }
-  }, [roomQueries.map((q) => q.status).join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
+    // biome-ignore lint/correctness/useExhaustiveDependencies: watch query status changes, not object references
+  }, [roomQueries.map((q) => q.status).join(',')]);
 
   // Build projects with rooms data
-  const projectsWithRooms = useMemo(() =>
-    projectEntries.map((entry, i) => {
-      const query = roomQueries[i];
-      return {
-        slug: entry.slug,
-        auth: entry.auth,
-        rooms: (query?.data ?? []) as RoomResponse[],
-        loading: query?.isLoading ?? true,
-        error: query?.isError ?? false,
-      };
-    }),
-  [projectEntries, roomQueries],
+  const projectsWithRooms = useMemo(
+    () =>
+      projectEntries.map((entry, i) => {
+        const query = roomQueries[i];
+        return {
+          slug: entry.slug,
+          auth: entry.auth,
+          rooms: (query?.data ?? []) as RoomResponse[],
+          loading: query?.isLoading ?? true,
+          error: query?.isError ?? false,
+        };
+      }),
+    [projectEntries, roomQueries],
   );
 
   // Mutations
@@ -187,12 +199,14 @@ export function HomePage() {
     [projectsWithRooms],
   );
 
-
   if (!identity) {
     const features = [
       { icon: Target, text: 'Live voting - your team estimates together in real time' },
       { icon: Clock, text: 'Async mode - everyone votes on their own schedule' },
-      { icon: BarChart3, text: 'Smart results - see consensus, outliers, and discussion points instantly' },
+      {
+        icon: BarChart3,
+        text: 'Smart results - see consensus, outliers, and discussion points instantly',
+      },
     ];
 
     return (
@@ -207,9 +221,15 @@ export function HomePage() {
           Sprint planning poker for distributed teams.
         </p>
 
-        <form onSubmit={(e) => handleSetName(e)} className="w-full max-w-sm animate-[fade-in-up_0.6s_ease-out_0.3s_both]">
+        <form
+          onSubmit={(e) => handleSetName(e)}
+          className="w-full max-w-sm animate-[fade-in-up_0.6s_ease-out_0.3s_both]"
+        >
           <div className="glass-frost rounded-2xl p-4 sm:p-6">
-            <label htmlFor="name-input" className="block text-sm font-medium text-efi-text-secondary mb-2">
+            <label
+              htmlFor="name-input"
+              className="block text-sm font-medium text-efi-text-secondary mb-2"
+            >
               What&apos;s your name?
             </label>
             <div className="flex items-center gap-1">
@@ -247,7 +267,6 @@ export function HomePage() {
             </div>
           ))}
         </div>
-
       </div>
     );
   }
@@ -281,7 +300,10 @@ export function HomePage() {
           <Info className="w-3.5 h-3.5 text-efi-info shrink-0" />
           <span>
             You're using EFI Poker as a guest. Your projects are stored locally.{' '}
-            <Link to="/login" className="text-efi-info hover:text-efi-info/80 font-medium no-underline hover:underline">
+            <Link
+              to="/login"
+              className="text-efi-info hover:text-efi-info/80 font-medium no-underline hover:underline"
+            >
               Log in
             </Link>{' '}
             to keep your data safe across devices.
@@ -289,10 +311,7 @@ export function HomePage() {
         </div>
       )}
 
-      <JoinByCodeModal
-        isOpen={showJoinModal}
-        onClose={() => setShowJoinModal(false)}
-      />
+      <JoinByCodeModal isOpen={showJoinModal} onClose={() => setShowJoinModal(false)} />
 
       <CreateProjectModal
         isOpen={showCreateModal}
@@ -306,8 +325,12 @@ export function HomePage() {
       {sortedProjects.length === 0 && (
         <div className="mb-8 text-center py-12 bg-white/3 rounded-2xl border border-dashed border-white/8">
           <span className="text-4xl block mb-3">&#127183;</span>
-          <p className="text-efi-text-primary font-medium mb-1">Create your first project to get started</p>
-          <p className="text-xs text-efi-text-tertiary mb-4">or ask your team lead for a join link</p>
+          <p className="text-efi-text-primary font-medium mb-1">
+            Create your first project to get started
+          </p>
+          <p className="text-xs text-efi-text-tertiary mb-4">
+            or ask your team lead for a join link
+          </p>
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
@@ -333,7 +356,9 @@ export function HomePage() {
                     <span className="text-sm font-medium text-efi-text-primary truncate">
                       {project.auth.projectName ?? project.slug}
                     </span>
-                    <RoleBadge isAdmin={Boolean(project.auth.adminCode) || isGuestAdmin(project.auth)} />
+                    <RoleBadge
+                      isAdmin={Boolean(project.auth.adminCode) || isGuestAdmin(project.auth)}
+                    />
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {project.loading ? (
@@ -353,7 +378,6 @@ export function HomePage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

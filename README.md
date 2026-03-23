@@ -25,6 +25,7 @@ Sprint Planning Poker for Scrum teams. Replace manual estimation on video calls 
 - **Markdown and CSV export** of estimation results
 - **Project/room/task hierarchy** - organize work by project, create rooms per sprint
 - **Admin tools** - user management, RBAC, project admin codes
+- **Remember me** - persistent sessions with secure refresh tokens
 - **No registration required** - participants join by nickname, no account needed
 - **PWA support** - installable on mobile
 - **Flexible auth** - built-in password, LDAP and OAuth2 (Auth0) providers
@@ -123,6 +124,8 @@ To get started:
 | `POSTGRES_PASSWORD` | `changeme` | Database password |
 | `JWT_SECRET` | - | JWT signing secret (min 64 chars) |
 | `JWT_EXPIRATION` | `86400` | JWT token expiration in seconds |
+| `JWT_REFRESH_EXPIRATION` | `2592000` | Refresh token expiration in seconds (30 days) |
+| `JWT_REFRESH_REMEMBER_EXPIRATION` | `7776000` | Refresh token with "Remember me" (90 days) |
 | `AUTH0_ENABLED` | `false` | Enable Auth0 OAuth2 login |
 | `AUTH0_DOMAIN` | - | Auth0 tenant domain |
 | `AUTH0_CLIENT_ID` | - | Auth0 client ID |

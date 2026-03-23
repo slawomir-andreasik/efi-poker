@@ -122,7 +122,7 @@ tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("boot
     val backendImage = providers.environmentVariable("BACKEND_IMAGE")
         .getOrElse("ghcr.io/slawomir-andreasik/efi-poker/backend")
     imageName.set("$backendImage:${project.version}")
-    builder.set("paketobuildpacks/builder-noble-java-tiny:0.0.119")
+    builder.set("paketobuildpacks/builder-noble-java-tiny:0.0.121")
     buildpacks.set(listOf(
         "urn:cnb:builder:paketo-buildpacks/java",
         "docker://docker.io/paketobuildpacks/health-checker"

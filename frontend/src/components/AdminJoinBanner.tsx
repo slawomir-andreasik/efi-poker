@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useAdminJoinMutation } from '@/api/mutations';
-import { logger } from '@/utils/logger';
-import { getErrorMessage } from '@/utils/error';
-import { useToast } from '@/components/Toast';
 import { ButtonSpinner } from '@/components/Spinner';
 import { TextInput } from '@/components/TextInput';
+import { useToast } from '@/components/Toast';
+import { getErrorMessage } from '@/utils/error';
+import { logger } from '@/utils/logger';
 
 interface AdminJoinBannerProps {
   slug: string;
@@ -48,7 +48,13 @@ export function AdminJoinBanner({ slug, onJoined }: AdminJoinBannerProps) {
         disabled={adminJoin.isPending || !joinNickname.trim()}
         className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
       >
-        {adminJoin.isPending ? <><ButtonSpinner /> Joining...</> : 'Join & Vote'}
+        {adminJoin.isPending ? (
+          <>
+            <ButtonSpinner /> Joining...
+          </>
+        ) : (
+          'Join & Vote'
+        )}
       </button>
     </form>
   );

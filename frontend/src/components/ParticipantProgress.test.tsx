@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ParticipantProgress } from './ParticipantProgress';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockParticipantProgress } from '@/test/fixtures';
+import { ParticipantProgress } from './ParticipantProgress';
 
 vi.mock('@/api/queries', () => ({
   roomApi: {
@@ -44,7 +44,9 @@ describe('ParticipantProgress', () => {
   });
 
   it('should render participant list sorted by votedCount ascending', () => {
-    mockUseQuery.mockReturnValue({ data: mockParticipantProgress() } as ReturnType<typeof useQuery>);
+    mockUseQuery.mockReturnValue({ data: mockParticipantProgress() } as ReturnType<
+      typeof useQuery
+    >);
     renderComponent();
 
     expect(screen.getByText('Participant Progress')).toBeInTheDocument();
@@ -58,7 +60,9 @@ describe('ParticipantProgress', () => {
   });
 
   it('should show progress counts', () => {
-    mockUseQuery.mockReturnValue({ data: mockParticipantProgress() } as ReturnType<typeof useQuery>);
+    mockUseQuery.mockReturnValue({ data: mockParticipantProgress() } as ReturnType<
+      typeof useQuery
+    >);
     renderComponent();
 
     expect(screen.getByText('5/5')).toBeInTheDocument();
@@ -68,7 +72,9 @@ describe('ParticipantProgress', () => {
 
   it('should toggle visibility on header click', async () => {
     const user = userEvent.setup();
-    mockUseQuery.mockReturnValue({ data: mockParticipantProgress() } as ReturnType<typeof useQuery>);
+    mockUseQuery.mockReturnValue({ data: mockParticipantProgress() } as ReturnType<
+      typeof useQuery
+    >);
     renderComponent();
 
     // Initially open

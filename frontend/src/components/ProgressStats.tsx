@@ -9,7 +9,9 @@ interface ProgressStatsProps {
 export function ProgressStats({ tasks, isRevealed }: ProgressStatsProps) {
   const totalTasks = tasks.length;
   const stats = useMemo(() => {
-    let myVotes = 0, fullyVoted = 0, finalSet = 0;
+    let myVotes = 0,
+      fullyVoted = 0,
+      finalSet = 0;
     for (const t of tasks) {
       if (t.myEstimate != null) myVotes++;
       if (t.totalParticipants > 0 && t.votedCount === t.totalParticipants) fullyVoted++;
@@ -22,7 +24,9 @@ export function ProgressStats({ tasks, isRevealed }: ProgressStatsProps) {
 
   return (
     <div className="rounded-xl glass-whisper p-4 space-y-3">
-      <h3 className="text-xs font-medium text-efi-text-secondary uppercase tracking-wider">Progress</h3>
+      <h3 className="text-xs font-medium text-efi-text-secondary uppercase tracking-wider">
+        Progress
+      </h3>
 
       <div className="space-y-2.5">
         {/* Total tasks */}
@@ -36,7 +40,9 @@ export function ProgressStats({ tasks, isRevealed }: ProgressStatsProps) {
           <div>
             <div className="flex items-center justify-between text-sm mb-1">
               <span className="text-efi-text-secondary">My votes</span>
-              <span className="text-efi-text-primary font-medium">{stats.myVotes} / {totalTasks}</span>
+              <span className="text-efi-text-primary font-medium">
+                {stats.myVotes} / {totalTasks}
+              </span>
             </div>
             <MiniBar value={stats.myVotes} total={totalTasks} />
           </div>
@@ -46,7 +52,9 @@ export function ProgressStats({ tasks, isRevealed }: ProgressStatsProps) {
         <div>
           <div className="flex items-center justify-between text-sm mb-1">
             <span className="text-efi-text-secondary">Team complete</span>
-            <span className="text-efi-text-primary font-medium">{stats.fullyVoted} / {totalTasks}</span>
+            <span className="text-efi-text-primary font-medium">
+              {stats.fullyVoted} / {totalTasks}
+            </span>
           </div>
           <MiniBar value={stats.fullyVoted} total={totalTasks} />
         </div>
@@ -56,7 +64,9 @@ export function ProgressStats({ tasks, isRevealed }: ProgressStatsProps) {
           <div>
             <div className="flex items-center justify-between text-sm mb-1">
               <span className="text-efi-text-secondary">Final SP set</span>
-              <span className="text-efi-text-primary font-medium">{stats.finalSet} / {totalTasks}</span>
+              <span className="text-efi-text-primary font-medium">
+                {stats.finalSet} / {totalTasks}
+              </span>
             </div>
             <MiniBar value={stats.finalSet} total={totalTasks} color="green" />
           </div>
@@ -66,7 +76,15 @@ export function ProgressStats({ tasks, isRevealed }: ProgressStatsProps) {
   );
 }
 
-function MiniBar({ value, total, color = 'gold' }: { value: number; total: number; color?: 'gold' | 'green' }) {
+function MiniBar({
+  value,
+  total,
+  color = 'gold',
+}: {
+  value: number;
+  total: number;
+  color?: 'gold' | 'green';
+}) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   const allDone = value === total && total > 0;
   const barColor = allDone

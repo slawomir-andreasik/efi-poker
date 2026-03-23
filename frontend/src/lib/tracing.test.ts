@@ -1,11 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  generateTraceId,
-  generateSpanId,
   createTraceparent,
+  generateSpanId,
+  generateTraceId,
+  getCurrentTraceId,
   getTracingHeaders,
   resetTrace,
-  getCurrentTraceId,
 } from './tracing';
 
 describe('tracing', () => {

@@ -1,14 +1,15 @@
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { RoomStatsEntry } from '@/api/types';
-import { TOOLTIP_STYLE, CURSOR_STYLE, GRID_STROKE, AXIS_TICK, AXIS_TICK_SMALL, AXIS_LINE, COLORS, truncateTitle } from './chartTheme';
+import {
+  AXIS_LINE,
+  AXIS_TICK,
+  AXIS_TICK_SMALL,
+  COLORS,
+  CURSOR_STYLE,
+  GRID_STROKE,
+  TOOLTIP_STYLE,
+  truncateTitle,
+} from './chartTheme';
 
 interface SpPerRoomChartProps {
   rooms: RoomStatsEntry[];
@@ -32,18 +33,8 @@ export function SpPerRoomChart({ rooms }: SpPerRoomChartProps) {
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
-        <XAxis
-          dataKey="name"
-          tick={AXIS_TICK_SMALL}
-          axisLine={AXIS_LINE}
-          tickLine={false}
-        />
-        <YAxis
-          tick={AXIS_TICK}
-          axisLine={false}
-          tickLine={false}
-          allowDecimals={false}
-        />
+        <XAxis dataKey="name" tick={AXIS_TICK_SMALL} axisLine={AXIS_LINE} tickLine={false} />
+        <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} allowDecimals={false} />
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
           cursor={CURSOR_STYLE}

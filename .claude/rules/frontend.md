@@ -7,6 +7,16 @@ paths:
 
 # Frontend Conventions
 
+## Linting and Formatting
+
+- **Biome** handles both linting and formatting (replaced ESLint + Prettier)
+- Config: `frontend/biome.json` - rules, formatter settings, import sorting
+- Lint: `bun run lint` (TypeScript type-check + Biome check)
+- Format: `bun run format` (auto-format with Biome)
+- Dead code: `bun run knip` (unused exports, deps)
+- Suppress rules: `// biome-ignore lint/category/ruleName: reason` (always include reason)
+- CSS files excluded from Biome (Tailwind `@theme` syntax not supported)
+
 ## Architecture
 
 - **Routing**: React Router v7, routes in `App.tsx` with `lazy()` + `Suspense`

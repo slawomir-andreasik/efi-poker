@@ -3,15 +3,26 @@
  * backend endpoints with correct HTTP methods and request bodies.
  * These tests mock fetch and check the actual URLs hit by each page.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fakeJwt, setAdminAuth, setGuestTokenAuth, setIdentity } from '../auth-helpers';
+import {
+  mockParticipant,
+  mockProject,
+  mockProjectAdmin,
+  mockRoomDetail,
+  mockRoomResults,
+} from '../fixtures';
 import { renderWithProviders } from '../helpers';
-import { setAdminAuth, setGuestTokenAuth, setIdentity, fakeJwt } from '../auth-helpers';
-import { mockProjectAdmin, mockParticipant, mockProject, mockRoomDetail, mockRoomResults } from '../fixtures';
 
 // Must mock react-router-dom params before importing pages
-const mockParams = vi.hoisted(() => ({ slug: 'test-project', roomId: 'room-123', roomSlug: 'test-room' }));
+const mockParams = vi.hoisted(() => ({
+  slug: 'test-project',
+  roomId: 'room-123',
+  roomSlug: 'test-room',
+}));
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return {
@@ -24,9 +35,9 @@ vi.mock('react-router-dom', async () => {
 import { HomePage } from '@/pages/HomePage';
 import { JoinPage } from '@/pages/JoinPage';
 import { ProjectPage } from '@/pages/ProjectPage';
-import { RoomPage } from '@/pages/RoomPage';
 import { ResultsPage } from '@/pages/ResultsPage';
 import { RoomJoinRedirectPage } from '@/pages/RoomJoinRedirectPage';
+import { RoomPage } from '@/pages/RoomPage';
 
 interface FetchCall {
   url: string;
@@ -38,9 +49,10 @@ let calls: FetchCall[];
 
 function routedFetch(routes: Record<string, unknown>): typeof globalThis.fetch {
   return vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-    const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    const url =
+      typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
     const method = init?.method || 'GET';
-    const body = init?.body as string | null ?? null;
+    const body = (init?.body as string | null) ?? null;
     calls.push({ url, method, body });
 
     // Find matching route (prefix match)
@@ -95,7 +107,6 @@ describe('HomePage API calls', () => {
     expect(postCall.url).toBe('/api/v1/projects');
     expect(JSON.parse(postCall.body!)).toMatchObject({ name: 'Sprint 42' });
   });
-
 });
 
 describe('JoinPage API calls', () => {
@@ -163,7 +174,15 @@ describe('RoomPage API calls', () => {
   it('should fetch room from flat path /rooms/{id}', async () => {
     setGuestTokenAuth('test-project', fakeJwt({ participantId: 'p-1' }));
     globalThis.fetch = routedFetch({
-      '/rooms/': { id: 'room-123', title: 'Test', status: 'OPEN', roomType: 'ASYNC', deadline: '2026-03-01T00:00:00Z', roundNumber: 1, tasks: [] },
+      '/rooms/': {
+        id: 'room-123',
+        title: 'Test',
+        status: 'OPEN',
+        roomType: 'ASYNC',
+        deadline: '2026-03-01T00:00:00Z',
+        roundNumber: 1,
+        tasks: [],
+      },
     });
 
     renderWithProviders(<RoomPage />);
@@ -176,7 +195,9 @@ describe('RoomPage API calls', () => {
     expect(urls).toContain('/api/v1/rooms/room-123');
 
     // Verify NO nested project path
-    const nestedCalls = calls.filter((c) => c.url.includes('/projects/') && c.url.includes('/rooms/'));
+    const nestedCalls = calls.filter(
+      (c) => c.url.includes('/projects/') && c.url.includes('/rooms/'),
+    );
     expect(nestedCalls).toHaveLength(0);
   });
 
@@ -186,8 +207,25 @@ describe('RoomPage API calls', () => {
     globalThis.fetch = routedFetch({
       '/estimates': {},
       '/rooms/': {
-        id: 'room-123', title: 'Test', status: 'OPEN', roomType: 'ASYNC', deadline: '2026-03-01T00:00:00Z', roundNumber: 1,
-        tasks: [{ id: 'task-1', title: 'Task One', sortOrder: 0, myEstimate: null, allEstimates: null, votedCount: 0, totalParticipants: 3, revealed: false, active: false }],
+        id: 'room-123',
+        title: 'Test',
+        status: 'OPEN',
+        roomType: 'ASYNC',
+        deadline: '2026-03-01T00:00:00Z',
+        roundNumber: 1,
+        tasks: [
+          {
+            id: 'task-1',
+            title: 'Task One',
+            sortOrder: 0,
+            myEstimate: null,
+            allEstimates: null,
+            votedCount: 0,
+            totalParticipants: 3,
+            revealed: false,
+            active: false,
+          },
+        ],
       },
     });
 
@@ -218,7 +256,30 @@ describe('RoomPage API calls', () => {
     globalThis.fetch = routedFetch({
       '/estimates': {},
       '/rooms/': mockRoomDetail({
-        tasks: [{ id: 'task-1', title: 'Task One', sortOrder: 0, myEstimate: { id: 'e-1', participantId: 'p-1', participantNickname: 'Alice', storyPoints: '5', createdAt: '2026-01-01' }, allEstimates: [], votedCount: 1, totalParticipants: 3, revealed: false, active: false, description: undefined, averagePoints: null, medianPoints: null, finalEstimate: null, questionVotesCount: 0 }],
+        tasks: [
+          {
+            id: 'task-1',
+            title: 'Task One',
+            sortOrder: 0,
+            myEstimate: {
+              id: 'e-1',
+              participantId: 'p-1',
+              participantNickname: 'Alice',
+              storyPoints: '5',
+              createdAt: '2026-01-01',
+            },
+            allEstimates: [],
+            votedCount: 1,
+            totalParticipants: 3,
+            revealed: false,
+            active: false,
+            description: undefined,
+            averagePoints: null,
+            medianPoints: null,
+            finalEstimate: null,
+            questionVotesCount: 0,
+          },
+        ],
       }),
     });
 

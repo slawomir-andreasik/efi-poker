@@ -35,10 +35,7 @@ export function ParticipationMatrix({ matrix, tasks }: ParticipationMatrixProps)
         </thead>
         <tbody>
           {matrix.map((row, idx) => (
-            <tr
-              key={row.participantId}
-              className={idx % 2 === 0 ? 'bg-white/[0.02]' : ''}
-            >
+            <tr key={row.participantId} className={idx % 2 === 0 ? 'bg-white/[0.02]' : ''}>
               <td className="px-4 py-2.5 text-efi-text-primary font-medium whitespace-nowrap">
                 {row.nickname}
               </td>

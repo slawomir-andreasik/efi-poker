@@ -22,5 +22,5 @@ export const COLORS = {
 } as const;
 
 export function truncateTitle(title: string, maxLen = 14): string {
-  return title.length > maxLen ? title.slice(0, maxLen) + '\u2026' : title;
+  return title.length > maxLen ? `${title.slice(0, maxLen)}\u2026` : title;
 }

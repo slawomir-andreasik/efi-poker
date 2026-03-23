@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TextInput, TextArea } from '@/components/TextInput';
+import { TextArea, TextInput } from '@/components/TextInput';
 
 interface AddTaskFormProps {
   onAdd: (title: string, description?: string) => Promise<void>;

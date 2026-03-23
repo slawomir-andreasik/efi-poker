@@ -1,9 +1,9 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllProjects, isGuestAdmin } from '@/api/client';
 import type { ProjectAuth } from '@/api/client';
-import { useDropdownDismiss } from '@/hooks/useDropdownDismiss';
+import { getAllProjects, isGuestAdmin } from '@/api/client';
 import { RoleBadge } from '@/components/RoleBadge';
+import { useDropdownDismiss } from '@/hooks/useDropdownDismiss';
 
 interface ProjectSwitcherDropdownProps {
   currentSlug: string | undefined;
@@ -41,7 +41,9 @@ export function ProjectSwitcherDropdown({ currentSlug, onClose }: ProjectSwitche
       className="absolute left-0 top-full mt-1 glass-crystal rounded-lg shadow-xl w-[85vw] sm:w-auto sm:min-w-56 max-w-sm z-50 overflow-hidden"
     >
       <div className="px-3 py-2 border-b border-white/8">
-        <p className="text-xs font-semibold text-efi-text-secondary uppercase tracking-wider">My Projects</p>
+        <p className="text-xs font-semibold text-efi-text-secondary uppercase tracking-wider">
+          My Projects
+        </p>
       </div>
 
       {entries.length > 0 ? (
@@ -60,7 +62,9 @@ export function ProjectSwitcherDropdown({ currentSlug, onClose }: ProjectSwitche
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <span className={`text-sm font-medium truncate ${isCurrent ? 'text-efi-gold-light' : 'text-efi-text-primary'}`}>
+                  <span
+                    className={`text-sm font-medium truncate ${isCurrent ? 'text-efi-gold-light' : 'text-efi-text-primary'}`}
+                  >
                     {entry.name}
                   </span>
                   <RoleBadge isAdmin={entry.isAdmin} />

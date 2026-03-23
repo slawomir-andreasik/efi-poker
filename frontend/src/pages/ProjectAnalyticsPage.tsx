@@ -1,21 +1,25 @@
-import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { Link, useParams } from 'react-router-dom';
 import { ApiError } from '@/api/client';
-import { queryKeys } from '@/api/queryKeys';
 import { analyticsApi } from '@/api/queries';
-import { getErrorMessage } from '@/utils/error';
-import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { PageSpinner } from '@/components/PageSpinner';
-import { NotFoundState } from '@/components/NotFoundState';
-import { TraceCopyButton } from '@/components/TraceCopyButton';
-import { SummaryCard } from '@/components/charts/SummaryCard';
-import { SpPerRoomChart } from '@/components/charts/SpPerRoomChart';
+import { queryKeys } from '@/api/queryKeys';
 import { ConsensusRateChart } from '@/components/charts/ConsensusRateChart';
+import { SpPerRoomChart } from '@/components/charts/SpPerRoomChart';
+import { SummaryCard } from '@/components/charts/SummaryCard';
+import { NotFoundState } from '@/components/NotFoundState';
+import { PageSpinner } from '@/components/PageSpinner';
+import { TraceCopyButton } from '@/components/TraceCopyButton';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { getErrorMessage } from '@/utils/error';
 
 export function ProjectAnalyticsPage() {
   const { slug } = useParams<{ slug: string }>();
 
-  const { data: analytics, isLoading, error } = useQuery({
+  const {
+    data: analytics,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: queryKeys.analytics.project(slug!),
     queryFn: () => analyticsApi.project(slug!),
     enabled: Boolean(slug),
@@ -34,9 +38,7 @@ export function ProjectAnalyticsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <p className="text-efi-error">{getErrorMessage(error)}</p>
-        {error instanceof ApiError && error.traceId && (
-          <TraceCopyButton traceId={error.traceId} />
-        )}
+        {error instanceof ApiError && error.traceId && <TraceCopyButton traceId={error.traceId} />}
         <Link
           to={slug ? `/p/${slug}` : '/'}
           className="text-sm text-efi-gold-light hover:text-efi-gold transition-colors no-underline hover:underline"
@@ -85,7 +87,7 @@ export function ProjectAnalyticsPage() {
             Story Points per Room
           </h2>
           <div className="glass-frost rounded-xl p-4">
-            <SpPerRoomChart rooms={analytics!.roomStats} />
+            <SpPerRoomChart rooms={analytics?.roomStats ?? []} />
           </div>
         </section>
       )}
@@ -97,7 +99,7 @@ export function ProjectAnalyticsPage() {
             Consensus Rate per Room
           </h2>
           <div className="glass-frost rounded-xl p-4">
-            <ConsensusRateChart rooms={analytics!.roomStats} />
+            <ConsensusRateChart rooms={analytics?.roomStats ?? []} />
           </div>
         </section>
       )}
@@ -127,11 +129,8 @@ export function ProjectAnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {analytics!.topContentiousTasks.map((task, idx) => (
-                  <tr
-                    key={task.taskId}
-                    className={idx % 2 === 0 ? 'bg-white/[0.02]' : ''}
-                  >
+                {analytics?.topContentiousTasks.map((task, idx) => (
+                  <tr key={task.taskId} className={idx % 2 === 0 ? 'bg-white/[0.02]' : ''}>
                     <td className="px-4 py-3 text-efi-text-primary font-medium">
                       {task.taskTitle}
                     </td>
@@ -179,14 +178,9 @@ export function ProjectAnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {analytics!.participantLeaderboard.map((entry, idx) => (
-                  <tr
-                    key={entry.participantId}
-                    className={idx % 2 === 0 ? 'bg-white/[0.02]' : ''}
-                  >
-                    <td className="px-4 py-3 text-efi-text-tertiary text-xs">
-                      {idx + 1}
-                    </td>
+                {analytics?.participantLeaderboard.map((entry, idx) => (
+                  <tr key={entry.participantId} className={idx % 2 === 0 ? 'bg-white/[0.02]' : ''}>
+                    <td className="px-4 py-3 text-efi-text-tertiary text-xs">{idx + 1}</td>
                     <td className="px-4 py-3 text-efi-text-primary font-medium">
                       {entry.nickname}
                     </td>

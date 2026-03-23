@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Modal } from '@/components/Modal';
 import { RandomNameButton } from '@/components/RandomNameButton';
-import { generateProjectName } from '@/utils/nameGenerator';
 import { ButtonSpinner } from '@/components/Spinner';
 import { TextInput } from '@/components/TextInput';
-import { Modal } from '@/components/Modal';
+import { generateProjectName } from '@/utils/nameGenerator';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -13,7 +13,13 @@ interface CreateProjectModalProps {
   isGuest: boolean;
 }
 
-export function CreateProjectModal({ isOpen, onClose, onCreate, isPending, isGuest }: CreateProjectModalProps) {
+export function CreateProjectModal({
+  isOpen,
+  onClose,
+  onCreate,
+  isPending,
+  isGuest,
+}: CreateProjectModalProps) {
   const [projectName, setProjectName] = useState('');
 
   useEffect(() => {
@@ -31,7 +37,10 @@ export function CreateProjectModal({ isOpen, onClose, onCreate, isPending, isGue
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="New Project">
       <form onSubmit={handleSubmit}>
-        <label htmlFor="modal-project-name" className="block text-sm font-medium text-efi-text-secondary mb-1">
+        <label
+          htmlFor="modal-project-name"
+          className="block text-sm font-medium text-efi-text-secondary mb-1"
+        >
           Project Name
         </label>
         <div className="flex items-center gap-1">
@@ -67,7 +76,13 @@ export function CreateProjectModal({ isOpen, onClose, onCreate, isPending, isGue
             disabled={isPending || !projectName.trim()}
             className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none flex items-center gap-2"
           >
-            {isPending ? <><ButtonSpinner /> Creating...</> : 'Create Project'}
+            {isPending ? (
+              <>
+                <ButtonSpinner /> Creating...
+              </>
+            ) : (
+              'Create Project'
+            )}
           </button>
         </div>
       </form>

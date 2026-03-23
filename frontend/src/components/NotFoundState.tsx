@@ -6,7 +6,11 @@ interface NotFoundStateProps {
   backLabel?: string;
 }
 
-export function NotFoundState({ message, backTo = '/', backLabel = 'Back to Home' }: NotFoundStateProps) {
+export function NotFoundState({
+  message,
+  backTo = '/',
+  backLabel = 'Back to Home',
+}: NotFoundStateProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
       <p className="text-efi-text-primary font-medium">{message}</p>

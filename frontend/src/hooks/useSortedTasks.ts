@@ -1,6 +1,6 @@
-import { useMemo, useCallback } from 'react';
-import { useLocalStorage } from './useLocalStorage';
+import { useCallback, useMemo } from 'react';
 import type { TaskWithEstimateResponse } from '@/api/types';
+import { useLocalStorage } from './useLocalStorage';
 
 export type SortField = 'default' | 'title' | 'progress';
 export type SortDirection = 'asc' | 'desc';
@@ -22,7 +22,12 @@ function getProgressRatio(task: TaskWithEstimateResponse): number {
   return task.votedCount / task.totalParticipants;
 }
 
-function compareTasks(a: TaskWithEstimateResponse, b: TaskWithEstimateResponse, field: SortField, direction: SortDirection): number {
+function compareTasks(
+  a: TaskWithEstimateResponse,
+  b: TaskWithEstimateResponse,
+  field: SortField,
+  direction: SortDirection,
+): number {
   let result: number;
 
   switch (field) {
@@ -32,7 +37,6 @@ function compareTasks(a: TaskWithEstimateResponse, b: TaskWithEstimateResponse, 
     case 'progress':
       result = getProgressRatio(a) - getProgressRatio(b);
       break;
-    case 'default':
     default:
       result = a.sortOrder - b.sortOrder;
       break;
@@ -42,15 +46,9 @@ function compareTasks(a: TaskWithEstimateResponse, b: TaskWithEstimateResponse, 
 }
 
 export function useSortedTasks(tasks: TaskWithEstimateResponse[], roomId: string) {
-  const [sortState, setSortState] = useLocalStorage<SortState>(
-    `efi-sort-${roomId}`,
-    DEFAULT_SORT,
-  );
+  const [sortState, setSortState] = useLocalStorage<SortState>(`efi-sort-${roomId}`, DEFAULT_SORT);
 
-  const unestimatedCount = useMemo(
-    () => tasks.filter((t) => t.myEstimate == null).length,
-    [tasks],
-  );
+  const unestimatedCount = useMemo(() => tasks.filter((t) => t.myEstimate == null).length, [tasks]);
 
   const sortedTasks = useMemo(() => {
     let filtered = tasks;
@@ -65,13 +63,14 @@ export function useSortedTasks(tasks: TaskWithEstimateResponse[], roomId: string
   }, [tasks, sortState]);
 
   const setSortField = useCallback(
-    (field: SortField) => setSortState((prev) => {
-      // Re-click active field: toggle direction instead of reverting to default
-      if (prev.field === field) {
-        return { ...prev, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
-      }
-      return { ...prev, field, direction: 'asc' };
-    }),
+    (field: SortField) =>
+      setSortState((prev) => {
+        // Re-click active field: toggle direction instead of reverting to default
+        if (prev.field === field) {
+          return { ...prev, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+        }
+        return { ...prev, field, direction: 'asc' };
+      }),
     [setSortState],
   );
 

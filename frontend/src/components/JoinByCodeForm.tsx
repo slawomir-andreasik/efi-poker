@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { logger } from '@/utils/logger';
 import { TextInput } from '@/components/TextInput';
+import { logger } from '@/utils/logger';
 
 export function JoinByCodeForm() {
   const navigate = useNavigate();

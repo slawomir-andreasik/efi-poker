@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { setJwt, setIdentity } from '@/api/client';
+import { setIdentity, setJwt } from '@/api/client';
 import { Spinner } from '@/components/Spinner';
 
 export function AuthCallbackPage() {

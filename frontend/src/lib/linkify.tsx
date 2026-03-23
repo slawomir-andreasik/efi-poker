@@ -1,5 +1,5 @@
-import { memo } from 'react';
 import type { ReactNode } from 'react';
+import { memo } from 'react';
 
 const URL_REGEX = /https?:\/\/[^\s<>"'()]+/g;
 const MAX_URL_DISPLAY = 45;
@@ -10,7 +10,7 @@ function parseUrl(raw: string): { displayUrl: string } | null {
     const { protocol, hostname, pathname } = new URL(raw);
     if (protocol !== 'http:' && protocol !== 'https:') return null;
     if (raw.length <= MAX_URL_DISPLAY) return { displayUrl: raw };
-    const pathHint = pathname.length > 1 ? pathname.slice(0, 15) + '...' : '';
+    const pathHint = pathname.length > 1 ? `${pathname.slice(0, 15)}...` : '';
     return { displayUrl: hostname + pathHint };
   } catch {
     return null;

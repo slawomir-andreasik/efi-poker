@@ -43,7 +43,7 @@ function getNowMin(): string {
 export function formatPreview(value: string): string {
   if (!value) return '';
   const d = new Date(value);
-  if (isNaN(d.getTime())) return '';
+  if (Number.isNaN(d.getTime())) return '';
   return new Intl.DateTimeFormat('pl-PL', {
     day: 'numeric',
     month: 'short',
@@ -97,9 +97,7 @@ export function DeadlineInput({ value, onChange }: DeadlineInputProps) {
             {p.label}
           </button>
         ))}
-        {preview && (
-          <span className="text-xs text-efi-text-secondary ml-auto">{preview}</span>
-        )}
+        {preview && <span className="text-xs text-efi-text-secondary ml-auto">{preview}</span>}
       </div>
     </div>
   );

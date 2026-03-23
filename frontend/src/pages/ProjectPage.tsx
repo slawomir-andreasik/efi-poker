@@ -1,46 +1,46 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { saveAuth, removeProject, ApiError, getJwt } from '@/api/client';
-import { queryKeys } from '@/api/queryKeys';
-import { projectApi, roomApi } from '@/api/queries';
-import { useProjectAuth } from '@/hooks/useProjectAuth';
-import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { Copy, Download, Eye, Plus, RotateCcw, Square, Trash2, Upload, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ApiError, getJwt, removeProject, saveAuth } from '@/api/client';
 import {
-  useCreateRoom,
-  useRevealRoom,
-  useReopenRoom,
-  useFinishSession,
-  useUpdateProject,
-  useDeleteProject,
   useAddTask,
-  useImportTasks,
-  useUpdateTask,
-  useDeleteTask,
+  useCreateRoom,
   useDeleteParticipant,
+  useDeleteProject,
+  useDeleteTask,
+  useFinishSession,
+  useImportTasks,
+  useReopenRoom,
+  useRevealRoom,
+  useUpdateProject,
+  useUpdateTask,
 } from '@/api/mutations';
-import { logger } from '@/utils/logger';
-import { getErrorMessage } from '@/utils/error';
-import { useToast } from '@/components/Toast';
-import { PageSpinner } from '@/components/PageSpinner';
+import { projectApi, roomApi } from '@/api/queries';
+import { queryKeys } from '@/api/queryKeys';
+import type { AutoAssignedEstimate, RoomType } from '@/api/types';
+import { AddTaskForm } from '@/components/AddTaskForm';
+import { CountdownTimer } from '@/components/CountdownTimer';
+import { DeadlineInput, formatPreview, getDefaultDeadline } from '@/components/DeadlineInput';
+import { FinishSessionDialog } from '@/components/FinishSessionDialog';
+import { ImportModal } from '@/components/ImportModal';
+import { InlineConfirmAction } from '@/components/InlineConfirmAction';
 import { NotFoundState } from '@/components/NotFoundState';
-import { TraceCopyButton } from '@/components/TraceCopyButton';
+import { PageSpinner } from '@/components/PageSpinner';
+import { RandomNameButton } from '@/components/RandomNameButton';
+import { DEFAULT_COMMENT_TEMPLATE, RoomSettings } from '@/components/RoomSettings';
 import { ShareButton } from '@/components/ShareButton';
 import { ButtonSpinner } from '@/components/Spinner';
-import { CountdownTimer } from '@/components/CountdownTimer';
-import { DeadlineInput, getDefaultDeadline, formatPreview } from '@/components/DeadlineInput';
-import { ImportModal } from '@/components/ImportModal';
-import { AddTaskForm } from '@/components/AddTaskForm';
-import { FinishSessionDialog } from '@/components/FinishSessionDialog';
-import { Copy, Trash2, Plus, X, Eye, RotateCcw, Upload, Download, Square } from 'lucide-react';
-import { InlineConfirmAction } from '@/components/InlineConfirmAction';
-import { RoomSettings, DEFAULT_COMMENT_TEMPLATE } from '@/components/RoomSettings';
-import { RandomNameButton } from '@/components/RandomNameButton';
-import { generateRoomName } from '@/utils/nameGenerator';
+import { TextArea, TextInput } from '@/components/TextInput';
+import { useToast } from '@/components/Toast';
+import { TraceCopyButton } from '@/components/TraceCopyButton';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useProjectAuth } from '@/hooks/useProjectAuth';
 import { Linkify } from '@/lib/linkify';
-import { statusBadge, roomTypeBadge, statusLabel } from '@/utils/roomBadges';
-import { TextInput, TextArea } from '@/components/TextInput';
-import type { RoomType, AutoAssignedEstimate } from '@/api/types';
+import { getErrorMessage } from '@/utils/error';
+import { logger } from '@/utils/logger';
+import { generateRoomName } from '@/utils/nameGenerator';
+import { roomTypeBadge, statusBadge, statusLabel } from '@/utils/roomBadges';
 
 export function ProjectPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -52,8 +52,16 @@ export function ProjectPage() {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [editingTask, setEditingTask] = useState<{ id: string; title: string; description: string } | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<{ type: 'task' | 'participant'; id: string; name: string } | null>(null);
+  const [editingTask, setEditingTask] = useState<{
+    id: string;
+    title: string;
+    description: string;
+  } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{
+    type: 'task' | 'participant';
+    id: string;
+    name: string;
+  } | null>(null);
   const [editingName, setEditingName] = useState<string | null>(null);
 
   // Shared create room state
@@ -67,7 +75,11 @@ export function ProjectPage() {
   const [commentRequired, setCommentRequired] = useState(false);
 
   // Queries
-  const { data: project, isLoading: loading, error } = useQuery({
+  const {
+    data: project,
+    isLoading: loading,
+    error,
+  } = useQuery({
     queryKey: queryKeys.projects.detail(slug!),
     queryFn: () => projectApi.detail(slug!),
     enabled: Boolean(slug),
@@ -132,9 +144,7 @@ export function ProjectPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <p className="text-efi-error">{getErrorMessage(error)}</p>
-        {error instanceof ApiError && error.traceId && (
-          <TraceCopyButton traceId={error.traceId} />
-        )}
+        {error instanceof ApiError && error.traceId && <TraceCopyButton traceId={error.traceId} />}
       </div>
     );
   }
@@ -229,7 +239,11 @@ export function ProjectPage() {
     if (!selectedRoomId) return;
     logger.debug(`Add task: title=${taskTitle}`);
     try {
-      await addTask.mutateAsync({ roomId: selectedRoomId, title: taskTitle, description: taskDescription });
+      await addTask.mutateAsync({
+        roomId: selectedRoomId,
+        title: taskTitle,
+        description: taskDescription,
+      });
     } catch (err) {
       logger.warn('Failed to add task:', getErrorMessage(err));
       showToast(getErrorMessage(err));
@@ -248,11 +262,16 @@ export function ProjectPage() {
     }
   }
 
-
   async function handleSaveTask() {
     if (!editingTask) return;
     try {
-      await updateTask.mutateAsync({ taskId: editingTask.id, body: { title: editingTask.title.trim(), description: editingTask.description.trim() || undefined } });
+      await updateTask.mutateAsync({
+        taskId: editingTask.id,
+        body: {
+          title: editingTask.title.trim(),
+          description: editingTask.description.trim() || undefined,
+        },
+      });
       setEditingTask(null);
     } catch (err) {
       logger.warn('Failed to update task:', getErrorMessage(err));
@@ -375,9 +394,12 @@ export function ProjectPage() {
               <h1
                 className="text-xl sm:text-2xl font-bold text-efi-text-primary cursor-pointer hover:text-efi-gold-light transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none rounded"
                 onClick={() => setEditingName(project?.name ?? '')}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditingName(project?.name ?? ''); } }}
-                role="button"
-                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setEditingName(project?.name ?? '');
+                  }
+                }}
                 title="Click to edit project name"
               >
                 <span className="text-sm font-normal text-efi-text-secondary mr-1">Project:</span>
@@ -385,7 +407,9 @@ export function ProjectPage() {
               </h1>
             )}
             <div className="flex items-center gap-3 mt-1">
-              <p className="text-sm text-efi-text-secondary">{roomList.length} {roomList.length === 1 ? 'room' : 'rooms'}</p>
+              <p className="text-sm text-efi-text-secondary">
+                {roomList.length} {roomList.length === 1 ? 'room' : 'rooms'}
+              </p>
             </div>
           </div>
           <div className="mt-3 sm:mt-0 flex gap-3">
@@ -429,26 +453,41 @@ export function ProjectPage() {
           <div className="lg:col-span-3 space-y-6">
             {/* Room list header */}
             <div>
-              <h2 className="text-sm font-semibold text-efi-text-secondary uppercase tracking-wider mb-3">Rooms</h2>
+              <h2 className="text-sm font-semibold text-efi-text-secondary uppercase tracking-wider mb-3">
+                Rooms
+              </h2>
 
               {roomList.length > 0 ? (
                 <div className="flex flex-col gap-1">
                   {roomList.map((r) => (
                     <div key={r.id} className="flex items-center gap-1">
                       <button
-                        onClick={() => { setSelectedRoomId(r.id); setPendingDelete(null); }}
-                        className={`flex-1 text-left px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none flex items-center justify-between gap-2 ${selectedRoomId === r.id
-                          ? 'bg-efi-gold/15 border border-efi-gold/30 text-efi-text-primary'
-                          : 'bg-white/[0.03] border border-white/6 text-efi-text-primary hover:bg-white/6 hover:border-white/10'
-                          }`}
+                        type="button"
+                        onClick={() => {
+                          setSelectedRoomId(r.id);
+                          setPendingDelete(null);
+                        }}
+                        className={`flex-1 text-left px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none flex items-center justify-between gap-2 ${
+                          selectedRoomId === r.id
+                            ? 'bg-efi-gold/15 border border-efi-gold/30 text-efi-text-primary'
+                            : 'bg-white/[0.03] border border-white/6 text-efi-text-primary hover:bg-white/6 hover:border-white/10'
+                        }`}
                       >
                         <span className="font-medium truncate">{r.title}</span>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="text-[10px] font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">{r.slug}</span>
-                          <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${roomTypeBadge(r.roomType)}`}>
+                          <span className="text-[10px] font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">
+                            {r.slug}
+                          </span>
+                          <span
+                            className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${roomTypeBadge(r.roomType)}`}
+                          >
                             {r.roomType === 'LIVE' ? 'Live' : 'Async'}
                           </span>
-                          <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${statusBadge(r.status)}`}>{statusLabel(r.status)}</span>
+                          <span
+                            className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${statusBadge(r.status)}`}
+                          >
+                            {statusLabel(r.status)}
+                          </span>
                         </div>
                       </button>
                     </div>
@@ -468,34 +507,59 @@ export function ProjectPage() {
                 <div className="mb-6">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-lg font-semibold text-efi-text-primary">{room.title}</h2>
-                    <span className="text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">{room.slug}</span>
-                    <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${roomTypeBadge(room.roomType)}`}>
+                    <span className="text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">
+                      {room.slug}
+                    </span>
+                    <span
+                      className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${roomTypeBadge(room.roomType)}`}
+                    >
                       {isRoomLive ? 'Live' : 'Async'}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-3">
                     {room.status !== 'REVEALED' && room.status !== 'CLOSED' && !isRoomLive && (
                       <button
+                        type="button"
                         onClick={() => void handleReveal(room.id)}
                         disabled={revealRoom.isPending}
                         className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                       >
-                        {revealRoom.isPending ? <><ButtonSpinner /> Revealing...</> : <><Eye className="w-4 h-4" /> Reveal</>}
+                        {revealRoom.isPending ? (
+                          <>
+                            <ButtonSpinner /> Revealing...
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="w-4 h-4" /> Reveal
+                          </>
+                        )}
                       </button>
                     )}
                     {(room.status === 'REVEALED' || room.status === 'CLOSED') && (
                       <button
+                        type="button"
                         onClick={() => void handleReopen(room.id)}
                         disabled={reopenRoom.isPending}
                         className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-info/30 text-efi-info hover:bg-efi-info/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                       >
-                        {reopenRoom.isPending ? <><ButtonSpinner /> Reopening...</> : <><RotateCcw className="w-4 h-4" /> Reopen Voting</>}
+                        {reopenRoom.isPending ? (
+                          <>
+                            <ButtonSpinner /> Reopening...
+                          </>
+                        ) : (
+                          <>
+                            <RotateCcw className="w-4 h-4" /> Reopen Voting
+                          </>
+                        )}
                       </button>
                     )}
                     {room.status !== 'CLOSED' && (
                       <button
                         type="button"
-                        onClick={() => { setFinishRoomId(room.id); setShowFinishDialog(true); }}
+                        onClick={() => {
+                          setFinishRoomId(room.id);
+                          setShowFinishDialog(true);
+                        }}
                         className="px-3 py-1.5 rounded-lg text-xs font-medium border border-efi-error/30 text-efi-error hover:bg-efi-error/10 transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                       >
                         <Square className="w-3.5 h-3.5" /> Finish
@@ -503,6 +567,7 @@ export function ProjectPage() {
                     )}
                     {!isRoomLive && room.status !== 'REVEALED' && room.status !== 'CLOSED' && (
                       <button
+                        type="button"
                         onClick={() => setShowImport(true)}
                         className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold hover:text-efi-text-primary transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                       >
@@ -511,11 +576,20 @@ export function ProjectPage() {
                     )}
                     {!isRoomLive && (
                       <button
+                        type="button"
                         onClick={() => void handleExportCsv(room.id)}
                         disabled={exporting}
                         className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold hover:text-efi-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                       >
-                        {exporting ? <><ButtonSpinner /> Exporting...</> : <><Download className="w-4 h-4" /> Export CSV</>}
+                        {exporting ? (
+                          <>
+                            <ButtonSpinner /> Exporting...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-4 h-4" /> Export CSV
+                          </>
+                        )}
                       </button>
                     )}
                     <Link
@@ -555,11 +629,11 @@ export function ProjectPage() {
                 )}
 
                 {/* Add task controls */}
-                {room.status !== 'REVEALED' && room.status !== 'CLOSED' && room.roomType !== 'LIVE' && (
-                  <AddTaskForm
-                    onAdd={(t, desc) => handleAddTask(t, desc)}
-                  />
-                )}
+                {room.status !== 'REVEALED' &&
+                  room.status !== 'CLOSED' &&
+                  room.roomType !== 'LIVE' && (
+                    <AddTaskForm onAdd={(t, desc) => handleAddTask(t, desc)} />
+                  )}
 
                 {/* Estimates table - ASYNC only; LIVE rooms use round-based voting inside the room */}
                 {isRoomLive ? (
@@ -567,117 +641,170 @@ export function ProjectPage() {
                     Round history and results are available inside the room.
                   </div>
                 ) : (
-                <div className="overflow-x-auto">
-                  {room.tasks.length > 0 ? (
-                    <table className="w-full text-sm min-w-[500px]">
-                      <thead>
-                        <tr className="border-b border-white/8">
-                          <th className="text-left py-2 px-2 text-efi-text-secondary font-medium">Task</th>
-                          {participantNames.map((name) => (
-                            <th key={name} className="text-center py-2 px-2 text-efi-text-secondary font-medium">
-                              {name}
+                  <div className="overflow-x-auto">
+                    {room.tasks.length > 0 ? (
+                      <table className="w-full text-sm min-w-[500px]">
+                        <thead>
+                          <tr className="border-b border-white/8">
+                            <th className="text-left py-2 px-2 text-efi-text-secondary font-medium">
+                              Task
                             </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {room.tasks.map((task) => (
-                          <tr key={task.id} className="border-b border-white/4">
-                            <td className="py-2 px-2">
-                              {editingTask?.id === task.id ? (
-                                <div className="space-y-1.5">
-                                  <TextInput
-                                    type="text"
-                                    value={editingTask.title}
-                                    onChange={(e) => setEditingTask((prev) => prev && { ...prev, title: e.target.value })}
-                                    maxLength={255}
-                                    className="w-full rounded bg-efi-well border border-efi-gold-light/20 px-2 py-1 text-base text-efi-text-primary focus:outline-none focus:border-efi-gold"
-                                  />
-                                  <TextArea
-                                    value={editingTask.description}
-                                    onChange={(e) => setEditingTask((prev) => prev && { ...prev, description: e.target.value })}
-                                    rows={2}
-                                    placeholder="Description (optional)"
-                                    className="w-full rounded bg-efi-well border border-efi-gold-light/20 px-2 py-1 text-base text-efi-text-secondary placeholder-efi-text-tertiary focus:outline-none focus:border-efi-gold resize-none"
-                                  />
-                                  <div className="flex gap-1.5">
-                                    <button
-                                      onClick={() => void handleSaveTask()}
-                                      disabled={updateTask.isPending || !editingTask.title.trim()}
-                                      className="px-2 py-0.5 rounded text-xs font-medium bg-efi-gold text-efi-void hover:bg-efi-gold/80 disabled:opacity-50 cursor-pointer"
-                                    >
-                                      {updateTask.isPending ? 'Saving...' : 'Save'}
-                                    </button>
-                                    <button
-                                      onClick={() => setEditingTask(null)}
-                                      className="px-2 py-0.5 rounded text-xs border border-white/12 text-efi-text-secondary hover:text-efi-text-primary cursor-pointer"
-                                    >
-                                      Cancel
-                                    </button>
+                            {participantNames.map((name) => (
+                              <th
+                                key={name}
+                                className="text-center py-2 px-2 text-efi-text-secondary font-medium"
+                              >
+                                {name}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {room.tasks.map((task) => (
+                            <tr key={task.id} className="border-b border-white/4">
+                              <td className="py-2 px-2">
+                                {editingTask?.id === task.id ? (
+                                  <div className="space-y-1.5">
+                                    <TextInput
+                                      type="text"
+                                      value={editingTask.title}
+                                      onChange={(e) =>
+                                        setEditingTask(
+                                          (prev) => prev && { ...prev, title: e.target.value },
+                                        )
+                                      }
+                                      maxLength={255}
+                                      className="w-full rounded bg-efi-well border border-efi-gold-light/20 px-2 py-1 text-base text-efi-text-primary focus:outline-none focus:border-efi-gold"
+                                    />
+                                    <TextArea
+                                      value={editingTask.description}
+                                      onChange={(e) =>
+                                        setEditingTask(
+                                          (prev) =>
+                                            prev && { ...prev, description: e.target.value },
+                                        )
+                                      }
+                                      rows={2}
+                                      placeholder="Description (optional)"
+                                      className="w-full rounded bg-efi-well border border-efi-gold-light/20 px-2 py-1 text-base text-efi-text-secondary placeholder-efi-text-tertiary focus:outline-none focus:border-efi-gold resize-none"
+                                    />
+                                    <div className="flex gap-1.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => void handleSaveTask()}
+                                        disabled={updateTask.isPending || !editingTask.title.trim()}
+                                        className="px-2 py-0.5 rounded text-xs font-medium bg-efi-gold text-efi-void hover:bg-efi-gold/80 disabled:opacity-50 cursor-pointer"
+                                      >
+                                        {updateTask.isPending ? 'Saving...' : 'Save'}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingTask(null)}
+                                        className="px-2 py-0.5 rounded text-xs border border-white/12 text-efi-text-secondary hover:text-efi-text-primary cursor-pointer"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
                                   </div>
-                                </div>
-                              ) : (
-                                <div className="flex items-start gap-1">
-                                  <div className="flex-1 min-w-0">
-                                    <span
-                                      className="text-efi-text-primary cursor-pointer hover:text-efi-gold-light transition-colors"
-                                      onClick={() => setEditingTask({ id: task.id, title: task.title, description: task.description ?? '' })}
-                                    >
-                                      {task.title}
-                                    </span>
-                                    {task.description && (
-                                      <p className="text-xs text-efi-text-secondary mt-0.5 line-clamp-2">
-                                        <Linkify text={task.description} />
-                                      </p>
+                                ) : (
+                                  <div className="flex items-start gap-1">
+                                    <div className="flex-1 min-w-0">
+                                      <span
+                                        className="text-efi-text-primary cursor-pointer hover:text-efi-gold-light transition-colors"
+                                        onClick={() =>
+                                          setEditingTask({
+                                            id: task.id,
+                                            title: task.title,
+                                            description: task.description ?? '',
+                                          })
+                                        }
+                                      >
+                                        {task.title}
+                                      </span>
+                                      {task.description && (
+                                        <p className="text-xs text-efi-text-secondary mt-0.5 line-clamp-2">
+                                          <Linkify text={task.description} />
+                                        </p>
+                                      )}
+                                    </div>
+                                    {pendingDelete?.id === task.id ? (
+                                      <span className="flex items-center gap-1 text-xs shrink-0">
+                                        <span className="text-efi-text-tertiary">Delete?</span>
+                                        <button
+                                          type="button"
+                                          onClick={confirmDelete}
+                                          className="text-efi-error hover:text-red-400 cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+                                        >
+                                          Yes
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setPendingDelete(null)}
+                                          className="text-efi-text-secondary hover:text-efi-text-primary cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+                                        >
+                                          No
+                                        </button>
+                                      </span>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setPendingDelete({
+                                            type: 'task',
+                                            id: task.id,
+                                            name: task.title,
+                                          })
+                                        }
+                                        title="Delete task"
+                                        className="shrink-0 p-2 text-efi-text-tertiary hover:text-efi-error transition-colors cursor-pointer rounded hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
                                     )}
                                   </div>
-                                  {pendingDelete?.id === task.id ? (
-                                    <span className="flex items-center gap-1 text-xs shrink-0">
-                                      <span className="text-efi-text-tertiary">Delete?</span>
-                                      <button onClick={confirmDelete} className="text-efi-error hover:text-red-400 cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none">Yes</button>
-                                      <button onClick={() => setPendingDelete(null)} className="text-efi-text-secondary hover:text-efi-text-primary cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none">No</button>
-                                    </span>
-                                  ) : (
-                                    <button
-                                      onClick={() => setPendingDelete({ type: 'task', id: task.id, name: task.title })}
-                                      title="Delete task"
-                                      className="shrink-0 p-2 text-efi-text-tertiary hover:text-efi-error transition-colors cursor-pointer rounded hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-                            </td>
-                            {participantNames.map((name) => {
-                              const est = task.estimates.find((e) => e.participantNickname === name);
-                              const isQuestion = est?.storyPoints === '?';
-                              return (
-                                <td key={name} className={`text-center py-2 px-2 font-medium ${isQuestion ? 'text-efi-warning bg-efi-warning/10' : 'text-efi-gold-light'
-                                  }`}>
-                                  {est?.storyPoints ?? '-'}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-efi-text-secondary">No tasks in this room</p>
-                      {room.status !== 'REVEALED' && room.status !== 'CLOSED' && (
-                        <p className="text-sm text-efi-text-tertiary mt-1">Add tasks above or import from a list.</p>
-                      )}
-                    </div>
-                  )}
-                </div>
+                                )}
+                              </td>
+                              {participantNames.map((name) => {
+                                const est = task.estimates.find(
+                                  (e) => e.participantNickname === name,
+                                );
+                                const isQuestion = est?.storyPoints === '?';
+                                return (
+                                  <td
+                                    key={name}
+                                    className={`text-center py-2 px-2 font-medium ${
+                                      isQuestion
+                                        ? 'text-efi-warning bg-efi-warning/10'
+                                        : 'text-efi-gold-light'
+                                    }`}
+                                  >
+                                    {est?.storyPoints ?? '-'}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-efi-text-secondary">No tasks in this room</p>
+                        {room.status !== 'REVEALED' && room.status !== 'CLOSED' && (
+                          <p className="text-sm text-efi-text-tertiary mt-1">
+                            Add tasks above or import from a list.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (
               <div className="flex items-center justify-center h-48">
                 <p className="text-efi-text-secondary">
-                  {roomList.length ? 'Select a room to view estimates' : 'Create a room to get started'}
+                  {roomList.length
+                    ? 'Select a room to view estimates'
+                    : 'Create a room to get started'}
                 </p>
               </div>
             )}
@@ -688,7 +815,8 @@ export function ProjectPage() {
             <aside className="lg:sticky lg:top-[var(--nav-total-height)] lg:self-start">
               <div className="glass-whisper rounded-2xl p-4 border border-efi-gold-light/10">
                 <h2 className="text-sm font-semibold text-efi-text-primary mb-3">
-                  Participants{participants && participants.length > 0 ? ` (${participants.length})` : ''}
+                  Participants
+                  {participants && participants.length > 0 ? ` (${participants.length})` : ''}
                 </h2>
                 {participants && participants.length > 0 ? (
                   <div className="space-y-2">
@@ -697,41 +825,68 @@ export function ProjectPage() {
                         t.estimates.some((e) => e.participantId === p.id),
                       );
                       return (
-                      <div key={p.id} className="flex items-center gap-2 bg-efi-well rounded-lg px-3 py-2 border border-efi-gold-light/10">
-                        <span className={`text-xs shrink-0 ${hasVoted ? 'text-efi-success' : 'text-efi-text-tertiary'}`}>
-                          {hasVoted ? '✓' : '○'}
-                        </span>
-                        <span className="text-sm text-efi-text-primary flex-1 min-w-0 truncate">{p.nickname}</span>
-                        <button
-                          type="button"
-                          onClick={() => void handleCopyLink(p.id)}
-                          title="Copy magic link"
-                          className="shrink-0 p-2 text-efi-text-tertiary hover:text-efi-gold-light transition-colors cursor-pointer rounded hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+                        <div
+                          key={p.id}
+                          className="flex items-center gap-2 bg-efi-well rounded-lg px-3 py-2 border border-efi-gold-light/10"
                         >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                        {pendingDelete?.id === p.id ? (
-                          <span className="flex items-center gap-1 text-xs shrink-0">
-                            <span className="text-efi-text-tertiary">Del?</span>
-                            <button onClick={confirmDelete} className="text-efi-error hover:text-red-400 cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none">Yes</button>
-                            <button onClick={() => setPendingDelete(null)} className="text-efi-text-secondary hover:text-efi-text-primary cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none">No</button>
+                          <span
+                            className={`text-xs shrink-0 ${hasVoted ? 'text-efi-success' : 'text-efi-text-tertiary'}`}
+                          >
+                            {hasVoted ? '✓' : '○'}
                           </span>
-                        ) : (
+                          <span className="text-sm text-efi-text-primary flex-1 min-w-0 truncate">
+                            {p.nickname}
+                          </span>
                           <button
                             type="button"
-                            onClick={() => setPendingDelete({ type: 'participant', id: p.id, name: p.nickname })}
-                            title="Remove participant"
-                            className="shrink-0 p-2 text-efi-text-tertiary hover:text-efi-error transition-colors cursor-pointer rounded hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+                            onClick={() => void handleCopyLink(p.id)}
+                            title="Copy magic link"
+                            className="shrink-0 p-2 text-efi-text-tertiary hover:text-efi-gold-light transition-colors cursor-pointer rounded hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <Copy className="w-3.5 h-3.5" />
                           </button>
-                        )}
-                      </div>
+                          {pendingDelete?.id === p.id ? (
+                            <span className="flex items-center gap-1 text-xs shrink-0">
+                              <span className="text-efi-text-tertiary">Del?</span>
+                              <button
+                                type="button"
+                                onClick={confirmDelete}
+                                className="text-efi-error hover:text-red-400 cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPendingDelete(null)}
+                                className="text-efi-text-secondary hover:text-efi-text-primary cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+                              >
+                                No
+                              </button>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPendingDelete({
+                                  type: 'participant',
+                                  id: p.id,
+                                  name: p.nickname,
+                                })
+                              }
+                              title="Remove participant"
+                              className="shrink-0 p-2 text-efi-text-tertiary hover:text-efi-error transition-colors cursor-pointer rounded hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <p className="text-xs text-efi-text-tertiary">No participants yet. Share the join link to invite your team.</p>
+                  <p className="text-xs text-efi-text-tertiary">
+                    No participants yet. Share the join link to invite your team.
+                  </p>
                 )}
               </div>
             </aside>
@@ -742,8 +897,12 @@ export function ProjectPage() {
         {showForm && (
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-[fade-in_0.2s_ease-out]"
-            onClick={(e) => { if (e.target === e.currentTarget) setShowForm(false); }}
-            onKeyDown={(e) => { if (e.key === 'Escape') setShowForm(false); }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowForm(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setShowForm(false);
+            }}
           >
             <div className="glass-crystal rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-lg animate-[fade-in-scale_0.2s_ease-out]">
               <h2 className="text-lg font-semibold text-efi-text-primary mb-4">New Room</h2>
@@ -772,28 +931,40 @@ export function ProjectPage() {
                     <div className="flex-1 flex flex-col">
                       <button
                         type="button"
-                        onClick={() => { setRoomType('LIVE'); setCommentTemplate(''); }}
-                        className={`w-full px-3 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none ${roomType === 'LIVE'
-                          ? roomTypeBadge('LIVE')
-                          : 'border-white/12 text-efi-text-secondary hover:text-efi-text-primary hover:border-white/20'
-                          }`}
+                        onClick={() => {
+                          setRoomType('LIVE');
+                          setCommentTemplate('');
+                        }}
+                        className={`w-full px-3 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none ${
+                          roomType === 'LIVE'
+                            ? roomTypeBadge('LIVE')
+                            : 'border-white/12 text-efi-text-secondary hover:text-efi-text-primary hover:border-white/20'
+                        }`}
                       >
                         Live
                       </button>
-                      <p className="text-[11px] text-efi-text-tertiary mt-1 text-center">Real-time session - team votes together, results revealed after each round</p>
+                      <p className="text-[11px] text-efi-text-tertiary mt-1 text-center">
+                        Real-time session - team votes together, results revealed after each round
+                      </p>
                     </div>
                     <div className="flex-1 flex flex-col">
                       <button
                         type="button"
-                        onClick={() => { setRoomType('ASYNC'); setCommentTemplate(DEFAULT_COMMENT_TEMPLATE); }}
-                        className={`w-full px-3 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none ${roomType === 'ASYNC'
-                          ? 'bg-efi-info/20 border-efi-info/40 text-efi-info'
-                          : 'border-white/12 text-efi-text-secondary hover:text-efi-text-primary hover:border-white/20'
-                          }`}
+                        onClick={() => {
+                          setRoomType('ASYNC');
+                          setCommentTemplate(DEFAULT_COMMENT_TEMPLATE);
+                        }}
+                        className={`w-full px-3 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none ${
+                          roomType === 'ASYNC'
+                            ? 'bg-efi-info/20 border-efi-info/40 text-efi-info'
+                            : 'border-white/12 text-efi-text-secondary hover:text-efi-text-primary hover:border-white/20'
+                        }`}
                       >
                         Async
                       </button>
-                      <p className="text-[11px] text-efi-text-tertiary mt-1 text-center">Deadline-based - team votes independently before a set deadline</p>
+                      <p className="text-[11px] text-efi-text-tertiary mt-1 text-center">
+                        Deadline-based - team votes independently before a set deadline
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -815,7 +986,9 @@ export function ProjectPage() {
                 )}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs text-efi-text-secondary">Comment Template (optional)</label>
+                    <label className="text-xs text-efi-text-secondary">
+                      Comment Template (optional)
+                    </label>
                     <div className="flex gap-2">
                       {commentTemplate && (
                         <button
@@ -867,10 +1040,18 @@ export function ProjectPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={createRoom.isPending || !title.trim() || (roomType === 'ASYNC' && !deadline)}
+                    disabled={
+                      createRoom.isPending || !title.trim() || (roomType === 'ASYNC' && !deadline)
+                    }
                     className="px-4 py-2 rounded-lg text-sm font-medium bg-efi-gold text-efi-void hover:bg-efi-gold/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
                   >
-                    {createRoom.isPending ? <><ButtonSpinner /> Creating...</> : 'Create'}
+                    {createRoom.isPending ? (
+                      <>
+                        <ButtonSpinner /> Creating...
+                      </>
+                    ) : (
+                      'Create'
+                    )}
                   </button>
                 </div>
               </form>
@@ -888,9 +1069,16 @@ export function ProjectPage() {
           isOpen={showFinishDialog}
           isPending={finishSession.isPending}
           onFinish={(revealVotes) => void handleFinishSession(revealVotes)}
-          onCancel={() => { setShowFinishDialog(false); setFinishRoomId(null); }}
+          onCancel={() => {
+            setShowFinishDialog(false);
+            setFinishRoomId(null);
+          }}
           autoAssigned={autoAssigned}
-          onDismissAutoAssigned={() => { setAutoAssigned(null); setShowFinishDialog(false); setFinishRoomId(null); }}
+          onDismissAutoAssigned={() => {
+            setAutoAssigned(null);
+            setShowFinishDialog(false);
+            setFinishRoomId(null);
+          }}
         />
       </div>
     );
@@ -948,21 +1136,29 @@ export function ProjectPage() {
             role="link"
             tabIndex={0}
             onClick={() => void navigate(`/p/${slug}/r/${r.id}`)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') void navigate(`/p/${slug}/r/${r.id}`); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') void navigate(`/p/${slug}/r/${r.id}`);
+            }}
             className="block glass-frost rounded-xl p-4 hover:border-efi-gold/30 active:scale-[0.995] transition-all duration-150 cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
           >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-efi-text-primary font-medium">{r.title}</h3>
-                  <span className="text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">{r.slug}</span>
+                  <span className="text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">
+                    {r.slug}
+                  </span>
                   <ShareButton roomSlug={r.slug} />
-                  <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${roomTypeBadge(r.roomType)}`}>
+                  <span
+                    className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${roomTypeBadge(r.roomType)}`}
+                  >
                     {r.roomType === 'LIVE' ? 'Live' : 'Async'}
                   </span>
                 </div>
                 {r.description && (
-                  <p className="text-sm text-efi-text-secondary mt-1 line-clamp-2">{r.description}</p>
+                  <p className="text-sm text-efi-text-secondary mt-1 line-clamp-2">
+                    {r.description}
+                  </p>
                 )}
                 {r.roomType === 'ASYNC' && r.deadline && (
                   <div className="flex items-center gap-3 mt-2 text-xs text-efi-text-secondary">

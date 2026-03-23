@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { logger } from '@/utils/logger';
 import { getCurrentTraceId } from '@/lib/tracing';
+import { logger } from '@/utils/logger';
 
 interface Props {
   children: ReactNode;
@@ -40,6 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
             Trace: {traceId.slice(0, 8)}… [copy]
           </button>
           <button
+            type="button"
             onClick={() => window.location.reload()}
             className="px-6 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
           >

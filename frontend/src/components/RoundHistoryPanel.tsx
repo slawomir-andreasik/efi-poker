@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import type { RoundHistoryEntry } from '@/api/types';
 
 interface RoundHistoryPanelProps {
@@ -34,7 +34,10 @@ export function RoundHistoryPanel({ history }: RoundHistoryPanelProps) {
           const isOpen = expandedRound === entry.roundNumber;
           const hasStats = entry.averagePoints != null || entry.medianPoints != null;
           return (
-            <div key={entry.roundNumber} className="rounded-lg border border-white/8 overflow-hidden">
+            <div
+              key={entry.roundNumber}
+              className="rounded-lg border border-white/8 overflow-hidden"
+            >
               <button
                 type="button"
                 onClick={() => setExpandedRound(isOpen ? null : entry.roundNumber)}
@@ -47,7 +50,9 @@ export function RoundHistoryPanel({ history }: RoundHistoryPanelProps) {
                       R{entry.roundNumber}
                     </span>
                     {entry.topic ? (
-                      <span className="text-sm text-efi-text-primary font-medium truncate">{entry.topic}</span>
+                      <span className="text-sm text-efi-text-primary font-medium truncate">
+                        {entry.topic}
+                      </span>
                     ) : (
                       <span className="text-xs text-efi-text-tertiary italic">no topic</span>
                     )}
@@ -56,12 +61,18 @@ export function RoundHistoryPanel({ history }: RoundHistoryPanelProps) {
                     <div className="flex items-center gap-3">
                       {entry.averagePoints != null && (
                         <span className="text-xs text-efi-text-tertiary">
-                          avg <span className="text-efi-gold-light font-semibold">{entry.averagePoints.toFixed(1)}</span>
+                          avg{' '}
+                          <span className="text-efi-gold-light font-semibold">
+                            {entry.averagePoints.toFixed(1)}
+                          </span>
                         </span>
                       )}
                       {entry.medianPoints != null && (
                         <span className="text-xs text-efi-text-tertiary">
-                          med <span className="text-efi-gold-light font-semibold">{entry.medianPoints.toFixed(1)}</span>
+                          med{' '}
+                          <span className="text-efi-gold-light font-semibold">
+                            {entry.medianPoints.toFixed(1)}
+                          </span>
                         </span>
                       )}
                       <span className="text-xs text-efi-text-tertiary">
@@ -71,7 +82,9 @@ export function RoundHistoryPanel({ history }: RoundHistoryPanelProps) {
                   )}
                 </div>
                 {/* Chevron */}
-                <ChevronDown className={`w-3.5 h-3.5 text-efi-text-tertiary transition-transform mt-1 shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-efi-text-tertiary transition-transform mt-1 shrink-0 ${isOpen ? 'rotate-180' : ''}`}
+                />
               </button>
 
               {/* Expanded: individual votes */}

@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -32,9 +32,7 @@ export function Modal({ isOpen, onClose, title, maxWidth = 'max-w-md', children 
         className={`glass-crystal rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full ${maxWidth} animate-[fade-in-scale_0.2s_ease-out]`}
         onClick={(e) => e.stopPropagation()}
       >
-        {title && (
-          <h2 className="text-lg font-semibold text-efi-text-primary mb-4">{title}</h2>
-        )}
+        {title && <h2 className="text-lg font-semibold text-efi-text-primary mb-4">{title}</h2>}
         {children}
       </div>
     </div>

@@ -36,7 +36,9 @@ make server-test     # backend tests only
 make client-dev      # Vite dev server
 make api-generate    # regenerate from OpenAPI (run after spec changes)
 make spotless        # auto-fix Java formatting (run before commit)
-make lint            # all linters
+make lint            # all linters (Spotless + Biome + TypeScript)
+make client-format   # auto-format frontend with Biome
+make client-knip     # detect unused code and dependencies
 make pre-push        # formatting + all checks
 make db-reset        # drop + recreate database
 ```
@@ -57,6 +59,21 @@ Rules in `.claude/rules/` are scoped by file path - loaded automatically when wo
 - [rules/frontend.md](rules/frontend.md) - Project utilities, state management, layout, error handling
 - [rules/security.md](rules/security.md) - OWASP Top 10:2025 security conventions
 
+## Branching Model
+
+- `dev` - active development branch (PRs target this)
+- `main` - releases only (merged from `dev`, tagged)
+- Feature branches from `dev`
+
+## Auth Architecture
+
+Dual JWT model with refresh tokens:
+- **User JWT** (24h) - short-lived access token in localStorage
+- **Refresh token** (30/90 days) - httpOnly/Secure/SameSite=Strict cookie, rotated on every use
+- **Guest JWT** (90 days) - project-scoped, stateless, stored in localStorage per project
+- Login with "Remember me" extends refresh token to 90 days
+- Silent refresh on 401 - frontend deduplicates concurrent refresh attempts
+
 ## Contributing
 
 1. Fork + clone, create feature branch from `dev`
@@ -72,5 +89,7 @@ When introducing a new pattern or convention, update the relevant `.claude/rules
 - After code changes: `make build` (or `make server-test` / `bun run lint && bun run test`)
 - Fast feedback: `make server-test-unit` (unit tests only, no Spring context)
 - Backend: `./gradlew check` = tests + Spotless + JaCoCo coverage (50% gate)
-- Frontend: `bun run lint` + `bun run test` (vitest + happy-dom)
+- Frontend: `bun run lint` (tsc + Biome) + `bun run test` (vitest + happy-dom)
+- Frontend format: `bun run format` (Biome auto-format)
+- Unused code: `bun run knip` (dead exports, unused deps)
 - Testing conventions: [rules/java.md](rules/java.md) ## Testing

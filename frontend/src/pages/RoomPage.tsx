@@ -1,32 +1,37 @@
-import { useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Trash2 } from 'lucide-react';
-import { InlineConfirmAction } from '@/components/InlineConfirmAction';
 import { useQuery } from '@tanstack/react-query';
+import { Trash2 } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { ApiError, getJwt } from '@/api/client';
-import { queryKeys } from '@/api/queryKeys';
+import {
+  useDeleteEstimate,
+  useSetFinalEstimate,
+  useSubmitEstimate,
+  useUpdateTask,
+} from '@/api/mutations';
 import { roomApi } from '@/api/queries';
-import { useProjectAuth } from '@/hooks/useProjectAuth';
-import { useSubmitEstimate, useDeleteEstimate, useSetFinalEstimate, useUpdateTask } from '@/api/mutations';
-import { logger } from '@/utils/logger';
-import { getErrorMessage } from '@/utils/error';
-import { useSortedTasks } from '@/hooks/useSortedTasks';
-import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { useDeleteRoomAction } from '@/hooks/useDeleteRoomAction';
-import { useToast } from '@/components/Toast';
-import { PageSpinner } from '@/components/PageSpinner';
-import { NotFoundState } from '@/components/NotFoundState';
-import { TraceCopyButton } from '@/components/TraceCopyButton';
-import { ShareButton } from '@/components/ShareButton';
-import { CountdownTimer } from '@/components/CountdownTimer';
-import { TaskCard } from '@/components/TaskCard';
-import { SortControls } from '@/components/SortControls';
-import { RoomSidebar } from '@/components/RoomSidebar';
-import { LiveRoomView } from '@/components/LiveRoomView';
-import { RoomSettings } from '@/components/RoomSettings';
-import { ParticipantProgress } from '@/components/ParticipantProgress';
-import { AdminJoinBanner } from '@/components/AdminJoinBanner';
+import { queryKeys } from '@/api/queryKeys';
 import type { StoryPoints } from '@/api/types';
+import { AdminJoinBanner } from '@/components/AdminJoinBanner';
+import { CountdownTimer } from '@/components/CountdownTimer';
+import { InlineConfirmAction } from '@/components/InlineConfirmAction';
+import { LiveRoomView } from '@/components/LiveRoomView';
+import { NotFoundState } from '@/components/NotFoundState';
+import { PageSpinner } from '@/components/PageSpinner';
+import { ParticipantProgress } from '@/components/ParticipantProgress';
+import { RoomSettings } from '@/components/RoomSettings';
+import { RoomSidebar } from '@/components/RoomSidebar';
+import { ShareButton } from '@/components/ShareButton';
+import { SortControls } from '@/components/SortControls';
+import { TaskCard } from '@/components/TaskCard';
+import { useToast } from '@/components/Toast';
+import { TraceCopyButton } from '@/components/TraceCopyButton';
+import { useDeleteRoomAction } from '@/hooks/useDeleteRoomAction';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useProjectAuth } from '@/hooks/useProjectAuth';
+import { useSortedTasks } from '@/hooks/useSortedTasks';
+import { getErrorMessage } from '@/utils/error';
+import { logger } from '@/utils/logger';
 
 export function RoomPage() {
   const { slug, roomId } = useParams<{ slug: string; roomId: string }>();
@@ -36,9 +41,16 @@ export function RoomPage() {
   const projectName = auth.projectName ?? slug;
 
   const [votes, setVotes] = useState<Record<string, StoryPoints>>({});
-  const { handleDeleteRoom, isPending: deleteRoomPending } = useDeleteRoomAction(slug ?? '', roomId ?? '');
+  const { handleDeleteRoom, isPending: deleteRoomPending } = useDeleteRoomAction(
+    slug ?? '',
+    roomId ?? '',
+  );
 
-  const { data: room, isLoading: loading, error } = useQuery({
+  const {
+    data: room,
+    isLoading: loading,
+    error,
+  } = useQuery({
     queryKey: queryKeys.rooms.detail(roomId!),
     queryFn: () => roomApi.detail(roomId!, slug!),
     enabled: Boolean(roomId && slug),
@@ -68,73 +80,82 @@ export function RoomPage() {
   const setFinalEstimate = useSetFinalEstimate(slug ?? '');
   const updateTask = useUpdateTask(slug ?? '');
 
-  const handleEstimate = useCallback(async (taskId: string, value: StoryPoints | null, comment?: string) => {
-    if (!slug || !roomId) return;
+  const handleEstimate = useCallback(
+    async (taskId: string, value: StoryPoints | null, comment?: string) => {
+      if (!slug || !roomId) return;
 
-    // Draft save: no SP, only comment (blur without selecting SP)
-    if (value === null && comment) {
-      logger.debug(`Draft comment: task=${taskId}`);
-      try {
-        await submitEstimate.mutateAsync({ taskId, comment });
-      } catch (err) {
-        logger.warn('Failed to save draft comment:', getErrorMessage(err));
+      // Draft save: no SP, only comment (blur without selecting SP)
+      if (value === null && comment) {
+        logger.debug(`Draft comment: task=${taskId}`);
+        try {
+          await submitEstimate.mutateAsync({ taskId, comment });
+        } catch (err) {
+          logger.warn('Failed to save draft comment:', getErrorMessage(err));
+        }
+        return;
       }
-      return;
-    }
 
-    logger.debug(`Estimate: task=${taskId} sp=${value}`);
-    const previousValue = votes[taskId] ?? null;
+      logger.debug(`Estimate: task=${taskId} sp=${value}`);
+      const previousValue = votes[taskId] ?? null;
 
-    if (value === null) {
-      setVotes((prev) => {
-        const updated = { ...prev };
-        delete updated[taskId];
-        return updated;
-      });
-    } else {
-      setVotes((prev) => ({ ...prev, [taskId]: value }));
-    }
-
-    try {
       if (value === null) {
-        await deleteEstimate.mutateAsync(taskId);
-      } else {
-        await submitEstimate.mutateAsync({ taskId, storyPoints: value, comment });
-      }
-    } catch (err) {
-      if (previousValue) {
-        setVotes((prev) => ({ ...prev, [taskId]: previousValue }));
-      } else {
         setVotes((prev) => {
           const updated = { ...prev };
           delete updated[taskId];
           return updated;
         });
+      } else {
+        setVotes((prev) => ({ ...prev, [taskId]: value }));
       }
-      logger.warn('Failed to submit estimate:', getErrorMessage(err));
-      showToast(getErrorMessage(err));
-    }
-  }, [deleteEstimate, submitEstimate, votes, showToast, roomId, slug]);
 
-  const handleSetFinalEstimate = useCallback(async (taskId: string, value: StoryPoints) => {
-    if (!slug) return;
-    try {
-      await setFinalEstimate.mutateAsync({ taskId, storyPoints: value });
-    } catch (err) {
-      logger.warn('Failed to set final estimate:', getErrorMessage(err));
-      showToast(getErrorMessage(err));
-    }
-  }, [setFinalEstimate, showToast, slug]);
+      try {
+        if (value === null) {
+          await deleteEstimate.mutateAsync(taskId);
+        } else {
+          await submitEstimate.mutateAsync({ taskId, storyPoints: value, comment });
+        }
+      } catch (err) {
+        if (previousValue) {
+          setVotes((prev) => ({ ...prev, [taskId]: previousValue }));
+        } else {
+          setVotes((prev) => {
+            const updated = { ...prev };
+            delete updated[taskId];
+            return updated;
+          });
+        }
+        logger.warn('Failed to submit estimate:', getErrorMessage(err));
+        showToast(getErrorMessage(err));
+      }
+    },
+    [deleteEstimate, submitEstimate, votes, showToast, roomId, slug],
+  );
 
-  const handleUpdateDescription = useCallback(async (taskId: string, description: string) => {
-    if (!slug) return;
-    try {
-      await updateTask.mutateAsync({ taskId, body: { description } });
-    } catch (err) {
-      logger.warn('Failed to update description:', getErrorMessage(err));
-      showToast(getErrorMessage(err));
-    }
-  }, [updateTask, showToast, slug]);
+  const handleSetFinalEstimate = useCallback(
+    async (taskId: string, value: StoryPoints) => {
+      if (!slug) return;
+      try {
+        await setFinalEstimate.mutateAsync({ taskId, storyPoints: value });
+      } catch (err) {
+        logger.warn('Failed to set final estimate:', getErrorMessage(err));
+        showToast(getErrorMessage(err));
+      }
+    },
+    [setFinalEstimate, showToast, slug],
+  );
+
+  const handleUpdateDescription = useCallback(
+    async (taskId: string, description: string) => {
+      if (!slug) return;
+      try {
+        await updateTask.mutateAsync({ taskId, body: { description } });
+      } catch (err) {
+        logger.warn('Failed to update description:', getErrorMessage(err));
+        showToast(getErrorMessage(err));
+      }
+    },
+    [updateTask, showToast, slug],
+  );
 
   if (loading && !room) {
     return <PageSpinner />;
@@ -142,28 +163,21 @@ export function RoomPage() {
 
   if (error) {
     if (error instanceof ApiError && error.status === 404) {
-      return <NotFoundState message="Room not found" backTo={`/p/${slug}`} backLabel="Back to Project" />;
+      return (
+        <NotFoundState message="Room not found" backTo={`/p/${slug}`} backLabel="Back to Project" />
+      );
     }
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <p className="text-efi-error">{getErrorMessage(error)}</p>
-        {error instanceof ApiError && error.traceId && (
-          <TraceCopyButton traceId={error.traceId} />
-        )}
+        {error instanceof ApiError && error.traceId && <TraceCopyButton traceId={error.traceId} />}
       </div>
     );
   }
 
   // Split: LIVE rooms get their own dedicated view
   if (room?.roomType === 'LIVE') {
-    return (
-      <LiveRoomView
-        slug={slug!}
-        roomId={roomId!}
-        room={room}
-        auth={auth}
-      />
-    );
+    return <LiveRoomView slug={slug!} roomId={roomId!} room={room} auth={auth} />;
   }
 
   const isRevealed = room?.status === 'REVEALED' || room?.status === 'CLOSED';
@@ -180,7 +194,11 @@ export function RoomPage() {
                 <span className="text-sm font-normal text-efi-text-secondary mr-1">Room:</span>
                 {room?.title}
               </h1>
-              {room?.slug && <span className="text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">{room.slug}</span>}
+              {room?.slug && (
+                <span className="text-xs font-mono text-efi-text-secondary bg-white/8 px-1.5 py-0.5 rounded">
+                  {room.slug}
+                </span>
+              )}
               {room?.slug && <ShareButton roomSlug={room.slug} />}
             </div>
             {room?.description && (
@@ -284,7 +302,9 @@ export function RoomPage() {
                 finalEstimate={task.finalEstimate}
                 isAdmin={isAdmin}
                 onSetFinalEstimate={(taskId, value) => void handleSetFinalEstimate(taskId, value)}
-                onUpdateDescription={isAdmin ? (taskId, desc) => void handleUpdateDescription(taskId, desc) : undefined}
+                onUpdateDescription={
+                  isAdmin ? (taskId, desc) => void handleUpdateDescription(taskId, desc) : undefined
+                }
                 commentTemplate={room?.commentTemplate}
                 commentRequired={room?.commentRequired}
                 myComment={task.myEstimate?.comment}
@@ -297,9 +317,13 @@ export function RoomPage() {
                 <p className="text-efi-text-secondary">No tasks yet.</p>
                 {isAdmin && (
                   <p className="text-sm text-efi-text-tertiary mt-1">
-                    <Link to={`/p/${slug}`} className="text-efi-gold-light hover:text-efi-text-primary transition-colors">
+                    <Link
+                      to={`/p/${slug}`}
+                      className="text-efi-gold-light hover:text-efi-text-primary transition-colors"
+                    >
                       Manage tasks
-                    </Link> in the project dashboard.
+                    </Link>{' '}
+                    in the project dashboard.
                   </p>
                 )}
               </div>
@@ -314,8 +338,6 @@ export function RoomPage() {
           isRevealed={isRevealed}
         />
       </div>
-
     </div>
   );
 }
-

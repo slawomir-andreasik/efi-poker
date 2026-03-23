@@ -19,7 +19,7 @@ describe('ErrorBoundary', () => {
     renderWithProviders(
       <ErrorBoundary>
         <p>All good</p>
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     expect(screen.getByText('All good')).toBeInTheDocument();
   });
@@ -28,7 +28,7 @@ describe('ErrorBoundary', () => {
     renderWithProviders(
       <ErrorBoundary>
         <ThrowingComponent />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /refresh page/i })).toBeInTheDocument();

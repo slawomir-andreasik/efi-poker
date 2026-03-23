@@ -1,6 +1,6 @@
-import { useRef, useEffect, useCallback } from 'react';
-import { TextArea } from '@/components/TextInput';
 import { Check } from 'lucide-react';
+import { useCallback, useEffect, useRef } from 'react';
+import { TextArea } from '@/components/TextInput';
 
 interface CommentInputProps {
   comment: string;
@@ -24,12 +24,12 @@ export function CommentInput({
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
+    el.style.height = `${el.scrollHeight}px`;
   }, []);
 
   useEffect(() => {
     autoResize();
-  }, [comment, autoResize]);
+  }, [autoResize]);
 
   function handleBlur() {
     const trimmed = comment.trim();

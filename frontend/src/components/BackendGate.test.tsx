@@ -14,7 +14,7 @@ describe('BackendGate', () => {
     renderWithProviders(
       <BackendGate>
         <p>App content</p>
-      </BackendGate>
+      </BackendGate>,
     );
 
     await waitFor(() => {
@@ -28,7 +28,7 @@ describe('BackendGate', () => {
     renderWithProviders(
       <BackendGate>
         <p>App content</p>
-      </BackendGate>
+      </BackendGate>,
     );
 
     await waitFor(() => {
@@ -38,12 +38,15 @@ describe('BackendGate', () => {
   });
 
   it('does not show status text during initial check', () => {
-    vi.stubGlobal('fetch', vi.fn().mockImplementation(() => new Promise(() => {})));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => new Promise(() => {})),
+    );
 
     renderWithProviders(
       <BackendGate>
         <p>App content</p>
-      </BackendGate>
+      </BackendGate>,
     );
 
     expect(screen.queryByText('Backend is starting up...')).not.toBeInTheDocument();
@@ -53,7 +56,8 @@ describe('BackendGate', () => {
   it('recovers and renders children after backend becomes available', async () => {
     vi.useFakeTimers();
 
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       .mockRejectedValueOnce(new TypeError('Failed to fetch'))
       .mockResolvedValue({ ok: true });
     vi.stubGlobal('fetch', fetchMock);
@@ -61,7 +65,7 @@ describe('BackendGate', () => {
     renderWithProviders(
       <BackendGate>
         <p>App content</p>
-      </BackendGate>
+      </BackendGate>,
     );
 
     // Run all timers: initial probe fails, 4s retry fires, retry succeeds

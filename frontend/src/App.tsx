@@ -1,29 +1,47 @@
 import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
-import { Header } from '@/components/layout/Header';
+import { Route, Routes, useLocation } from 'react-router-dom';
+import { BackendGate } from '@/components/BackendGate';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { Footer } from '@/components/layout/Footer';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { BackendGate } from '@/components/BackendGate';
-import { useToast } from '@/components/Toast';
+import { Header } from '@/components/layout/Header';
 import { Spinner } from '@/components/Spinner';
-import { resetTrace } from '@/lib/tracing';
-import { useVersionCheck } from '@/hooks/useVersionCheck';
+import { useToast } from '@/components/Toast';
 import { usePageRestore } from '@/hooks/usePageRestore';
+import { useVersionCheck } from '@/hooks/useVersionCheck';
+import { resetTrace } from '@/lib/tracing';
 
-const HomePage = lazy(() => import('@/pages/HomePage').then(m => ({ default: m.HomePage })));
-const ProjectPage = lazy(() => import('@/pages/ProjectPage').then(m => ({ default: m.ProjectPage })));
-const JoinPage = lazy(() => import('@/pages/JoinPage').then(m => ({ default: m.JoinPage })));
-const RoomPage = lazy(() => import('@/pages/RoomPage').then(m => ({ default: m.RoomPage })));
-const ResultsPage = lazy(() => import('@/pages/ResultsPage').then(m => ({ default: m.ResultsPage })));
-const RoomJoinRedirectPage = lazy(() => import('@/pages/RoomJoinRedirectPage').then(m => ({ default: m.RoomJoinRedirectPage })));
-const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
-const AuthCallbackPage = lazy(() => import('@/pages/AuthCallbackPage').then(m => ({ default: m.AuthCallbackPage })));
-const LoginPage = lazy(() => import('@/pages/LoginPage').then(m => ({ default: m.LoginPage })));
-const RegisterPage = lazy(() => import('@/pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
-const AdminUsersPage = lazy(() => import('@/pages/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })));
-const RoomAnalyticsPage = lazy(() => import('@/pages/RoomAnalyticsPage').then(m => ({ default: m.RoomAnalyticsPage })));
-const ProjectAnalyticsPage = lazy(() => import('@/pages/ProjectAnalyticsPage').then(m => ({ default: m.ProjectAnalyticsPage })));
+const HomePage = lazy(() => import('@/pages/HomePage').then((m) => ({ default: m.HomePage })));
+const ProjectPage = lazy(() =>
+  import('@/pages/ProjectPage').then((m) => ({ default: m.ProjectPage })),
+);
+const JoinPage = lazy(() => import('@/pages/JoinPage').then((m) => ({ default: m.JoinPage })));
+const RoomPage = lazy(() => import('@/pages/RoomPage').then((m) => ({ default: m.RoomPage })));
+const ResultsPage = lazy(() =>
+  import('@/pages/ResultsPage').then((m) => ({ default: m.ResultsPage })),
+);
+const RoomJoinRedirectPage = lazy(() =>
+  import('@/pages/RoomJoinRedirectPage').then((m) => ({ default: m.RoomJoinRedirectPage })),
+);
+const NotFoundPage = lazy(() =>
+  import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
+);
+const AuthCallbackPage = lazy(() =>
+  import('@/pages/AuthCallbackPage').then((m) => ({ default: m.AuthCallbackPage })),
+);
+const LoginPage = lazy(() => import('@/pages/LoginPage').then((m) => ({ default: m.LoginPage })));
+const RegisterPage = lazy(() =>
+  import('@/pages/RegisterPage').then((m) => ({ default: m.RegisterPage })),
+);
+const AdminUsersPage = lazy(() =>
+  import('@/pages/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })),
+);
+const RoomAnalyticsPage = lazy(() =>
+  import('@/pages/RoomAnalyticsPage').then((m) => ({ default: m.RoomAnalyticsPage })),
+);
+const ProjectAnalyticsPage = lazy(() =>
+  import('@/pages/ProjectAnalyticsPage').then((m) => ({ default: m.ProjectAnalyticsPage })),
+);
 
 export function App() {
   const location = useLocation();
@@ -31,12 +49,14 @@ export function App() {
   useVersionCheck({ showToast });
   usePageRestore();
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset trace on every route change
   useEffect(() => {
     resetTrace();
   }, [location.pathname]);
 
   // Suppress CSS transitions during SPA route changes to prevent flash on back/forward nav.
   // useLayoutEffect runs after DOM update but before paint - exactly the right timing.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: run on every route change
   useLayoutEffect(() => {
     document.documentElement.classList.add('no-transitions');
     const frameId = requestAnimationFrame(() => {
@@ -63,7 +83,13 @@ export function App() {
       <main className="flex-1">
         <ErrorBoundary>
           <BackendGate>
-            <Suspense fallback={<div className="flex justify-center py-20"><Spinner /></div>}>
+            <Suspense
+              fallback={
+                <div className="flex justify-center py-20">
+                  <Spinner />
+                </div>
+              }
+            >
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />

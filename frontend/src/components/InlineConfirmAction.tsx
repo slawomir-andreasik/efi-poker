@@ -9,7 +9,13 @@ interface InlineConfirmActionProps {
   title: string;
 }
 
-export function InlineConfirmAction({ label, onConfirm, isLoading, icon, title }: InlineConfirmActionProps) {
+export function InlineConfirmAction({
+  label,
+  onConfirm,
+  isLoading,
+  icon,
+  title,
+}: InlineConfirmActionProps) {
   const [pending, setPending] = useState(false);
 
   return pending ? (

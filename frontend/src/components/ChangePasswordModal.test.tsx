@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ChangePasswordModal } from './ChangePasswordModal';
+import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '@/test/helpers';
+import { ChangePasswordModal } from './ChangePasswordModal';
 
 describe('ChangePasswordModal', () => {
   it('should not render when closed', () => {
@@ -59,9 +59,7 @@ describe('ChangePasswordModal', () => {
   it('should call onClose when cancel is clicked', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderWithProviders(
-      <ChangePasswordModal isOpen={true} onClose={onClose} hasPassword={true} />,
-    );
+    renderWithProviders(<ChangePasswordModal isOpen={true} onClose={onClose} hasPassword={true} />);
 
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onClose).toHaveBeenCalled();
@@ -70,9 +68,7 @@ describe('ChangePasswordModal', () => {
   it('should call onClose on escape key', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderWithProviders(
-      <ChangePasswordModal isOpen={true} onClose={onClose} hasPassword={true} />,
-    );
+    renderWithProviders(<ChangePasswordModal isOpen={true} onClose={onClose} hasPassword={true} />);
 
     await user.keyboard('{Escape}');
     expect(onClose).toHaveBeenCalled();

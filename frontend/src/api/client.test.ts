@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, api } from './client';
 
 beforeEach(() => {
@@ -38,8 +38,11 @@ describe('api() silent refresh on 401', () => {
       headers: { 'content-type': 'application/json' },
     });
 
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(new Response('{}', { status: 401, headers: { 'content-type': 'application/json' } }))
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response('{}', { status: 401, headers: { 'content-type': 'application/json' } }),
+      )
       .mockResolvedValueOnce(refreshResponse)
       .mockResolvedValueOnce(retryResponse);
     globalThis.fetch = fetchMock;
@@ -54,9 +57,14 @@ describe('api() silent refresh on 401', () => {
     localStorage.setItem('efi-jwt', 'expired-token');
     localStorage.setItem('efi-identity', 'testuser');
 
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(new Response('{}', { status: 401, headers: { 'content-type': 'application/json' } }))
-      .mockResolvedValueOnce(new Response('{}', { status: 403, headers: { 'content-type': 'application/json' } }));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response('{}', { status: 401, headers: { 'content-type': 'application/json' } }),
+      )
+      .mockResolvedValueOnce(
+        new Response('{}', { status: 403, headers: { 'content-type': 'application/json' } }),
+      );
     globalThis.fetch = fetchMock;
 
     await expect(api('/test')).rejects.toThrow();
@@ -68,10 +76,18 @@ describe('api() silent refresh on 401', () => {
 describe('api() error handling', () => {
   it('should throw ApiError with traceId from X-Trace-Id header', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ title: 'Not Found', detail: 'Room not found', status: 404, type: 'about:blank' }), {
-        status: 404,
-        headers: { 'content-type': 'application/json', 'X-Trace-Id': 'trace-abc-123' },
-      }),
+      new Response(
+        JSON.stringify({
+          title: 'Not Found',
+          detail: 'Room not found',
+          status: 404,
+          type: 'about:blank',
+        }),
+        {
+          status: 404,
+          headers: { 'content-type': 'application/json', 'X-Trace-Id': 'trace-abc-123' },
+        },
+      ),
     );
 
     await expect(api('/rooms/nonexistent')).rejects.toSatisfy((err: ApiError) => {
@@ -85,13 +101,22 @@ describe('api() error handling', () => {
 
   it('should use detail field from ProblemDetail body', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ title: 'Bad Request', detail: 'Deadline is required for ASYNC rooms', status: 400 }), {
-        status: 400,
-        headers: { 'content-type': 'application/json' },
-      }),
+      new Response(
+        JSON.stringify({
+          title: 'Bad Request',
+          detail: 'Deadline is required for ASYNC rooms',
+          status: 400,
+        }),
+        {
+          status: 400,
+          headers: { 'content-type': 'application/json' },
+        },
+      ),
     );
 
-    await expect(api('/projects/test/rooms', { method: 'POST', body: {} })).rejects.toThrow('Deadline is required for ASYNC rooms');
+    await expect(api('/projects/test/rooms', { method: 'POST', body: {} })).rejects.toThrow(
+      'Deadline is required for ASYNC rooms',
+    );
   });
 
   it('should fall back to title when detail is missing', async () => {
@@ -102,7 +127,9 @@ describe('api() error handling', () => {
       }),
     );
 
-    await expect(api('/projects/test/rooms', { method: 'POST', body: {} })).rejects.toThrow('Forbidden');
+    await expect(api('/projects/test/rooms', { method: 'POST', body: {} })).rejects.toThrow(
+      'Forbidden',
+    );
   });
 
   it('should handle non-JSON error response gracefully', async () => {

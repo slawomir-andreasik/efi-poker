@@ -1,10 +1,14 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import { ToastProvider, useToast, AUTO_DISMISS_MS } from './Toast';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { AUTO_DISMISS_MS, ToastProvider, useToast } from './Toast';
 
 function TestTrigger({ message, type }: { message: string; type?: 'error' | 'success' | 'info' }) {
   const { showToast } = useToast();
-  return <button onClick={() => showToast(message, type)}>trigger</button>;
+  return (
+    <button type="button" onClick={() => showToast(message, type)}>
+      trigger
+    </button>
+  );
 }
 
 describe('Toast', () => {
@@ -47,10 +51,18 @@ describe('Toast', () => {
       const { showToast } = useToast();
       return (
         <div>
-          <button onClick={() => showToast('Toast 1')}>t1</button>
-          <button onClick={() => showToast('Toast 2')}>t2</button>
-          <button onClick={() => showToast('Toast 3')}>t3</button>
-          <button onClick={() => showToast('Toast 4')}>t4</button>
+          <button type="button" onClick={() => showToast('Toast 1')}>
+            t1
+          </button>
+          <button type="button" onClick={() => showToast('Toast 2')}>
+            t2
+          </button>
+          <button type="button" onClick={() => showToast('Toast 3')}>
+            t3
+          </button>
+          <button type="button" onClick={() => showToast('Toast 4')}>
+            t4
+          </button>
         </div>
       );
     }

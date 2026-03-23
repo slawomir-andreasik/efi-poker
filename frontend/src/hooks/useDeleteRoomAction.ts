@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useDeleteRoom } from '@/api/mutations';
 import { useToast } from '@/components/Toast';
-import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/utils/error';
+import { logger } from '@/utils/logger';
 
 export function useDeleteRoomAction(slug: string, roomId: string) {
   const deleteRoomMutation = useDeleteRoom(slug);

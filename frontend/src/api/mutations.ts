@@ -1,20 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, saveAuth, setJwt, setIdentity } from './client';
+import { api, saveAuth, setIdentity, setJwt } from './client';
 import { queryKeys } from './queryKeys';
 import type {
-  RoomResponse,
-  ParticipantResponse,
-  ProjectAdminResponse,
-  StoryPoints,
-  AuthResponse,
-  AdminUserResponse,
   AdminCreateUserRequest,
-  AdminUpdateUserRequest,
-  ChangePasswordRequest,
   AdminResetPasswordRequest,
-  RoomType,
+  AdminUpdateUserRequest,
+  AdminUserResponse,
+  AuthResponse,
+  ChangePasswordRequest,
   FinishSessionResponse,
   GuestTokenResponse,
+  ParticipantResponse,
+  ProjectAdminResponse,
+  RoomResponse,
+  RoomType,
+  StoryPoints,
 } from './types';
 
 // --- Auth mutations ---
@@ -74,8 +74,7 @@ export function useUpdateProject(slug: string) {
 
 export function useDeleteProject(slug: string) {
   return useMutation({
-    mutationFn: () =>
-      api<void>(`/projects/${slug}`, { method: 'DELETE' }, slug),
+    mutationFn: () => api<void>(`/projects/${slug}`, { method: 'DELETE' }, slug),
   });
 }
 
@@ -84,8 +83,15 @@ export function useDeleteProject(slug: string) {
 export function useCreateRoom(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { title: string; description?: string; deadline?: string; roomType: RoomType; autoRevealOnDeadline?: boolean; commentTemplate?: string; commentRequired?: boolean }) =>
-      api<RoomResponse>(`/projects/${slug}/rooms`, { method: 'POST', body }, slug),
+    mutationFn: (body: {
+      title: string;
+      description?: string;
+      deadline?: string;
+      roomType: RoomType;
+      autoRevealOnDeadline?: boolean;
+      commentTemplate?: string;
+      commentRequired?: boolean;
+    }) => api<RoomResponse>(`/projects/${slug}/rooms`, { method: 'POST', body }, slug),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.projects.rooms(slug) });
     },
@@ -95,8 +101,7 @@ export function useCreateRoom(slug: string) {
 export function useRevealRoom(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (roomId: string) =>
-      api(`/rooms/${roomId}/reveal`, { method: 'POST' }, slug),
+    mutationFn: (roomId: string) => api(`/rooms/${roomId}/reveal`, { method: 'POST' }, slug),
     onSuccess: (_data, roomId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.rooms.admin(roomId) });
       void qc.invalidateQueries({ queryKey: queryKeys.rooms.detail(roomId) });
@@ -109,8 +114,7 @@ export function useRevealRoom(slug: string) {
 export function useReopenRoom(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (roomId: string) =>
-      api(`/rooms/${roomId}/reopen`, { method: 'POST' }, slug),
+    mutationFn: (roomId: string) => api(`/rooms/${roomId}/reopen`, { method: 'POST' }, slug),
     onSuccess: (_data, roomId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.rooms.admin(roomId) });
       void qc.invalidateQueries({ queryKey: queryKeys.projects.rooms(slug) });
@@ -134,7 +138,11 @@ export function useFinishSession(slug: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ roomId, revealVotes }: { roomId: string; revealVotes: boolean }) =>
-      api<FinishSessionResponse>(`/rooms/${roomId}/finish?revealVotes=${revealVotes}`, { method: 'POST' }, slug),
+      api<FinishSessionResponse>(
+        `/rooms/${roomId}/finish?revealVotes=${revealVotes}`,
+        { method: 'POST' },
+        slug,
+      ),
     onSuccess: (_data, { roomId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.rooms.admin(roomId) });
       void qc.invalidateQueries({ queryKey: queryKeys.rooms.detail(roomId) });
@@ -147,8 +155,7 @@ export function useFinishSession(slug: string) {
 export function useDeleteRoom(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (roomId: string) =>
-      api<void>(`/rooms/${roomId}`, { method: 'DELETE' }, slug),
+    mutationFn: (roomId: string) => api<void>(`/rooms/${roomId}`, { method: 'DELETE' }, slug),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.projects.rooms(slug) });
     },
@@ -173,8 +180,15 @@ export function useUpdateRoom(slug: string) {
 export function useAddTask(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ roomId, title, description }: { roomId: string; title: string; description?: string }) =>
-      api(`/rooms/${roomId}/tasks`, { method: 'POST', body: { title, description } }, slug),
+    mutationFn: ({
+      roomId,
+      title,
+      description,
+    }: {
+      roomId: string;
+      title: string;
+      description?: string;
+    }) => api(`/rooms/${roomId}/tasks`, { method: 'POST', body: { title, description } }, slug),
     onSuccess: (_data, { roomId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.rooms.admin(roomId) });
     },
@@ -207,8 +221,7 @@ export function useUpdateTask(slug: string) {
 export function useDeleteTask(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (taskId: string) =>
-      api(`/tasks/${taskId}`, { method: 'DELETE' }, slug),
+    mutationFn: (taskId: string) => api(`/tasks/${taskId}`, { method: 'DELETE' }, slug),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['rooms'] });
     },
@@ -220,8 +233,23 @@ export function useDeleteTask(slug: string) {
 export function useSubmitEstimate(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ taskId, storyPoints, comment }: { taskId: string; storyPoints?: StoryPoints | null; comment?: string }) =>
-      api(`/tasks/${taskId}/estimates`, { method: 'POST', body: { storyPoints: storyPoints || undefined, comment: comment || undefined } }, slug),
+    mutationFn: ({
+      taskId,
+      storyPoints,
+      comment,
+    }: {
+      taskId: string;
+      storyPoints?: StoryPoints | null;
+      comment?: string;
+    }) =>
+      api(
+        `/tasks/${taskId}/estimates`,
+        {
+          method: 'POST',
+          body: { storyPoints: storyPoints || undefined, comment: comment || undefined },
+        },
+        slug,
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['rooms'] });
     },
@@ -231,8 +259,7 @@ export function useSubmitEstimate(slug: string) {
 export function useDeleteEstimate(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (taskId: string) =>
-      api(`/tasks/${taskId}/estimates`, { method: 'DELETE' }, slug),
+    mutationFn: (taskId: string) => api(`/tasks/${taskId}/estimates`, { method: 'DELETE' }, slug),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['rooms'] });
     },
@@ -343,8 +370,7 @@ export function useAdminResetPassword() {
 export function useAdminDeleteUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      api<void>(`/admin/users/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => api<void>(`/admin/users/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['admin', 'users'] });
     },

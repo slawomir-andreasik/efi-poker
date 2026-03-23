@@ -1,14 +1,24 @@
-import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
-import { Link, useLocation, matchPath } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { X, Github, ChevronRight, ChevronDown, LogOut, Home, Shield, LogIn, UserPlus } from 'lucide-react';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useAuthConfig } from '@/hooks/useAuthConfig';
-import { getJwt, getAllProjects, getIdentity } from '@/api/client';
-import { queryKeys } from '@/api/queryKeys';
+import {
+  ChevronDown,
+  ChevronRight,
+  Github,
+  Home,
+  LogIn,
+  LogOut,
+  Shield,
+  UserPlus,
+  X,
+} from 'lucide-react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { Link, matchPath, useLocation } from 'react-router-dom';
+import { getAllProjects, getIdentity, getJwt } from '@/api/client';
 import { projectApi } from '@/api/queries';
-import { statusBadge, roomTypeBadge, statusLabel } from '@/utils/roomBadges';
+import { queryKeys } from '@/api/queryKeys';
 import { RoleBadge } from '@/components/RoleBadge';
+import { useAuthConfig } from '@/hooks/useAuthConfig';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { roomTypeBadge, statusBadge, statusLabel } from '@/utils/roomBadges';
 
 interface MobileSidebarProps {
   open: boolean;
@@ -50,13 +60,17 @@ export function MobileSidebar({ open, onClose, onLogout }: MobileSidebarProps) {
     if (slug) setExpandedSlug(slug);
   }, [slug]);
 
-  const projectEntries = useMemo(() => Object.entries(getAllProjects())
-    .map(([s, a]) => ({
-      slug: s,
-      name: a.projectName ?? s,
-      isAdmin: Boolean(a.adminCode),
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name)), []);
+  const projectEntries = useMemo(
+    () =>
+      Object.entries(getAllProjects())
+        .map(([s, a]) => ({
+          slug: s,
+          name: a.projectName ?? s,
+          isAdmin: Boolean(a.adminCode),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [],
+  );
 
   // Fetch rooms for expanded project
   const { data: rooms, isLoading: roomsLoading } = useQuery({
@@ -66,19 +80,22 @@ export function MobileSidebar({ open, onClose, onLogout }: MobileSidebarProps) {
     staleTime: 10_000,
   });
 
-  const sortedRooms = useMemo(() => rooms
-    ?.slice()
-    .sort((a, b) => {
-      // OPEN first, then by createdAt desc
-      if (a.status === 'OPEN' && b.status !== 'OPEN') return -1;
-      if (a.status !== 'OPEN' && b.status === 'OPEN') return 1;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    }), [rooms]);
+  const sortedRooms = useMemo(
+    () =>
+      rooms?.slice().sort((a, b) => {
+        // OPEN first, then by createdAt desc
+        if (a.status === 'OPEN' && b.status !== 'OPEN') return -1;
+        if (a.status !== 'OPEN' && b.status === 'OPEN') return 1;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }),
+    [rooms],
+  );
 
   // Close on route change
   useEffect(() => {
     onClose();
-  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+    // biome-ignore lint/correctness/useExhaustiveDependencies: close sidebar on navigation, onClose is stable
+  }, [location.pathname]);
 
   // Close on Escape key
   useEffect(() => {
@@ -103,11 +120,7 @@ export function MobileSidebar({ open, onClose, onLogout }: MobileSidebarProps) {
     <>
       {/* Overlay */}
       {open && (
-        <div
-          className="fixed inset-0 bg-black/50 z-[60]"
-          onClick={onClose}
-          aria-hidden="true"
-        />
+        <div className="fixed inset-0 bg-black/50 z-[60]" onClick={onClose} aria-hidden="true" />
       )}
 
       {/* Sidebar panel */}
@@ -121,7 +134,9 @@ export function MobileSidebar({ open, onClose, onLogout }: MobileSidebarProps) {
       >
         {/* Sidebar header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
-          <span className="text-sm font-semibold text-efi-text-secondary uppercase tracking-wider">Menu</span>
+          <span className="text-sm font-semibold text-efi-text-secondary uppercase tracking-wider">
+            Menu
+          </span>
           <button
             type="button"
             onClick={onClose}
@@ -159,14 +174,16 @@ export function MobileSidebar({ open, onClose, onLogout }: MobileSidebarProps) {
                   const isExpanded = entry.slug === expandedSlug;
                   return (
                     <div key={entry.slug}>
-                      <div className={`flex items-center gap-0 rounded-lg transition-colors ${
-                          isExpanded || isCurrent
-                            ? 'bg-efi-gold/10'
-                            : ''
-                        }`}>
+                      <div
+                        className={`flex items-center gap-0 rounded-lg transition-colors ${
+                          isExpanded || isCurrent ? 'bg-efi-gold/10' : ''
+                        }`}
+                      >
                         <button
                           type="button"
-                          onClick={() => setExpandedSlug(prev => prev === entry.slug ? null : entry.slug)}
+                          onClick={() =>
+                            setExpandedSlug((prev) => (prev === entry.slug ? null : entry.slug))
+                          }
                           title={isExpanded ? 'Collapse rooms' : 'Expand rooms'}
                           className="p-2.5 rounded-lg text-efi-text-tertiary hover:text-efi-text-primary hover:bg-white/5 transition-colors cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
                         >
@@ -195,12 +212,14 @@ export function MobileSidebar({ open, onClose, onLogout }: MobileSidebarProps) {
                       {isExpanded && (
                         <div className="ml-4 mt-0.5 space-y-0.5">
                           {roomsLoading && (
-                            <p className="px-4 py-2 text-xs text-efi-text-tertiary">Loading rooms...</p>
+                            <p className="px-4 py-2 text-xs text-efi-text-tertiary">
+                              Loading rooms...
+                            </p>
                           )}
                           {!roomsLoading && sortedRooms && sortedRooms.length === 0 && (
                             <p className="px-4 py-2 text-xs text-efi-text-tertiary">No rooms</p>
                           )}
-                          {sortedRooms && sortedRooms.map((room) => {
+                          {sortedRooms?.map((room) => {
                             const isCurrentRoom = room.id === roomId;
                             return (
                               <Link
@@ -214,10 +233,14 @@ export function MobileSidebar({ open, onClose, onLogout }: MobileSidebarProps) {
                               >
                                 <span className="truncate flex-1">{room.title}</span>
                                 <div className="flex items-center gap-1 shrink-0">
-                                  <span className={`text-[10px] font-bold uppercase px-1 py-0.5 rounded border ${roomTypeBadge(room.roomType)}`}>
+                                  <span
+                                    className={`text-[10px] font-bold uppercase px-1 py-0.5 rounded border ${roomTypeBadge(room.roomType)}`}
+                                  >
                                     {room.roomType === 'LIVE' ? 'Live' : 'Async'}
                                   </span>
-                                  <span className={`text-[10px] font-bold uppercase px-1 py-0.5 rounded border ${statusBadge(room.status)}`}>
+                                  <span
+                                    className={`text-[10px] font-bold uppercase px-1 py-0.5 rounded border ${statusBadge(room.status)}`}
+                                  >
                                     {statusLabel(room.status)}
                                   </span>
                                 </div>

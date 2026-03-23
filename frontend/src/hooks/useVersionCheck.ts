@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { APP_VERSION } from '@/version';
 import { logger } from '@/utils/logger';
+import { APP_VERSION } from '@/version';
 
 const POLL_INTERVAL_MS = 30_000;
 const RELOAD_DELAY_MS = 1_500;

@@ -24,9 +24,7 @@ describe('Linkify', () => {
   });
 
   it('renders multiple URLs as separate links', () => {
-    render(
-      <Linkify text="First https://a.com then https://b.com" />,
-    );
+    render(<Linkify text="First https://a.com then https://b.com" />);
     const links = screen.getAllByRole('link');
     expect(links).toHaveLength(2);
     expect(links[0]).toHaveAttribute('href', 'https://a.com');

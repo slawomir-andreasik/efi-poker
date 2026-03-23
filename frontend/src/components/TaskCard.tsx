@@ -1,13 +1,13 @@
-import { memo, useState, useRef } from 'react';
+import { memo, useRef, useState } from 'react';
+import { clearDraftComment, getDraftComment, saveDraftComment } from '@/api/client';
+import type { EstimateResponse, StoryPoints } from '@/api/types';
+import { SP_NOT_APPLICABLE, SP_VALUES } from '@/api/types';
+import { CommentInput } from '@/components/CommentInput';
+import { TextArea } from '@/components/TextInput';
+import { useSaveIndicator } from '@/hooks/useSaveIndicator';
+import { Linkify } from '@/lib/linkify';
 import { EstimateButtons } from './EstimateButtons';
 import { ProgressBar } from './ProgressBar';
-import { Linkify } from '@/lib/linkify';
-import { SP_VALUES, SP_NOT_APPLICABLE } from '@/api/types';
-import { TextArea } from '@/components/TextInput';
-import { CommentInput } from '@/components/CommentInput';
-import { useSaveIndicator } from '@/hooks/useSaveIndicator';
-import { getDraftComment, clearDraftComment, saveDraftComment } from '@/api/client';
-import type { StoryPoints, EstimateResponse } from '@/api/types';
 
 interface TaskCardProps {
   id: string;
@@ -57,7 +57,9 @@ export const TaskCard = memo(function TaskCard({
   const hasVoted = selectedSp !== null;
   const isNA = selectedSp === SP_NOT_APPLICABLE;
   const showCommentBox = !revealed && !disabled && !isNA && (commentTemplate || commentRequired);
-  const [comment, setComment] = useState(() => getDraftComment(id) ?? myComment ?? commentTemplate ?? '');
+  const [comment, setComment] = useState(
+    () => getDraftComment(id) ?? myComment ?? commentTemplate ?? '',
+  );
   const { saving, showSaveIndicator } = useSaveIndicator();
 
   return (
@@ -71,9 +73,18 @@ export const TaskCard = memo(function TaskCard({
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-efi-text-primary">{title}</h3>
           {isAdmin && !revealed && onUpdateDescription ? (
-            <InlineDescription key={description ?? ''} taskId={id} value={description ?? ''} onSave={onUpdateDescription} />
+            <InlineDescription
+              key={description ?? ''}
+              taskId={id}
+              value={description ?? ''}
+              onSave={onUpdateDescription}
+            />
           ) : (
-            description && <p className="text-sm text-efi-text-secondary mt-1"><Linkify text={description} /></p>
+            description && (
+              <p className="text-sm text-efi-text-secondary mt-1">
+                <Linkify text={description} />
+              </p>
+            )
           )}
         </div>
         <div className="flex items-center gap-3 sm:ml-4 mt-1 sm:mt-0">
@@ -98,7 +109,13 @@ export const TaskCard = memo(function TaskCard({
         <EstimateButtons
           selectedValue={selectedSp}
           onSelect={(value) => {
-            onEstimate(id, value, value !== null && value !== SP_NOT_APPLICABLE ? (comment.trim() || undefined) : undefined);
+            onEstimate(
+              id,
+              value,
+              value !== null && value !== SP_NOT_APPLICABLE
+                ? comment.trim() || undefined
+                : undefined,
+            );
             if (value !== null) {
               clearDraftComment(id);
               showSaveIndicator();
@@ -135,7 +152,10 @@ export const TaskCard = memo(function TaskCard({
           <div className="flex flex-wrap gap-4 mb-3">
             {averagePoints != null && (
               <span className="text-sm text-efi-text-secondary">
-                Avg: <span className="text-efi-gold-light font-semibold">{averagePoints.toFixed(1)}</span>
+                Avg:{' '}
+                <span className="text-efi-gold-light font-semibold">
+                  {averagePoints.toFixed(1)}
+                </span>
               </span>
             )}
             {medianPoints != null && (
@@ -159,17 +179,36 @@ export const TaskCard = memo(function TaskCard({
                 return (
                   <div
                     key={est.id}
-                    className={`px-2.5 py-1.5 rounded-md text-xs ${isQuestion
+                    className={`px-2.5 py-1.5 rounded-md text-xs ${
+                      isQuestion
                         ? 'bg-efi-warning/20 border border-efi-warning/30'
-                        : estIsNA ? 'bg-white/4' : 'bg-white/6'
-                      }`}
+                        : estIsNA
+                          ? 'bg-white/4'
+                          : 'bg-white/6'
+                    }`}
                   >
                     <div className="flex items-center gap-1.5">
-                      <span className={isQuestion ? 'text-efi-warning/70' : estIsNA ? 'text-efi-text-tertiary' : 'text-efi-text-secondary'}>{est.participantNickname}</span>
-                      <span className={`font-bold ${isQuestion ? 'text-efi-warning' : estIsNA ? 'text-efi-text-tertiary' : 'text-efi-text-primary'}`}>{est.storyPoints}</span>
+                      <span
+                        className={
+                          isQuestion
+                            ? 'text-efi-warning/70'
+                            : estIsNA
+                              ? 'text-efi-text-tertiary'
+                              : 'text-efi-text-secondary'
+                        }
+                      >
+                        {est.participantNickname}
+                      </span>
+                      <span
+                        className={`font-bold ${isQuestion ? 'text-efi-warning' : estIsNA ? 'text-efi-text-tertiary' : 'text-efi-text-primary'}`}
+                      >
+                        {est.storyPoints}
+                      </span>
                     </div>
                     {est.comment && (
-                      <p className="text-efi-text-secondary mt-1 whitespace-pre-line break-words">{est.comment}</p>
+                      <p className="text-efi-text-secondary mt-1 whitespace-pre-line break-words">
+                        {est.comment}
+                      </p>
                     )}
                   </div>
                 );
@@ -183,12 +222,25 @@ export const TaskCard = memo(function TaskCard({
                 return (
                   <span
                     key={est.id}
-                    className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs ${isQuestion
+                    className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs ${
+                      isQuestion
                         ? 'bg-efi-warning/20 border border-efi-warning/30 text-efi-warning'
-                        : estIsNA ? 'bg-white/4 text-efi-text-tertiary' : 'bg-white/6 text-efi-text-primary'
-                      }`}
+                        : estIsNA
+                          ? 'bg-white/4 text-efi-text-tertiary'
+                          : 'bg-white/6 text-efi-text-primary'
+                    }`}
                   >
-                    <span className={isQuestion ? 'text-efi-warning/70' : estIsNA ? 'text-efi-text-tertiary' : 'text-efi-text-secondary'}>{est.participantNickname}</span>
+                    <span
+                      className={
+                        isQuestion
+                          ? 'text-efi-warning/70'
+                          : estIsNA
+                            ? 'text-efi-text-tertiary'
+                            : 'text-efi-text-secondary'
+                      }
+                    >
+                      {est.participantNickname}
+                    </span>
                     <span className="font-bold">{est.storyPoints}</span>
                   </span>
                 );
@@ -205,13 +257,15 @@ export const TaskCard = memo(function TaskCard({
                   const isSelected = finalEstimate === value;
                   return (
                     <button
+                      type="button"
                       key={value}
                       onClick={() => onSetFinalEstimate(id, value)}
                       className={`
                         w-9 h-9 rounded-md font-bold text-xs transition-all cursor-pointer
-                        ${isSelected
-                          ? 'bg-efi-success text-white shadow-lg shadow-efi-success/30'
-                          : 'bg-efi-well border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-success hover:text-white'
+                        ${
+                          isSelected
+                            ? 'bg-efi-success text-white shadow-lg shadow-efi-success/30'
+                            : 'bg-efi-well border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-success hover:text-white'
                         }
                         active:scale-95 focus-visible:ring-2 focus-visible:ring-efi-success focus-visible:outline-none
                       `}
