@@ -196,7 +196,7 @@ public class RoomResponseAssembler {
     TasksWithEstimates data = loadTasksAndEstimates(room.id(), false);
     List<Task> tasks = data.tasks();
     Map<UUID, List<Estimate>> estimatesByTask = data.estimatesByTask();
-    List<Participant> participants = participantService.listParticipants(room.project().id());
+    List<Participant> participants = participantService.listAllParticipants(room.project().id());
 
     List<TaskWithAllEstimatesResponse> taskResponses = new ArrayList<>();
     for (Task task : tasks) {
@@ -271,13 +271,15 @@ public class RoomResponseAssembler {
             .collect(Collectors.groupingBy(e -> e.participant().id()));
 
     int totalTasks = data.tasks().size();
+    Set<UUID> participantsWithEstimates = estimatesByParticipant.keySet();
 
     List<ParticipantProgressEntry> entries = new ArrayList<>();
     for (Participant participant : participants) {
+      if (!participantsWithEstimates.contains(participant.id())) {
+        continue;
+      }
       List<Estimate> voted =
-          estimatesByParticipant.getOrDefault(participant.id(), List.of()).stream()
-              .filter(Estimate::hasVoted)
-              .toList();
+          estimatesByParticipant.get(participant.id()).stream().filter(Estimate::hasVoted).toList();
       int votedCount = voted.size();
       boolean hasCommentedAll =
           votedCount > 0

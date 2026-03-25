@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.andreasik.efipoker.auth.UserEntity;
 import com.andreasik.efipoker.estimation.estimate.EstimateEntity;
 import com.andreasik.efipoker.estimation.task.TaskEntity;
 import com.andreasik.efipoker.participant.ParticipantEntity;
@@ -400,6 +401,24 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
           .perform(get("/api/v1/rooms/{roomId}/participant-progress", UUID.randomUUID()))
           .andExpect(status().isNotFound());
     }
+
+    @Test
+    void should_exclude_participants_without_estimates_in_room() throws Exception {
+      RoomEntity room = roomRepository.save(Fixtures.roomEntity(project));
+      TaskEntity task = taskRepository.save(Fixtures.taskEntity(room));
+      ParticipantEntity alice =
+          participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+      participantRepository.save(Fixtures.participantEntity(project, "Bob"));
+
+      // Only Alice voted - Bob should not appear in progress
+      estimateRepository.save(Fixtures.estimateEntity(task, alice, "5"));
+
+      mockMvc
+          .perform(get("/api/v1/rooms/{roomId}/participant-progress", room.getId()))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.participants.length()").value(1))
+          .andExpect(jsonPath("$.participants[0].nickname").value("Alice"));
+    }
   }
 
   @Nested
@@ -686,6 +705,83 @@ class RoomControllerIntegrationTest extends BaseComponentTest {
                   .header("Authorization", "Bearer " + adminJwt)
                   .contentType(MediaType.APPLICATION_JSON))
           .andExpect(status().isConflict());
+    }
+  }
+
+  @Nested
+  @DisplayName("User JWT room access")
+  class UserJwtRoomAccess {
+
+    private String userJwt;
+    private ParticipantEntity userParticipant;
+
+    @BeforeEach
+    void setUp() throws Exception {
+      userJwt = loginAsTestAdmin();
+      UserEntity user =
+          userRepository
+              .findByUsername("testadmin")
+              .orElseThrow(() -> new AssertionError("testadmin user not found"));
+      userParticipant =
+          participantRepository.save(Fixtures.participantEntity(project, "TestAdmin", user));
+    }
+
+    @Test
+    void should_return_myEstimate_in_room_detail_for_user_jwt() throws Exception {
+      RoomEntity room = roomRepository.save(Fixtures.roomEntity(project));
+      TaskEntity task = taskRepository.save(Fixtures.taskEntity(room));
+      estimateRepository.save(Fixtures.estimateEntity(task, userParticipant, "5"));
+
+      mockMvc
+          .perform(
+              get("/api/v1/rooms/{roomId}", room.getId())
+                  .header("Authorization", "Bearer " + userJwt))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.tasks[0].myEstimate").isNotEmpty())
+          .andExpect(jsonPath("$.tasks[0].myEstimate.storyPoints").value("5"));
+    }
+
+    @Test
+    void should_return_myEstimate_in_live_room_for_user_jwt() throws Exception {
+      // Create LIVE room via API so phantom task is auto-created
+      // language=JSON
+      String body =
+          """
+          {"title":"Live Planning","roomType":"LIVE"}
+          """;
+      String createResponse =
+          mockMvc
+              .perform(
+                  post("/api/v1/projects/{slug}/rooms", project.getSlug())
+                      .header("Authorization", "Bearer " + adminJwt)
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .content(body))
+              .andExpect(status().isCreated())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      String roomId = objectMapper.readTree(createResponse).get("id").asText();
+      UUID phantomTaskId =
+          taskRepository
+              .findByRoomIdAndTitle(UUID.fromString(roomId), "__live__")
+              .orElseThrow()
+              .getId();
+
+      estimateRepository.save(
+          EstimateEntity.builder()
+              .task(taskRepository.getReferenceById(phantomTaskId))
+              .participant(userParticipant)
+              .storyPoints("3")
+              .build());
+
+      mockMvc
+          .perform(
+              get("/api/v1/rooms/{roomId}/live", roomId)
+                  .header("Authorization", "Bearer " + userJwt))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.myEstimate").isNotEmpty())
+          .andExpect(jsonPath("$.myEstimate.storyPoints").value("3"));
     }
   }
 }

@@ -15,11 +15,13 @@ import com.andreasik.efipoker.api.model.RoomSlugResponse;
 import com.andreasik.efipoker.api.model.RoundHistoryEntry;
 import com.andreasik.efipoker.api.model.UpdateRoomRequest;
 import com.andreasik.efipoker.participant.Participant;
+import com.andreasik.efipoker.participant.ParticipantApi;
 import com.andreasik.efipoker.participant.ParticipantService;
 import com.andreasik.efipoker.project.Project;
 import com.andreasik.efipoker.project.ProjectService;
 import com.andreasik.efipoker.shared.exception.UnauthorizedException;
 import com.andreasik.efipoker.shared.security.SecurityUtils;
+import jakarta.annotation.Nullable;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -37,6 +39,7 @@ public class RoomController implements RoomsApi {
   private final RoomService roomService;
   private final ProjectService projectService;
   private final ParticipantService participantService;
+  private final ParticipantApi participantApi;
   private final RoomMapper roomMapper;
   private final RoundHistoryService roundHistoryService;
   private final RoomResponseAssembler responseAssembler;
@@ -71,7 +74,7 @@ public class RoomController implements RoomsApi {
     log.debug("GET /projects/{}/rooms", slug);
     Project project = projectService.getProjectBySlug(slug);
     List<Room> rooms = roomService.listByProject(project.id());
-    UUID participantId = SecurityUtils.getCurrentParticipantId();
+    UUID participantId = resolveParticipantIdForProject(project.id());
     if (participantId != null) {
       Participant participant = participantService.getParticipant(project.id(), participantId);
       Set<UUID> invitedRoomIds = participant.invitedRoomIds();
@@ -86,7 +89,7 @@ public class RoomController implements RoomsApi {
   public ResponseEntity<RoomDetailResponse> getRoom(UUID roomId) {
     log.debug("GET /rooms/{}", roomId);
     Room room = roomService.getRoom(roomId);
-    UUID participantId = SecurityUtils.getCurrentParticipantId();
+    UUID participantId = resolveParticipantIdForProject(room.project().id());
     return ResponseEntity.ok(responseAssembler.buildDetailResponse(room, participantId));
   }
 
@@ -194,7 +197,7 @@ public class RoomController implements RoomsApi {
     log.debug("GET /rooms/{}/live", roomId);
     Room room = roomService.getRoom(roomId);
     validateLiveRoom(room);
-    UUID participantId = SecurityUtils.getCurrentParticipantId();
+    UUID participantId = resolveParticipantIdForProject(room.project().id());
     return ResponseEntity.ok(responseAssembler.buildLiveRoomStateResponse(room, participantId));
   }
 
@@ -226,5 +229,18 @@ public class RoomController implements RoomsApi {
     if (RoomType.LIVE != room.roomType()) {
       throw new IllegalStateException("This endpoint is only available for LIVE rooms");
     }
+  }
+
+  @Nullable
+  private UUID resolveParticipantIdForProject(UUID projectId) {
+    UUID participantId = SecurityUtils.getCurrentParticipantId();
+    if (participantId != null) {
+      return participantId;
+    }
+    UUID userId = SecurityUtils.getCurrentUserId();
+    if (userId != null) {
+      return participantApi.findParticipantIdByProjectAndUser(projectId, userId);
+    }
+    return null;
   }
 }
