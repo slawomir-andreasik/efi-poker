@@ -726,14 +726,7 @@ class RoomServiceTest extends BaseUnitTest {
       // Act
       roomService.createRoom(
           new CreateRoomCommand(
-              projectId,
-              "Async Room",
-              null,
-              RoomType.ASYNC,
-              java.time.Instant.now(),
-              true,
-              null,
-              false));
+              projectId, "Async Room", null, RoomType.ASYNC, Instant.now(), true, null, false));
 
       // Assert
       then(taskRepository).should(never()).save(any(TaskEntity.class));

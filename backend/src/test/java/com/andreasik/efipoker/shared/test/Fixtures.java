@@ -1,5 +1,6 @@
 package com.andreasik.efipoker.shared.test;
 
+import com.andreasik.efipoker.auth.UserEntity;
 import com.andreasik.efipoker.estimation.estimate.Estimate;
 import com.andreasik.efipoker.estimation.estimate.EstimateEntity;
 import com.andreasik.efipoker.estimation.room.Room;
@@ -194,6 +195,11 @@ public final class Fixtures {
 
   public static ParticipantEntity participantEntity(ProjectEntity project, String nickname) {
     return ParticipantEntity.builder().project(project).nickname(nickname).build();
+  }
+
+  public static ParticipantEntity participantEntity(
+      ProjectEntity project, String nickname, UserEntity user) {
+    return ParticipantEntity.builder().project(project).nickname(nickname).user(user).build();
   }
 
   public static EstimateEntity estimateEntity(TaskEntity task, ParticipantEntity participant) {

@@ -61,3 +61,18 @@ databaseChangeLog:
       rollback:
         - sql:
             sql: "DROP INDEX IF EXISTS idx_participants_project_id;"
+
+  - changeSet:
+      id: "participants-005-archived"
+      author: "sandreasik"
+      comment: "Add archived flag for soft-delete without losing historical estimates"
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE participants ADD COLUMN archived BOOLEAN NOT NULL DEFAULT false;
+              ALTER TABLE participants ADD COLUMN archived_at TIMESTAMP;
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE participants DROP COLUMN IF EXISTS archived_at;
+              ALTER TABLE participants DROP COLUMN IF EXISTS archived;

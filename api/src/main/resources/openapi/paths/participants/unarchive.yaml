@@ -1,0 +1,29 @@
+post:
+  operationId: unarchiveParticipant
+  tags: [participants]
+  summary: Unarchive participant (admin only)
+  description: Restores an archived participant to active status.
+  security:
+    - bearerAuth: []
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+    - $ref: '../../parameters/ParticipantIdPath.yaml'
+  responses:
+    '200':
+      description: Participant unarchived
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/ParticipantResponse.yaml'
+    '403':
+      description: Access denied
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '404':
+      description: Participant not found
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

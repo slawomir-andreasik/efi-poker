@@ -25,6 +25,14 @@ properties:
     format: date-time
     nullable: true
     description: Token expiration timestamp
+  archived:
+    type: boolean
+    description: Whether this participant is archived (hidden from active views)
+  archivedAt:
+    type: string
+    format: date-time
+    nullable: true
+    description: When the participant was archived
   createdAt:
     type: string
     format: date-time

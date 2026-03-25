@@ -1,0 +1,29 @@
+post:
+  operationId: archiveParticipant
+  tags: [participants]
+  summary: Archive participant (admin only)
+  description: Hides participant from active views while preserving their historical votes and comments.
+  security:
+    - bearerAuth: []
+  parameters:
+    - $ref: '../../parameters/SlugPath.yaml'
+    - $ref: '../../parameters/ParticipantIdPath.yaml'
+  responses:
+    '200':
+      description: Participant archived
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/response/ParticipantResponse.yaml'
+    '403':
+      description: Access denied
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'
+    '404':
+      description: Participant not found
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/common/error/ProblemDetail.yaml'

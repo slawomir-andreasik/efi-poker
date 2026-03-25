@@ -235,7 +235,7 @@ class ParticipantServiceTest extends BaseUnitTest {
                   .nickname("Alice")
                   .build(),
               ParticipantEntity.builder().id(bobId).project(projectEntity).nickname("Bob").build());
-      given(participantRepository.findByProjectId(projectId)).willReturn(entities);
+      given(participantRepository.findByProjectIdAndArchivedFalse(projectId)).willReturn(entities);
       given(participantEntityMapper.toDomainList(entities))
           .willReturn(
               List.of(
@@ -265,7 +265,7 @@ class ParticipantServiceTest extends BaseUnitTest {
     void should_return_empty_list_when_no_participants() {
       // Arrange - covers mutant #201: empty-list early return path
       UUID projectId = UUID.randomUUID();
-      given(participantRepository.findByProjectId(projectId)).willReturn(List.of());
+      given(participantRepository.findByProjectIdAndArchivedFalse(projectId)).willReturn(List.of());
       given(participantEntityMapper.toDomainList(List.of())).willReturn(List.of());
 
       // Act
@@ -473,7 +473,7 @@ class ParticipantServiceTest extends BaseUnitTest {
     void should_return_count() {
       // Arrange
       UUID projectId = UUID.randomUUID();
-      given(participantRepository.countByProjectId(projectId)).willReturn(5L);
+      given(participantRepository.countByProjectIdAndArchivedFalse(projectId)).willReturn(5L);
 
       // Act
       long result = participantService.countByProject(projectId);

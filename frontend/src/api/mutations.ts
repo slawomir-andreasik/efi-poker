@@ -311,6 +311,30 @@ export function useDeleteParticipant(slug: string) {
   });
 }
 
+export function useArchiveParticipant(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (participantId: string) =>
+      api(`/projects/${slug}/participants/${participantId}/archive`, { method: 'POST' }, slug),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.participants(slug) });
+      void qc.invalidateQueries({ queryKey: ['rooms'] });
+    },
+  });
+}
+
+export function useUnarchiveParticipant(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (participantId: string) =>
+      api(`/projects/${slug}/participants/${participantId}/unarchive`, { method: 'POST' }, slug),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.participants(slug) });
+      void qc.invalidateQueries({ queryKey: ['rooms'] });
+    },
+  });
+}
+
 export function useAdminJoinMutation(slug: string) {
   const qc = useQueryClient();
   return useMutation({

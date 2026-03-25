@@ -6,12 +6,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.andreasik.efipoker.auth.UserEntity;
 import com.andreasik.efipoker.estimation.room.RoomEntity;
 import com.andreasik.efipoker.estimation.task.TaskEntity;
 import com.andreasik.efipoker.participant.ParticipantEntity;
 import com.andreasik.efipoker.project.ProjectEntity;
 import com.andreasik.efipoker.shared.test.BaseComponentTest;
 import com.andreasik.efipoker.shared.test.Fixtures;
+import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -221,6 +223,118 @@ class EstimateControllerIntegrationTest extends BaseComponentTest {
     void should_reject_missing_jwt_403() throws Exception {
       mockMvc
           .perform(delete("/api/v1/tasks/{id}/estimates", task.getId()))
+          .andExpect(status().isForbidden());
+    }
+  }
+
+  @Nested
+  @DisplayName("User JWT estimates")
+  class UserJwtEstimate {
+
+    private String userJwt;
+    private ProjectEntity userProject;
+    private TaskEntity userTask;
+
+    @BeforeEach
+    void setUp() throws Exception {
+      userJwt = loginAsTestAdmin();
+      UserEntity user =
+          userRepository
+              .findByUsername("testadmin")
+              .orElseThrow(() -> new AssertionError("testadmin user not found"));
+      userProject = projectRepository.save(Fixtures.projectEntity());
+      RoomEntity room = roomRepository.save(Fixtures.roomEntity(userProject));
+      userTask = taskRepository.save(Fixtures.taskEntity(room));
+      participantRepository.save(Fixtures.participantEntity(userProject, "TestAdmin", user));
+    }
+
+    @Test
+    void should_submit_estimate_with_user_jwt_200() throws Exception {
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"5"}
+          """;
+
+      mockMvc
+          .perform(
+              post("/api/v1/tasks/{id}/estimates", userTask.getId())
+                  .header("Authorization", "Bearer " + userJwt)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.storyPoints").value("5"));
+    }
+
+    @Test
+    void should_delete_estimate_with_user_jwt_204() throws Exception {
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"5"}
+          """;
+      mockMvc
+          .perform(
+              post("/api/v1/tasks/{id}/estimates", userTask.getId())
+                  .header("Authorization", "Bearer " + userJwt)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
+          .andExpect(status().isOk());
+
+      mockMvc
+          .perform(
+              delete("/api/v1/tasks/{id}/estimates", userTask.getId())
+                  .header("Authorization", "Bearer " + userJwt))
+          .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void should_reject_user_jwt_without_participant_403() throws Exception {
+      ProjectEntity otherProject = projectRepository.save(Fixtures.projectEntity());
+      RoomEntity otherRoom = roomRepository.save(Fixtures.roomEntity(otherProject));
+      TaskEntity otherTask = taskRepository.save(Fixtures.taskEntity(otherRoom));
+
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"5"}
+          """;
+
+      mockMvc
+          .perform(
+              post("/api/v1/tasks/{id}/estimates", otherTask.getId())
+                  .header("Authorization", "Bearer " + userJwt)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
+          .andExpect(status().isForbidden());
+    }
+  }
+
+  @Nested
+  @DisplayName("Archived participant voting")
+  class ArchivedParticipantEstimate {
+
+    @Test
+    void should_reject_estimate_from_archived_participant_403() throws Exception {
+      ParticipantEntity archivedParticipant =
+          participantRepository.save(Fixtures.participantEntity(project, "Archived"));
+      archivedParticipant.setArchived(true);
+      archivedParticipant.setArchivedAt(Instant.now());
+      participantRepository.save(archivedParticipant);
+      String archivedJwt = testJwt.guestParticipantJwt(project, archivedParticipant);
+
+      // language=JSON
+      String body =
+          """
+          {"storyPoints":"5"}
+          """;
+
+      mockMvc
+          .perform(
+              post("/api/v1/tasks/{id}/estimates", task.getId())
+                  .header("Authorization", "Bearer " + archivedJwt)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
           .andExpect(status().isForbidden());
     }
   }

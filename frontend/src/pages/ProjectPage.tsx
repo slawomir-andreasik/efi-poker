@@ -1,10 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
-import { Copy, Download, Eye, Plus, RotateCcw, Square, Trash2, Upload, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import {
+  Archive,
+  Copy,
+  Download,
+  Eye,
+  Plus,
+  RotateCcw,
+  Square,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, getJwt, removeProject, saveAuth } from '@/api/client';
 import {
   useAddTask,
+  useArchiveParticipant,
   useCreateRoom,
   useDeleteParticipant,
   useDeleteProject,
@@ -13,6 +25,7 @@ import {
   useImportTasks,
   useReopenRoom,
   useRevealRoom,
+  useUnarchiveParticipant,
   useUpdateProject,
   useUpdateTask,
 } from '@/api/mutations';
@@ -25,6 +38,7 @@ import { DeadlineInput, formatPreview, getDefaultDeadline } from '@/components/D
 import { FinishSessionDialog } from '@/components/FinishSessionDialog';
 import { ImportModal } from '@/components/ImportModal';
 import { InlineConfirmAction } from '@/components/InlineConfirmAction';
+import { Modal } from '@/components/Modal';
 import { NotFoundState } from '@/components/NotFoundState';
 import { PageSpinner } from '@/components/PageSpinner';
 import { RandomNameButton } from '@/components/RandomNameButton';
@@ -58,10 +72,15 @@ export function ProjectPage() {
     description: string;
   } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{
-    type: 'task' | 'participant';
+    type: 'task';
     id: string;
     name: string;
   } | null>(null);
+  const [participantRemoveModal, setParticipantRemoveModal] = useState<{
+    id: string;
+    nickname: string;
+  } | null>(null);
+  const [showArchivedParticipants, setShowArchivedParticipants] = useState(false);
   const [editingName, setEditingName] = useState<string | null>(null);
 
   // Shared create room state
@@ -107,6 +126,15 @@ export function ProjectPage() {
     refetchInterval: isAdmin && project ? 30_000 : undefined,
   });
 
+  const activeParticipants = useMemo(
+    () => participants?.filter((p) => !p.archived) ?? [],
+    [participants],
+  );
+  const archivedParticipants = useMemo(
+    () => participants?.filter((p) => p.archived) ?? [],
+    [participants],
+  );
+
   // Mutations
   const [showFinishDialog, setShowFinishDialog] = useState(false);
   const [finishRoomId, setFinishRoomId] = useState<string | null>(null);
@@ -121,6 +149,8 @@ export function ProjectPage() {
   const updateTask = useUpdateTask(slug ?? '');
   const deleteTask = useDeleteTask(slug ?? '');
   const deleteParticipant = useDeleteParticipant(slug ?? '');
+  const archiveParticipant = useArchiveParticipant(slug ?? '');
+  const unarchiveParticipant = useUnarchiveParticipant(slug ?? '');
   const updateProject = useUpdateProject(slug ?? '');
   const deleteProjectMutation = useDeleteProject(slug ?? '');
   const navigate = useNavigate();
@@ -317,12 +347,29 @@ export function ProjectPage() {
     }
   }
 
+  async function handleArchiveParticipant(participantId: string) {
+    try {
+      await archiveParticipant.mutateAsync(participantId);
+    } catch (err) {
+      logger.warn('Failed to archive participant:', getErrorMessage(err));
+      showToast(getErrorMessage(err));
+    }
+  }
+
+  async function handleUnarchiveParticipant(participantId: string) {
+    try {
+      await unarchiveParticipant.mutateAsync(participantId);
+    } catch (err) {
+      logger.warn('Failed to unarchive participant:', getErrorMessage(err));
+      showToast(getErrorMessage(err));
+    }
+  }
+
   function confirmDelete() {
     if (!pendingDelete) return;
-    const { type, id } = pendingDelete;
+    const { id } = pendingDelete;
     setPendingDelete(null);
-    if (type === 'task') void handleDeleteTask(id);
-    else void handleDeleteParticipant(id);
+    void handleDeleteTask(id);
   }
 
   async function handleSaveName() {
@@ -816,11 +863,11 @@ export function ProjectPage() {
               <div className="glass-whisper rounded-2xl p-4 border border-efi-gold-light/10">
                 <h2 className="text-sm font-semibold text-efi-text-primary mb-3">
                   Participants
-                  {participants && participants.length > 0 ? ` (${participants.length})` : ''}
+                  {activeParticipants.length > 0 ? ` (${activeParticipants.length})` : ''}
                 </h2>
-                {participants && participants.length > 0 ? (
+                {activeParticipants.length > 0 ? (
                   <div className="space-y-2">
-                    {participants.map((p) => {
+                    {activeParticipants.map((p) => {
                       const hasVoted = (room?.tasks ?? []).some((t) =>
                         t.estimates.some((e) => e.participantId === p.id),
                       );
@@ -845,40 +892,19 @@ export function ProjectPage() {
                           >
                             <Copy className="w-3.5 h-3.5" />
                           </button>
-                          {pendingDelete?.id === p.id ? (
-                            <span className="flex items-center gap-1 text-xs shrink-0">
-                              <span className="text-efi-text-tertiary">Del?</span>
-                              <button
-                                type="button"
-                                onClick={confirmDelete}
-                                className="text-efi-error hover:text-red-400 cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
-                              >
-                                Yes
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setPendingDelete(null)}
-                                className="text-efi-text-secondary hover:text-efi-text-primary cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
-                              >
-                                No
-                              </button>
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setPendingDelete({
-                                  type: 'participant',
-                                  id: p.id,
-                                  name: p.nickname,
-                                })
-                              }
-                              title="Remove participant"
-                              className="shrink-0 p-2 text-efi-text-tertiary hover:text-efi-error transition-colors cursor-pointer rounded hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setParticipantRemoveModal({
+                                id: p.id,
+                                nickname: p.nickname,
+                              })
+                            }
+                            title="Remove participant"
+                            className="shrink-0 p-2 text-efi-text-tertiary hover:text-efi-error transition-colors cursor-pointer rounded hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       );
                     })}
@@ -888,10 +914,98 @@ export function ProjectPage() {
                     No participants yet. Share the join link to invite your team.
                   </p>
                 )}
+
+                {archivedParticipants.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-efi-gold-light/10">
+                    <button
+                      type="button"
+                      onClick={() => setShowArchivedParticipants(!showArchivedParticipants)}
+                      className="flex items-center gap-1 text-xs text-efi-text-tertiary hover:text-efi-text-secondary cursor-pointer w-full"
+                    >
+                      <Archive className="w-3 h-3" />
+                      <span>Archived ({archivedParticipants.length})</span>
+                      <span className="ml-auto">{showArchivedParticipants ? '▼' : '▶'}</span>
+                    </button>
+                    {showArchivedParticipants && (
+                      <div className="space-y-2 mt-2">
+                        {archivedParticipants.map((p) => (
+                          <div
+                            key={p.id}
+                            className="flex items-center gap-2 bg-efi-well/50 rounded-lg px-3 py-2 border border-efi-gold-light/5"
+                          >
+                            <span className="text-sm text-efi-text-tertiary italic flex-1 min-w-0 truncate">
+                              {p.nickname}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => void handleUnarchiveParticipant(p.id)}
+                              title="Unarchive participant"
+                              className="shrink-0 p-2 text-efi-text-tertiary hover:text-efi-gold-light transition-colors cursor-pointer rounded hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </aside>
           </div>
         </div>
+
+        {/* Participant Removal Modal */}
+        <Modal
+          isOpen={!!participantRemoveModal}
+          onClose={() => setParticipantRemoveModal(null)}
+          title={`Remove participant: ${participantRemoveModal?.nickname ?? ''}`}
+          maxWidth="max-w-sm"
+        >
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => {
+                const id = participantRemoveModal?.id;
+                setParticipantRemoveModal(null);
+                if (id) void handleArchiveParticipant(id);
+              }}
+              className="w-full text-left rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 hover:border-efi-gold-light/40 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+            >
+              <div className="flex items-center gap-2 text-sm font-medium text-efi-text-primary">
+                <Archive className="w-4 h-4" />
+                Archive
+              </div>
+              <p className="text-xs text-efi-text-tertiary mt-1">
+                Hide from active view. Votes and comments are preserved.
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const id = participantRemoveModal?.id;
+                setParticipantRemoveModal(null);
+                if (id) void handleDeleteParticipant(id);
+              }}
+              className="w-full text-left rounded-lg bg-efi-well border border-efi-error/20 px-4 py-3 hover:border-efi-error/40 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+            >
+              <div className="flex items-center gap-2 text-sm font-medium text-efi-error">
+                <Trash2 className="w-4 h-4" />
+                Delete permanently
+              </div>
+              <p className="text-xs text-efi-text-tertiary mt-1">
+                Remove participant AND all their votes and comments from all rooms.
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setParticipantRemoveModal(null)}
+              className="w-full text-center rounded-lg px-4 py-2 text-sm text-efi-text-secondary hover:text-efi-text-primary transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none"
+            >
+              Cancel
+            </button>
+          </div>
+        </Modal>
 
         {/* New Room Modal */}
         {showForm && (
