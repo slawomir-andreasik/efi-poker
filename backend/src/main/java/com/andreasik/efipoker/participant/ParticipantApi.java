@@ -15,4 +15,6 @@ public interface ParticipantApi {
   UUID findParticipantIdByProjectAndUser(UUID projectId, UUID userId);
 
   void validateParticipantHasRoomAccess(UUID participantId, UUID roomId);
+
+  void validateParticipantNotArchived(UUID participantId);
 }

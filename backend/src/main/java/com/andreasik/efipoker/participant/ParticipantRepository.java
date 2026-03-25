@@ -71,6 +71,22 @@ public interface ParticipantRepository extends JpaRepository<ParticipantEntity, 
   long countByProjectId(UUID projectId);
 
   @Query(
+      """
+      SELECT pt FROM ParticipantEntity pt
+      JOIN FETCH pt.project p
+      LEFT JOIN FETCH p.createdBy
+      LEFT JOIN FETCH pt.user
+      WHERE pt.project.id = :projectId
+        AND pt.archived = false
+      """)
+  List<ParticipantEntity> findByProjectIdAndArchivedFalse(@Param("projectId") UUID projectId);
+
+  long countByProjectIdAndArchivedFalse(UUID projectId);
+
+  @Query("SELECT COALESCE(pt.archived, false) FROM ParticipantEntity pt WHERE pt.id = :id")
+  boolean isArchived(@Param("id") UUID participantId);
+
+  @Query(
       nativeQuery = true,
       value =
           "SELECT EXISTS(SELECT 1 FROM rooms r WHERE r.id = :roomId AND r.project_id = :projectId)")

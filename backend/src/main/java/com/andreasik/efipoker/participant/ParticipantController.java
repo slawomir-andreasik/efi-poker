@@ -54,7 +54,7 @@ public class ParticipantController implements ParticipantsApi {
   public ResponseEntity<List<ParticipantResponse>> listProjectParticipants(String slug) {
     log.debug("GET /projects/{}/participants", slug);
     Project project = projectService.validateAdminAccessBySlug(slug);
-    List<Participant> participants = participantService.listParticipants(project.id());
+    List<Participant> participants = participantService.listAllParticipants(project.id());
     return ResponseEntity.ok(participantMapper.toResponseList(participants));
   }
 
@@ -70,11 +70,18 @@ public class ParticipantController implements ParticipantsApi {
   public ResponseEntity<ParticipantResponse> updateParticipant(
       String slug, UUID participantId, UpdateParticipantRequest updateParticipantRequest) {
     log.debug("PATCH /projects/{}/participants/{}", slug, participantId);
+    Project project = projectService.getProjectBySlug(slug);
     UUID tokenParticipantId = SecurityUtils.getCurrentParticipantId();
+    if (tokenParticipantId == null) {
+      UUID userId = SecurityUtils.getCurrentUserId();
+      if (userId != null) {
+        tokenParticipantId =
+            participantService.findParticipantIdByProjectAndUser(project.id(), userId);
+      }
+    }
     if (tokenParticipantId == null || !tokenParticipantId.equals(participantId)) {
       throw new UnauthorizedException("You can only update your own participant profile");
     }
-    Project project = projectService.getProjectBySlug(slug);
     Participant updated =
         participantService.updateNickname(
             project.id(), participantId, updateParticipantRequest.getNickname());
@@ -100,5 +107,21 @@ public class ParticipantController implements ParticipantsApi {
     Project project = projectService.validateAdminAccessBySlug(slug);
     participantService.deleteParticipant(project.id(), participantId);
     return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  public ResponseEntity<ParticipantResponse> archiveParticipant(String slug, UUID participantId) {
+    log.debug("POST /projects/{}/participants/{}/archive", slug, participantId);
+    Project project = projectService.validateAdminAccessBySlug(slug);
+    Participant archived = participantService.archiveParticipant(project.id(), participantId);
+    return ResponseEntity.ok(participantMapper.toResponse(archived));
+  }
+
+  @Override
+  public ResponseEntity<ParticipantResponse> unarchiveParticipant(String slug, UUID participantId) {
+    log.debug("POST /projects/{}/participants/{}/unarchive", slug, participantId);
+    Project project = projectService.validateAdminAccessBySlug(slug);
+    Participant unarchived = participantService.unarchiveParticipant(project.id(), participantId);
+    return ResponseEntity.ok(participantMapper.toResponse(unarchived));
   }
 }

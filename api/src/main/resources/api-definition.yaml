@@ -484,6 +484,91 @@ paths:
       summary: Update participant nickname (self-service)
       tags:
       - participants
+  /projects/{slug}/participants/{participantId}/archive:
+    post:
+      description: Hides participant from active views while preserving their historical
+        votes and comments.
+      operationId: archiveParticipant
+      parameters:
+      - description: URL-safe project slug
+        in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      - description: UUID of the participant
+        in: path
+        name: participantId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParticipantResponse"
+          description: Participant archived
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Participant not found
+      security:
+      - bearerAuth: []
+      summary: Archive participant (admin only)
+      tags:
+      - participants
+  /projects/{slug}/participants/{participantId}/unarchive:
+    post:
+      description: Restores an archived participant to active status.
+      operationId: unarchiveParticipant
+      parameters:
+      - description: URL-safe project slug
+        in: path
+        name: slug
+        required: true
+        schema:
+          type: string
+      - description: UUID of the participant
+        in: path
+        name: participantId
+        required: true
+        schema:
+          format: uuid
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParticipantResponse"
+          description: Participant unarchived
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Access denied
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Participant not found
+      security:
+      - bearerAuth: []
+      summary: Unarchive participant (admin only)
+      tags:
+      - participants
   /rooms/by-slug/{roomSlug}:
     get:
       operationId: getRoomBySlug
@@ -2066,6 +2151,13 @@ components:
       - slug
       type: object
     ProblemDetail:
+      example:
+        traceId: traceId
+        instance: instance
+        detail: detail
+        type: type
+        title: title
+        status: 0
       properties:
         type:
           type: string
@@ -2160,6 +2252,8 @@ components:
       type: object
     ParticipantResponse:
       example:
+        archived: true
+        archivedAt: 2000-01-23T04:56:07.000+00:00
         createdAt: 2000-01-23T04:56:07.000+00:00
         nickname: nickname
         invitedRoomIds:
@@ -2189,6 +2283,14 @@ components:
           type: string
         tokenExpiresAt:
           description: Token expiration timestamp
+          format: date-time
+          nullable: true
+          type: string
+        archived:
+          description: Whether this participant is archived (hidden from active views)
+          type: boolean
+        archivedAt:
+          description: When the participant was archived
           format: date-time
           nullable: true
           type: string
@@ -2451,7 +2553,9 @@ components:
             id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         status: OPEN
         participants:
-        - createdAt: 2000-01-23T04:56:07.000+00:00
+        - archived: true
+          archivedAt: 2000-01-23T04:56:07.000+00:00
+          createdAt: 2000-01-23T04:56:07.000+00:00
           nickname: nickname
           invitedRoomIds:
           - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -2459,7 +2563,9 @@ components:
           tokenExpiresAt: 2000-01-23T04:56:07.000+00:00
           id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           token: token
-        - createdAt: 2000-01-23T04:56:07.000+00:00
+        - archived: true
+          archivedAt: 2000-01-23T04:56:07.000+00:00
+          createdAt: 2000-01-23T04:56:07.000+00:00
           nickname: nickname
           invitedRoomIds:
           - 046b6c7f-0b8a-43b9-b35d-6489e6daee91

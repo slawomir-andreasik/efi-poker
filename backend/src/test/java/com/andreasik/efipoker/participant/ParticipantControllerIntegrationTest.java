@@ -8,10 +8,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.andreasik.efipoker.auth.UserEntity;
 import com.andreasik.efipoker.project.ProjectEntity;
 import com.andreasik.efipoker.shared.test.BaseComponentTest;
 import com.andreasik.efipoker.shared.test.Fixtures;
 import com.jayway.jsonpath.JsonPath;
+import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -462,6 +464,96 @@ class ParticipantControllerIntegrationTest extends BaseComponentTest {
                       UUID.randomUUID())
                   .header("Authorization", "Bearer " + adminJwt))
           .andExpect(status().isNotFound());
+    }
+  }
+
+  @Nested
+  @DisplayName("User JWT participant operations")
+  class UserJwtParticipant {
+
+    @Test
+    void should_update_nickname_with_user_jwt() throws Exception {
+      String userJwt = loginAsTestAdmin();
+      UserEntity user =
+          userRepository
+              .findByUsername("testadmin")
+              .orElseThrow(() -> new AssertionError("testadmin user not found"));
+      ParticipantEntity participant =
+          participantRepository.save(Fixtures.participantEntity(project, "TestAdmin", user));
+
+      // language=JSON
+      String body =
+          """
+          {"nickname":"UpdatedAdmin"}
+          """;
+
+      mockMvc
+          .perform(
+              patch(
+                      "/api/v1/projects/{slug}/participants/{participantId}",
+                      project.getSlug(),
+                      participant.getId())
+                  .header("Authorization", "Bearer " + userJwt)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.nickname").value("UpdatedAdmin"));
+    }
+  }
+
+  @Nested
+  @DisplayName("Archive/Unarchive participants")
+  class ArchiveParticipant {
+
+    @Test
+    void should_archive_participant_200() throws Exception {
+      ParticipantEntity participant =
+          participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+
+      mockMvc
+          .perform(
+              post(
+                      "/api/v1/projects/{slug}/participants/{id}/archive",
+                      project.getSlug(),
+                      participant.getId())
+                  .header("Authorization", "Bearer " + adminJwt))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.archived").value(true))
+          .andExpect(jsonPath("$.archivedAt").isNotEmpty());
+    }
+
+    @Test
+    void should_unarchive_participant_200() throws Exception {
+      ParticipantEntity participant =
+          participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+      participant.setArchived(true);
+      participant.setArchivedAt(Instant.now());
+      participantRepository.save(participant);
+
+      mockMvc
+          .perform(
+              post(
+                      "/api/v1/projects/{slug}/participants/{id}/unarchive",
+                      project.getSlug(),
+                      participant.getId())
+                  .header("Authorization", "Bearer " + adminJwt))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.archived").value(false))
+          .andExpect(jsonPath("$.archivedAt").doesNotExist());
+    }
+
+    @Test
+    void should_reject_archive_without_admin_403() throws Exception {
+      ParticipantEntity participant =
+          participantRepository.save(Fixtures.participantEntity(project, "Alice"));
+
+      mockMvc
+          .perform(
+              post(
+                  "/api/v1/projects/{slug}/participants/{id}/archive",
+                  project.getSlug(),
+                  participant.getId()))
+          .andExpect(status().isForbidden());
     }
   }
 }

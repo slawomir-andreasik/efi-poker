@@ -13,4 +13,6 @@ public record Participant(
     String nickname,
     UUID userId,
     Set<UUID> invitedRoomIds,
+    boolean archived,
+    Instant archivedAt,
     Instant createdAt) {}

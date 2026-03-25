@@ -263,6 +263,8 @@ export interface ParticipantResponse {
   token?: string;
   tokenExpiresAt?: string;
   invitedRoomIds?: string[];
+  archived?: boolean;
+  archivedAt?: string;
   createdAt: string;
 }
 

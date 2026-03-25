@@ -44,6 +44,10 @@ paths:
     $ref: './paths/participants/me.yaml'
   /projects/{slug}/participants/{participantId}:
     $ref: './paths/participants/get-by-id.yaml'
+  /projects/{slug}/participants/{participantId}/archive:
+    $ref: './paths/participants/archive.yaml'
+  /projects/{slug}/participants/{participantId}/unarchive:
+    $ref: './paths/participants/unarchive.yaml'
   /rooms/by-slug/{roomSlug}:
     $ref: './paths/rooms/room-by-slug.yaml'
   /rooms/{roomId}:

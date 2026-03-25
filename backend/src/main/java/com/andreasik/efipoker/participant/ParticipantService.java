@@ -7,6 +7,7 @@ import com.andreasik.efipoker.shared.exception.ResourceNotFoundException;
 import com.andreasik.efipoker.shared.exception.UnauthorizedException;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,13 +39,26 @@ public class ParticipantService implements ParticipantApi {
             .findByProjectIdAndNickname(projectId, nickname)
             .map(
                 existing -> {
+                  boolean dirty = false;
                   if (existing.getUser() == null && userId != null) {
                     existing.setUser(entityManager.getReference(UserEntity.class, userId));
-                    existing = participantRepository.save(existing);
+                    dirty = true;
                     log.info(
                         "Backfilled userId for participant: projectId={}, nickname={}",
                         projectId,
                         nickname);
+                  }
+                  if (existing.isArchived()) {
+                    existing.setArchived(false);
+                    existing.setArchivedAt(null);
+                    dirty = true;
+                    log.info(
+                        "Unarchived participant on rejoin: projectId={}, nickname={}",
+                        projectId,
+                        nickname);
+                  }
+                  if (dirty) {
+                    existing = participantRepository.save(existing);
                   }
                   return existing;
                 })
@@ -89,6 +103,14 @@ public class ParticipantService implements ParticipantApi {
   public List<Participant> listParticipants(UUID projectId) {
     log.debug("listParticipants: projectId={}", projectId);
     List<Participant> participants =
+        participantEntityMapper.toDomainList(
+            participantRepository.findByProjectIdAndArchivedFalse(projectId));
+    return enrichListWithRoomAccess(participants);
+  }
+
+  public List<Participant> listAllParticipants(UUID projectId) {
+    log.debug("listAllParticipants: projectId={}", projectId);
+    List<Participant> participants =
         participantEntityMapper.toDomainList(participantRepository.findByProjectId(projectId));
     return enrichListWithRoomAccess(participants);
   }
@@ -109,6 +131,40 @@ public class ParticipantService implements ParticipantApi {
             .orElseThrow(() -> new ResourceNotFoundException("Participant", participantId));
     participantRepository.delete(entity);
     log.info("Participant deleted: projectId={}, participantId={}", projectId, participantId);
+  }
+
+  @Transactional
+  public Participant archiveParticipant(UUID projectId, UUID participantId) {
+    ParticipantEntity entity =
+        participantRepository
+            .findByIdAndProjectId(participantId, projectId)
+            .orElseThrow(() -> new ResourceNotFoundException("Participant", participantId));
+    entity.setArchived(true);
+    entity.setArchivedAt(Instant.now());
+    ParticipantEntity saved = participantRepository.save(entity);
+    log.info("Participant archived: projectId={}, participantId={}", projectId, participantId);
+    return participantEntityMapper.toDomain(saved);
+  }
+
+  @Transactional
+  public Participant unarchiveParticipant(UUID projectId, UUID participantId) {
+    ParticipantEntity entity =
+        participantRepository
+            .findByIdAndProjectId(participantId, projectId)
+            .orElseThrow(() -> new ResourceNotFoundException("Participant", participantId));
+    entity.setArchived(false);
+    entity.setArchivedAt(null);
+    ParticipantEntity saved = participantRepository.save(entity);
+    log.info("Participant unarchived: projectId={}, participantId={}", projectId, participantId);
+    return participantEntityMapper.toDomain(saved);
+  }
+
+  @Override
+  public void validateParticipantNotArchived(UUID participantId) {
+    if (participantRepository.isArchived(participantId)) {
+      log.warn("Archived participant attempted action: participantId={}", participantId);
+      throw new UnauthorizedException("Participant is archived");
+    }
   }
 
   @Transactional
@@ -142,7 +198,7 @@ public class ParticipantService implements ParticipantApi {
   }
 
   public long countByProject(UUID projectId) {
-    return participantRepository.countByProjectId(projectId);
+    return participantRepository.countByProjectIdAndArchivedFalse(projectId);
   }
 
   public long countAll() {

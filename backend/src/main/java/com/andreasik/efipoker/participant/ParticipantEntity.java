@@ -49,6 +49,13 @@ public class ParticipantEntity {
   @JoinColumn(name = "user_id")
   private UserEntity user;
 
+  @Column(nullable = false)
+  @Builder.Default
+  private boolean archived = false;
+
+  @Column(name = "archived_at")
+  private Instant archivedAt;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
