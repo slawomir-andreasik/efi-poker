@@ -12,7 +12,9 @@ paths:
 - **Biome** handles both linting and formatting (replaced ESLint + Prettier)
 - Config: `frontend/biome.json` - rules, formatter settings, import sorting
 - Lint: `bun run lint` (TypeScript type-check + Biome check)
-- Format: `bun run format` (auto-format with Biome)
+- Format: `bun run format` = `biome format --write` - code style only (indentation, quotes, semicolons)
+- Fix all: `bun run check` = `biome check --write` - code style + lint fixes (import sorting, auto-fixable rules)
+- **Always use `make client-format`** (runs `bun run check`) before commit - `bun run format` does NOT sort imports
 - Dead code: `bun run knip` (unused exports, deps)
 - Suppress rules: `// biome-ignore lint/category/ruleName: reason` (always include reason)
 - CSS files excluded from Biome (Tailwind `@theme` syntax not supported)
