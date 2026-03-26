@@ -26,6 +26,7 @@ import { Spinner } from '@/components/Spinner';
 import { TextInput } from '@/components/TextInput';
 import { useToast } from '@/components/Toast';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { outlineBtn, primaryBase, primaryBtn, primaryBtnLg } from '@/styles/buttons';
 import { getErrorMessage } from '@/utils/error';
 
 interface ProjectEntry {
@@ -245,11 +246,7 @@ export function HomePage() {
               />
               <RandomNameButton onGenerate={setNameInput} />
             </div>
-            <button
-              type="submit"
-              disabled={!nameInput.trim()}
-              className="w-full mt-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-            >
+            <button type="submit" disabled={!nameInput.trim()} className={`${primaryBtnLg} mt-4`}>
               Continue
             </button>
           </div>
@@ -278,18 +275,10 @@ export function HomePage() {
           My Projects
         </h2>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowJoinModal(true)}
-            className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold transition-colors cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-          >
+          <button type="button" onClick={() => setShowJoinModal(true)} className={outlineBtn}>
             Join
           </button>
-          <button
-            type="button"
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-          >
+          <button type="button" onClick={() => setShowCreateModal(true)} className={primaryBtn}>
             <Plus className="w-4 h-4 inline -mt-0.5" /> New Project
           </button>
         </div>
@@ -334,7 +323,7 @@ export function HomePage() {
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className="px-6 py-3 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+            className={`${primaryBase} px-6 py-3`}
           >
             <Plus className="w-4 h-4 inline -mt-0.5" /> New Project
           </button>

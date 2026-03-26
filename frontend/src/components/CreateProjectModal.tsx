@@ -3,6 +3,7 @@ import { Modal } from '@/components/Modal';
 import { RandomNameButton } from '@/components/RandomNameButton';
 import { ButtonSpinner } from '@/components/Spinner';
 import { TextInput } from '@/components/TextInput';
+import { primaryBtn } from '@/styles/buttons';
 import { generateProjectName } from '@/utils/nameGenerator';
 
 interface CreateProjectModalProps {
@@ -74,7 +75,7 @@ export function CreateProjectModal({
           <button
             type="submit"
             disabled={isPending || !projectName.trim()}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none flex items-center gap-2"
+            className={`${primaryBtn} flex items-center gap-2`}
           >
             {isPending ? (
               <>

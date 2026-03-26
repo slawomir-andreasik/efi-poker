@@ -16,6 +16,8 @@ import { TextInput } from '@/components/TextInput';
 import { useToast } from '@/components/Toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { primaryBase, primaryBtn } from '@/styles/buttons';
+import { inputSm } from '@/styles/inputs';
 import { getErrorMessage } from '@/utils/error';
 import { logger } from '@/utils/logger';
 
@@ -153,11 +155,7 @@ export function AdminUsersPage() {
     <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-xl font-bold text-efi-text-primary">User Management</h1>
-        <button
-          type="button"
-          onClick={() => setShowCreate(!showCreate)}
-          className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-        >
+        <button type="button" onClick={() => setShowCreate(!showCreate)} className={primaryBtn}>
           {showCreate ? 'Cancel' : '+ New User'}
         </button>
       </div>
@@ -186,7 +184,7 @@ export function AdminUsersPage() {
                 maxLength={100}
                 minLength={3}
                 autoFocus
-                className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
+                className={inputSm}
               />
             </div>
             <div>
@@ -204,7 +202,7 @@ export function AdminUsersPage() {
                 placeholder="Min. 8 characters"
                 maxLength={128}
                 autoComplete="new-password"
-                className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
+                className={inputSm}
               />
             </div>
             <div>
@@ -221,7 +219,7 @@ export function AdminUsersPage() {
                 onChange={(e) => setNewEmail(e.target.value)}
                 placeholder="user@example.com"
                 maxLength={254}
-                className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
+                className={inputSm}
               />
             </div>
             <div>
@@ -245,7 +243,7 @@ export function AdminUsersPage() {
           <button
             type="submit"
             disabled={createUser.isPending || !newUsername.trim() || newPassword.length < 8}
-            className="mt-4 px-6 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none flex items-center gap-2"
+            className={`${primaryBase} mt-4 px-6 py-2 flex items-center gap-2`}
           >
             {createUser.isPending ? (
               <>

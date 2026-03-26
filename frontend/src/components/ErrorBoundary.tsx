@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { getCurrentTraceId } from '@/lib/tracing';
+import { primaryBase } from '@/styles/buttons';
 import { logger } from '@/utils/logger';
 
 interface Props {
@@ -42,7 +43,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="px-6 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+            className={`${primaryBase} px-6 py-3`}
           >
             Refresh Page
           </button>

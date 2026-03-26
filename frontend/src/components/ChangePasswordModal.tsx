@@ -4,6 +4,8 @@ import { Modal } from '@/components/Modal';
 import { ButtonSpinner } from '@/components/Spinner';
 import { TextInput } from '@/components/TextInput';
 import { useToast } from '@/components/Toast';
+import { primaryBtn } from '@/styles/buttons';
+import { inputLg } from '@/styles/inputs';
 import { getErrorMessage } from '@/utils/error';
 import { logger } from '@/utils/logger';
 
@@ -78,7 +80,7 @@ export function ChangePasswordModal({ isOpen, onClose, hasPassword }: ChangePass
               maxLength={128}
               autoComplete="current-password"
               autoFocus
-              className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
+              className={inputLg}
             />
           </div>
         )}
@@ -99,7 +101,7 @@ export function ChangePasswordModal({ isOpen, onClose, hasPassword }: ChangePass
             maxLength={128}
             autoComplete="new-password"
             autoFocus={!hasPassword}
-            className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
+            className={inputLg}
           />
         </div>
 
@@ -118,7 +120,7 @@ export function ChangePasswordModal({ isOpen, onClose, hasPassword }: ChangePass
             placeholder="Repeat new password"
             maxLength={128}
             autoComplete="new-password"
-            className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
+            className={inputLg}
           />
           {confirmPassword && !passwordsMatch && (
             <p className="text-xs text-efi-error mt-1">Passwords do not match</p>
@@ -136,7 +138,7 @@ export function ChangePasswordModal({ isOpen, onClose, hasPassword }: ChangePass
           <button
             type="submit"
             disabled={!isValid || changePassword.isPending}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none flex items-center gap-2"
+            className={`${primaryBtn} flex items-center gap-2`}
           >
             {changePassword.isPending ? (
               <>

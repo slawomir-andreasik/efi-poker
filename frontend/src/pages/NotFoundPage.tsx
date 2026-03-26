@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { primaryBase } from '@/styles/buttons';
 
 export function NotFoundPage() {
   return (
@@ -14,7 +15,7 @@ export function NotFoundPage() {
       </p>
       <Link
         to="/"
-        className="px-6 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 transition-opacity no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none animate-[fade-in-up_0.6s_ease-out_0.3s_both] motion-reduce:animate-none"
+        className={`${primaryBase} px-6 py-3 no-underline animate-[fade-in-up_0.6s_ease-out_0.3s_both] motion-reduce:animate-none`}
       >
         Go Home
       </Link>

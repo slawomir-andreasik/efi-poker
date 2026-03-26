@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextInput } from '@/components/TextInput';
+import { primaryBase } from '@/styles/buttons';
 import { logger } from '@/utils/logger';
 
 export function JoinByCodeForm() {
@@ -33,7 +34,7 @@ export function JoinByCodeForm() {
       <button
         type="submit"
         disabled={!code.trim()}
-        className="px-4 py-2.5 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none whitespace-nowrap"
+        className={`${primaryBase} px-4 py-2.5 whitespace-nowrap`}
       >
         Join
       </button>

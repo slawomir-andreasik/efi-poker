@@ -10,6 +10,7 @@ import { NotFoundState } from '@/components/NotFoundState';
 import { PageSpinner } from '@/components/PageSpinner';
 import { TraceCopyButton } from '@/components/TraceCopyButton';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { ghostLinkBtn } from '@/styles/buttons';
 import { getErrorMessage } from '@/utils/error';
 
 export function ProjectAnalyticsPage() {
@@ -62,10 +63,7 @@ export function ProjectAnalyticsPage() {
             <p className="text-sm text-efi-text-secondary mt-1">{analytics.projectName}</p>
           )}
         </div>
-        <Link
-          to={slug ? `/p/${slug}` : '/'}
-          className="mt-3 sm:mt-0 px-3 py-1.5 text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold rounded-lg transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none cursor-pointer"
-        >
+        <Link to={slug ? `/p/${slug}` : '/'} className={`mt-3 sm:mt-0 ${ghostLinkBtn}`}>
           Back to Project
         </Link>
       </div>
