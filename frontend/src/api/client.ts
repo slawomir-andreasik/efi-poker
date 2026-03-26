@@ -183,6 +183,19 @@ export async function api<T>(
       response = await doFetch();
     } else {
       delete headers.Authorization;
+      if (slug) {
+        const auth = getAuth(slug);
+        if (auth.guestToken) {
+          logger.info(`Falling back to guest token for ${method} ${path}`);
+          headers.Authorization = `Bearer ${auth.guestToken}`;
+        }
+      }
+      try {
+        response = await doFetch();
+      } catch (err) {
+        logger.error(`API network error on fallback retry ${method} ${path}`);
+        throw err;
+      }
     }
   } else if (response.status === 401 && !jwt && slug) {
     // Guest JWT expired - clear per-project auth and retry without auth

@@ -64,12 +64,83 @@ describe('api() silent refresh on 401', () => {
       )
       .mockResolvedValueOnce(
         new Response('{}', { status: 403, headers: { 'content-type': 'application/json' } }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ title: 'Forbidden' }), {
+          status: 403,
+          headers: { 'content-type': 'application/json' },
+        }),
       );
     globalThis.fetch = fetchMock;
 
     await expect(api('/test')).rejects.toThrow();
     expect(localStorage.getItem('efi-jwt')).toBeNull();
     expect(localStorage.getItem('efi-identity')).toBeNull();
+  });
+
+  it('should fall back to guest token when refresh fails and guest token exists', async () => {
+    localStorage.setItem('efi-jwt', 'expired-user-token');
+    localStorage.setItem(
+      'efi-projects',
+      JSON.stringify({ 'my-project': { guestToken: 'valid-guest-token' } }),
+    );
+
+    const fallbackResponse = new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const fetchMock = vi
+      .fn()
+      // 1st: original request with user JWT → 401
+      .mockResolvedValueOnce(
+        new Response('{}', { status: 401, headers: { 'content-type': 'application/json' } }),
+      )
+      // 2nd: refresh attempt → fails
+      .mockResolvedValueOnce(
+        new Response('{}', { status: 403, headers: { 'content-type': 'application/json' } }),
+      )
+      // 3rd: retry with guest token → success
+      .mockResolvedValueOnce(fallbackResponse);
+    globalThis.fetch = fetchMock;
+
+    const result = await api<{ ok: boolean }>('/test', {}, 'my-project');
+    expect(result.ok).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    const retryCall = fetchMock.mock.calls[2]!;
+    expect((retryCall[1] as { headers: Record<string, string> }).headers.Authorization).toBe(
+      'Bearer valid-guest-token',
+    );
+  });
+
+  it('should retry without auth when refresh fails and no guest token exists', async () => {
+    localStorage.setItem('efi-jwt', 'expired-user-token');
+
+    const fetchMock = vi
+      .fn()
+      // 1st: original request with user JWT → 401
+      .mockResolvedValueOnce(
+        new Response('{}', { status: 401, headers: { 'content-type': 'application/json' } }),
+      )
+      // 2nd: refresh attempt → fails
+      .mockResolvedValueOnce(
+        new Response('{}', { status: 403, headers: { 'content-type': 'application/json' } }),
+      )
+      // 3rd: retry without auth → 401 again (expected)
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ title: 'Unauthorized' }), {
+          status: 401,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    globalThis.fetch = fetchMock;
+
+    await expect(api('/test', {}, 'my-project')).rejects.toThrow('Unauthorized');
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    const retryCall = fetchMock.mock.calls[2]!;
+    expect(
+      (retryCall[1] as { headers: Record<string, string> }).headers.Authorization,
+    ).toBeUndefined();
   });
 });
 

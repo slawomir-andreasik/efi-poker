@@ -57,11 +57,16 @@ function routedFetch(routes: Record<string, unknown>): typeof globalThis.fetch {
 
     // Find matching route (prefix match)
     let responseBody: unknown = {};
+    let matched = false;
     for (const [pattern, value] of Object.entries(routes)) {
       if (url.includes(pattern)) {
         responseBody = value;
+        matched = true;
         break;
       }
+    }
+    if (!matched) {
+      console.warn(`[routedFetch] No route matched: ${method} ${url}. Returning {}.`);
     }
 
     return new Response(JSON.stringify(responseBody), {
@@ -135,6 +140,7 @@ describe('ProjectPage API calls', () => {
   it('should fetch project and rooms separately', async () => {
     globalThis.fetch = routedFetch({
       '/rooms': [],
+      '/participants': [],
       '/projects/': mockProject(),
     });
 
