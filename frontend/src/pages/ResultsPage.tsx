@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { Copy } from 'lucide-react';
-import { useCallback, useMemo } from 'react';
+import { Copy, Eye } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ApiError, getAuth } from '@/api/client';
 import { roomApi } from '@/api/queries';
 import { queryKeys } from '@/api/queryKeys';
 import { SummaryCard } from '@/components/charts/SummaryCard';
+import { MarkdownPreviewModal } from '@/components/MarkdownPreviewModal';
 import { NotFoundState } from '@/components/NotFoundState';
 import { PageSpinner } from '@/components/PageSpinner';
 import {
@@ -17,6 +18,7 @@ import {
 import { useToast } from '@/components/Toast';
 import { TraceCopyButton } from '@/components/TraceCopyButton';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { ghostIconBtn, ghostLinkBtn, outlineBtn } from '@/styles/buttons';
 import { getErrorMessage } from '@/utils/error';
 import { formatResultsAsMarkdown } from '@/utils/markdown';
 
@@ -81,15 +83,21 @@ export function ResultsPage() {
     [results],
   );
 
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  const markdown = useMemo(
+    () => formatResultsAsMarkdown(results?.title ?? '', tableData, participantNames),
+    [results?.title, tableData, participantNames],
+  );
+
   const handleCopyMarkdown = useCallback(async () => {
-    const md = formatResultsAsMarkdown(results?.title ?? '', tableData, participantNames);
     try {
-      await navigator.clipboard.writeText(md);
+      await navigator.clipboard.writeText(markdown);
       showToast('Results copied as Markdown!', 'success');
     } catch (err) {
       showToast(getErrorMessage(err));
     }
-  }, [results?.title, tableData, participantNames, showToast]);
+  }, [markdown, showToast]);
 
   if (isLoading && !results) {
     return <PageSpinner />;
@@ -129,25 +137,21 @@ export function ResultsPage() {
         </div>
         <div className="mt-3 sm:mt-0 flex gap-2">
           {tableData.length > 0 && (
-            <button
-              type="button"
-              onClick={handleCopyMarkdown}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold rounded-lg transition-colors active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none cursor-pointer"
-            >
-              <Copy className="w-4 h-4" />
-              Copy Markdown
-            </button>
+            <>
+              <button type="button" onClick={() => setPreviewOpen(true)} className={ghostIconBtn}>
+                <Eye className="w-4 h-4" />
+                Preview
+              </button>
+              <button type="button" onClick={handleCopyMarkdown} className={ghostIconBtn}>
+                <Copy className="w-4 h-4" />
+                Copy Markdown
+              </button>
+            </>
           )}
-          <Link
-            to={`/p/${slug}/r/${roomId}/analytics`}
-            className="px-3 py-1.5 text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold rounded-lg transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none cursor-pointer"
-          >
+          <Link to={`/p/${slug}/r/${roomId}/analytics`} className={ghostLinkBtn}>
             Analytics
           </Link>
-          <Link
-            to={`/p/${slug}/r/${roomId}`}
-            className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold hover:text-efi-text-primary transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none cursor-pointer"
-          >
+          <Link to={`/p/${slug}/r/${roomId}`} className={`${outlineBtn} no-underline`}>
             Back to Room
           </Link>
         </div>
@@ -171,6 +175,12 @@ export function ResultsPage() {
           />
         </div>
       )}
+      <MarkdownPreviewModal
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        markdown={markdown}
+        onCopy={handleCopyMarkdown}
+      />
     </div>
   );
 }
