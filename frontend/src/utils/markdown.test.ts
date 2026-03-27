@@ -51,16 +51,16 @@ describe('formatResultsAsMarkdown', () => {
     expect(md).toContain('- Bob: -');
   });
 
-  it('should render avg and median in blockquote', () => {
+  it('should render avg and median in italic', () => {
     const md = formatResultsAsMarkdown('Sprint', [task()], ['Alice', 'Bob']);
 
-    expect(md).toContain('> Avg: 4.0 | Med: 4');
+    expect(md).toContain('*Avg: 4.0 | Med: 4*');
   });
 
   it('should include final estimate when present', () => {
     const md = formatResultsAsMarkdown('Sprint', [task({ finalEstimate: '5' })], ['Alice', 'Bob']);
 
-    expect(md).toContain('> Avg: 4.0 | Med: 4 | Final: 5');
+    expect(md).toContain('*Avg: 4.0 | Med: 4 | Final: 5*');
   });
 
   it('should omit final estimate when absent', () => {
@@ -126,5 +126,40 @@ describe('formatResultsAsMarkdown', () => {
     const md = formatResultsAsMarkdown('Sprint', [task({ estimates: { Alice: '?' } })], ['Alice']);
 
     expect(md).toContain('- Alice: **?**');
+  });
+
+  it('should indent multi-line comments under the participant', () => {
+    const comment = 'Assumptions:\n- Backend only\nRisks:\n- no risks';
+    const md = formatResultsAsMarkdown(
+      'Sprint',
+      [task({ comments: { Alice: comment } })],
+      ['Alice', 'Bob'],
+    );
+
+    expect(md).toContain(
+      '- Alice: **5**\n  > Assumptions:\n  > - Backend only\n  > Risks:\n  > - no risks',
+    );
+  });
+
+  it('should keep single-line comments inline', () => {
+    const md = formatResultsAsMarkdown(
+      'Sprint',
+      [task({ comments: { Alice: 'Simple note' } })],
+      ['Alice'],
+    );
+
+    expect(md).toContain('- Alice: **5** - Simple note');
+  });
+
+  it('should escape pipes in multi-line comments', () => {
+    const comment = 'Line 1 | pipe\nLine 2';
+    const md = formatResultsAsMarkdown(
+      'Sprint',
+      [task({ comments: { Alice: comment } })],
+      ['Alice'],
+    );
+
+    expect(md).toContain('  > Line 1 \\| pipe');
+    expect(md).toContain('  > Line 2');
   });
 });

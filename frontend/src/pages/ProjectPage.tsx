@@ -51,6 +51,7 @@ import { TraceCopyButton } from '@/components/TraceCopyButton';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useProjectAuth } from '@/hooks/useProjectAuth';
 import { Linkify } from '@/lib/linkify';
+import { ghostLinkBtn, outlineBtn, primaryBtn } from '@/styles/buttons';
 import { getErrorMessage } from '@/utils/error';
 import { logger } from '@/utils/logger';
 import { generateRoomName } from '@/utils/nameGenerator';
@@ -463,7 +464,7 @@ export function ProjectPage() {
             <button
               type="button"
               onClick={() => setShowForm(true)}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 transition-opacity cursor-pointer active:scale-[0.98] flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+              className={`${primaryBtn} flex items-center gap-1`}
             >
               <Plus className="w-4 h-4" /> New Room
             </button>
@@ -477,10 +478,7 @@ export function ProjectPage() {
               Share
             </button>
             {(roomList ?? []).some((r) => r.status === 'REVEALED' || r.status === 'CLOSED') && (
-              <Link
-                to={`/p/${slug}/analytics`}
-                className="px-3 py-1.5 text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold rounded-lg transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none cursor-pointer"
-              >
+              <Link to={`/p/${slug}/analytics`} className={ghostLinkBtn}>
                 Analytics
               </Link>
             )}
@@ -569,7 +567,7 @@ export function ProjectPage() {
                         type="button"
                         onClick={() => void handleReveal(room.id)}
                         disabled={revealRoom.isPending}
-                        className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+                        className={`${primaryBtn} flex items-center gap-2`}
                       >
                         {revealRoom.isPending ? (
                           <>
@@ -616,7 +614,7 @@ export function ProjectPage() {
                       <button
                         type="button"
                         onClick={() => setShowImport(true)}
-                        className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold hover:text-efi-text-primary transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+                        className={`${outlineBtn} flex items-center gap-2`}
                       >
                         <Upload className="w-4 h-4" /> Import Tasks
                       </button>
@@ -626,7 +624,7 @@ export function ProjectPage() {
                         type="button"
                         onClick={() => void handleExportCsv(room.id)}
                         disabled={exporting}
-                        className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold hover:text-efi-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+                        className={`${outlineBtn} flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
                         {exporting ? (
                           <>
@@ -639,16 +637,13 @@ export function ProjectPage() {
                         )}
                       </button>
                     )}
-                    <Link
-                      to={`/p/${slug}/r/${room.id}`}
-                      className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold hover:text-efi-text-primary transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
-                    >
+                    <Link to={`/p/${slug}/r/${room.id}`} className={`${outlineBtn} no-underline`}>
                       Open Voting
                     </Link>
                     {!isRoomLive && (room.status === 'REVEALED' || room.status === 'CLOSED') && (
                       <Link
                         to={`/p/${slug}/r/${room.id}/results`}
-                        className="px-4 py-2 rounded-lg text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold hover:text-efi-text-primary transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+                        className={`${outlineBtn} no-underline`}
                       >
                         View Results
                       </Link>
@@ -1225,10 +1220,7 @@ export function ProjectPage() {
             </button>
           )}
           {slug && roomList.some((r) => r.status === 'REVEALED' || r.status === 'CLOSED') && (
-            <Link
-              to={`/p/${slug}/analytics`}
-              className="px-3 py-1.5 text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold rounded-lg transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none cursor-pointer"
-            >
+            <Link to={`/p/${slug}/analytics`} className={ghostLinkBtn}>
               Analytics
             </Link>
           )}

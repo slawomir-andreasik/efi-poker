@@ -9,6 +9,14 @@ function isConsensus(task: TaskEstimate): boolean {
   return nums.length > 0 && new Set(nums).size === 1;
 }
 
+function blockquoteComment(comment: string): string {
+  const escaped = escapeMarkdown(comment);
+  return escaped
+    .split('\n')
+    .map((line) => `  > ${line}`)
+    .join('\n');
+}
+
 function renderTask(task: TaskEstimate, participants: string[], lines: string[]): void {
   lines.push(`### ${task.taskTitle}`);
 
@@ -19,7 +27,12 @@ function renderTask(task: TaskEstimate, participants: string[], lines: string[])
     if (sp == null) {
       lines.push(`- ${name}: -`);
     } else if (comment) {
-      lines.push(`- ${name}: **${sp}** - ${escapeMarkdown(comment)}`);
+      if (comment.includes('\n')) {
+        lines.push(`- ${name}: **${sp}**`);
+        lines.push(blockquoteComment(comment));
+      } else {
+        lines.push(`- ${name}: **${sp}** - ${escapeMarkdown(comment)}`);
+      }
     } else {
       lines.push(`- ${name}: **${sp}**`);
     }
@@ -33,7 +46,7 @@ function renderTask(task: TaskEstimate, participants: string[], lines: string[])
   if (task.finalEstimate != null) parts.push(`Final: ${task.finalEstimate}`);
 
   if (parts.length > 0) {
-    lines.push(`> ${parts.join(' | ')}`);
+    lines.push(`*${parts.join(' | ')}*`);
     lines.push('');
   }
 }

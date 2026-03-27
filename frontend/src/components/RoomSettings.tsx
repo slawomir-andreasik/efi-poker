@@ -6,6 +6,7 @@ import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { DeadlineInput, formatPreview, toLocalDatetimeString } from '@/components/DeadlineInput';
 import { TextArea, TextInput } from '@/components/TextInput';
 import { useToast } from '@/components/Toast';
+import { inputSm } from '@/styles/inputs';
 import { getErrorMessage } from '@/utils/error';
 import { logger } from '@/utils/logger';
 
@@ -137,8 +138,7 @@ function BlurSaveInput({
     }
   }
 
-  const inputClass =
-    'w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void';
+  const inputClass = inputSm;
 
   return (
     <div>

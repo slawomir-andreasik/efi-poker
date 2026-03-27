@@ -12,6 +12,7 @@ import { NotFoundState } from '@/components/NotFoundState';
 import { PageSpinner } from '@/components/PageSpinner';
 import { TraceCopyButton } from '@/components/TraceCopyButton';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { ghostLinkBtn } from '@/styles/buttons';
 import { getErrorMessage } from '@/utils/error';
 
 export function RoomAnalyticsPage() {
@@ -78,7 +79,7 @@ export function RoomAnalyticsPage() {
         </div>
         <Link
           to={slug && roomId ? `/p/${slug}/r/${roomId}/results` : '/'}
-          className="mt-3 sm:mt-0 px-3 py-1.5 text-sm font-medium border border-efi-gold-light/20 text-efi-gold-light hover:border-efi-gold rounded-lg transition-colors no-underline active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none cursor-pointer"
+          className={`mt-3 sm:mt-0 ${ghostLinkBtn}`}
         >
           Back to Results
         </Link>

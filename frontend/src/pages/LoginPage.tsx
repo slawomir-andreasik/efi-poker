@@ -6,6 +6,8 @@ import { TextInput } from '@/components/TextInput';
 import { useToast } from '@/components/Toast';
 import { useAuthConfig } from '@/hooks/useAuthConfig';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { primaryBtnLg } from '@/styles/buttons';
+import { inputLg } from '@/styles/inputs';
 import { getErrorMessage } from '@/utils/error';
 
 export function LoginPage() {
@@ -70,7 +72,7 @@ export function LoginPage() {
                 maxLength={100}
                 autoFocus
                 autoComplete="username"
-                className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
+                className={inputLg}
               />
             </div>
 
@@ -89,7 +91,7 @@ export function LoginPage() {
                 placeholder="Your password"
                 maxLength={128}
                 autoComplete="current-password"
-                className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
+                className={inputLg}
               />
             </div>
 
@@ -106,7 +108,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={login.isPending || !username.trim() || !password}
-              className="w-full py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none flex items-center justify-center gap-2"
+              className={`${primaryBtnLg} flex items-center justify-center gap-2`}
             >
               {login.isPending ? (
                 <>

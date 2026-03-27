@@ -34,6 +34,7 @@ import { useToast } from '@/components/Toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useDeleteRoomAction } from '@/hooks/useDeleteRoomAction';
 import { useSaveIndicator } from '@/hooks/useSaveIndicator';
+import { primaryBtn } from '@/styles/buttons';
 import { getErrorMessage } from '@/utils/error';
 import { logger } from '@/utils/logger';
 
@@ -324,7 +325,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                 type="button"
                 onClick={() => void handleReveal()}
                 disabled={revealRoom.isPending}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-[0.98] flex items-center gap-2 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+                className={`${primaryBtn} flex items-center gap-2 whitespace-nowrap`}
               >
                 {revealRoom.isPending ? (
                   <>

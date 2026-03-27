@@ -6,6 +6,8 @@ import { TextInput } from '@/components/TextInput';
 import { useToast } from '@/components/Toast';
 import { useAuthConfig } from '@/hooks/useAuthConfig';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { primaryBtnLg } from '@/styles/buttons';
+import { inputLg } from '@/styles/inputs';
 import { getErrorMessage } from '@/utils/error';
 
 export function RegisterPage() {
@@ -74,7 +76,7 @@ export function RegisterPage() {
                 minLength={3}
                 autoFocus
                 autoComplete="username"
-                className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
+                className={inputLg}
               />
             </div>
 
@@ -93,7 +95,7 @@ export function RegisterPage() {
                 placeholder="Min. 8 characters"
                 maxLength={128}
                 autoComplete="new-password"
-                className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
+                className={inputLg}
               />
               {passwordTooShort && (
                 <p className="text-xs text-efi-error mt-1">
@@ -117,14 +119,14 @@ export function RegisterPage() {
                 placeholder="alice@example.com"
                 maxLength={254}
                 autoComplete="email"
-                className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-4 py-3 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold transition-colors focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void"
+                className={inputLg}
               />
             </div>
 
             <button
               type="submit"
               disabled={register.isPending || !username.trim() || !password || password.length < 8}
-              className="w-full py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none flex items-center justify-center gap-2"
+              className={`${primaryBtnLg} flex items-center justify-center gap-2`}
             >
               {register.isPending ? (
                 <>

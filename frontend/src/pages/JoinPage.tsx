@@ -8,6 +8,7 @@ import { ButtonSpinner, Spinner } from '@/components/Spinner';
 import { TextInput } from '@/components/TextInput';
 import { useToast } from '@/components/Toast';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { primaryBtnLg } from '@/styles/buttons';
 import { getErrorMessage } from '@/utils/error';
 import { logger } from '@/utils/logger';
 
@@ -153,7 +154,7 @@ export function JoinPage() {
           <button
             type="button"
             onClick={() => navigate(`/p/${slug}${roomRedirect}`)}
-            className="w-full py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none"
+            className={primaryBtnLg}
           >
             Continue
           </button>
@@ -210,7 +211,7 @@ export function JoinPage() {
           <button
             type="submit"
             disabled={joinProject.isPending || !nickname.trim()}
-            className="w-full mt-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-efi-gold to-efi-gold-muted text-efi-void hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-void focus-visible:outline-none flex items-center justify-center gap-2"
+            className={`${primaryBtnLg} mt-4 flex items-center justify-center gap-2`}
           >
             {joinProject.isPending ? (
               <>
