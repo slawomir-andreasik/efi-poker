@@ -85,8 +85,11 @@ public class AnalyticsService {
     double totalSP = 0.0;
 
     for (Task task : tasks) {
-      List<Estimate> estimates = estimatesByTask.getOrDefault(task.id(), List.of());
-      List<String> spValues = estimates.stream().map(Estimate::storyPoints).toList();
+      List<Estimate> voted =
+          estimatesByTask.getOrDefault(task.id(), List.of()).stream()
+              .filter(Estimate::hasVoted)
+              .toList();
+      List<String> spValues = voted.stream().map(Estimate::storyPoints).toList();
       List<Double> numeric = EstimationStats.extractNumericPoints(spValues);
 
       // Vote distribution
@@ -200,10 +203,13 @@ public class AnalyticsService {
       int consensusCount = 0;
 
       for (Task task : roomTasks) {
-        List<Estimate> estimates = estimatesByTask.getOrDefault(task.id(), List.of());
+        List<Estimate> roomVoted =
+            estimatesByTask.getOrDefault(task.id(), List.of()).stream()
+                .filter(Estimate::hasVoted)
+                .toList();
         List<Double> numeric =
             EstimationStats.extractNumericPoints(
-                estimates.stream().map(Estimate::storyPoints).toList());
+                roomVoted.stream().map(Estimate::storyPoints).toList());
 
         roomSP += EstimationStats.computeTaskSP(task.finalEstimate(), numeric);
 
@@ -230,11 +236,14 @@ public class AnalyticsService {
     record TaskSpread(Task task, Double spread, int voteCount) {}
     List<TaskSpread> spreads = new ArrayList<>();
     for (Task task : tasks) {
-      List<Estimate> estimates = estimatesByTask.getOrDefault(task.id(), List.of());
-      List<String> spValues = estimates.stream().map(Estimate::storyPoints).toList();
+      List<Estimate> taskVoted =
+          estimatesByTask.getOrDefault(task.id(), List.of()).stream()
+              .filter(Estimate::hasVoted)
+              .toList();
+      List<String> spValues = taskVoted.stream().map(Estimate::storyPoints).toList();
       Double spread = EstimationStats.computeStdDeviation(spValues);
       if (spread != null) {
-        spreads.add(new TaskSpread(task, spread, estimates.size()));
+        spreads.add(new TaskSpread(task, spread, taskVoted.size()));
       }
     }
     spreads.sort(Comparator.comparingDouble(TaskSpread::spread).reversed());
@@ -259,7 +268,9 @@ public class AnalyticsService {
     Map<UUID, Integer> voteCountByParticipant = new HashMap<>();
     for (List<Estimate> estimates : estimatesByTask.values()) {
       for (Estimate e : estimates) {
-        voteCountByParticipant.merge(e.participant().id(), 1, Integer::sum);
+        if (e.hasVoted()) {
+          voteCountByParticipant.merge(e.participant().id(), 1, Integer::sum);
+        }
       }
     }
 
