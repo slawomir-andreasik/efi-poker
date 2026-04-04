@@ -61,5 +61,5 @@ jobs:
             NOTES_FLAG="--notes-start-tag $PREV_TAG"
           fi
           gh release create "$TAG" \
-            --title "EFI Poker $TAG" \
+            --title "$TAG" \
             --generate-notes $NOTES_FLAG
