@@ -32,8 +32,8 @@ export function ResultsPage() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: queryKeys.rooms.results(roomId!),
-    queryFn: () => roomApi.results(roomId!, slug!),
+    queryKey: queryKeys.rooms.results(roomId as string),
+    queryFn: () => roomApi.results(roomId as string, slug as string),
     enabled: Boolean(roomId && slug),
     refetchInterval: (query) => {
       const status = query.state.data?.status;
@@ -41,6 +41,13 @@ export function ResultsPage() {
       if (query.state.status === 'error') return false;
       return 10_000;
     },
+  });
+
+  const { data: roomDetail } = useQuery({
+    queryKey: queryKeys.rooms.detail(roomId as string),
+    queryFn: () => roomApi.detail(roomId as string, slug as string),
+    enabled: Boolean(roomId && slug),
+    staleTime: 60_000,
   });
 
   useDocumentTitle('Results', results?.title, projectName);
@@ -86,8 +93,14 @@ export function ResultsPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const markdown = useMemo(
-    () => formatResultsAsMarkdown(results?.title ?? '', tableData, participantNames),
-    [results?.title, tableData, participantNames],
+    () =>
+      formatResultsAsMarkdown(
+        results?.title ?? '',
+        tableData,
+        participantNames,
+        roomDetail?.commentTemplate,
+      ),
+    [results?.title, tableData, participantNames, roomDetail?.commentTemplate],
   );
 
   const handleCopyMarkdown = useCallback(async () => {
@@ -158,7 +171,11 @@ export function ResultsPage() {
       </div>
 
       <div className="glass-frost rounded-xl sm:rounded-2xl p-3 sm:p-6">
-        <ResultsTable tasks={tableData} participants={participantNames} />
+        <ResultsTable
+          tasks={tableData}
+          participants={participantNames}
+          commentTemplate={roomDetail?.commentTemplate}
+        />
       </div>
 
       {/* Summary cards */}

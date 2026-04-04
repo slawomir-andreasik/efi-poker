@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
+import { isDefaultComment } from '@/hooks/useSortedTasks';
 
 interface TaskEstimate {
   taskId: string;
@@ -13,6 +14,7 @@ interface TaskEstimate {
 interface ResultsTableProps {
   tasks: TaskEstimate[];
   participants: string[];
+  commentTemplate?: string;
 }
 
 export function getTaskSp(task: TaskEstimate): number {
@@ -46,30 +48,18 @@ function consensusColor(level: 'consensus' | 'close' | 'divergent'): string {
   }
 }
 
-export function ResultsTable({ tasks, participants }: ResultsTableProps) {
-  const [showComments, setShowComments] = useState(false);
+export function ResultsTable({ tasks, participants, commentTemplate }: ResultsTableProps) {
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
   if (tasks.length === 0) {
     return <p className="text-efi-text-secondary text-center py-8">No results to display yet.</p>;
   }
 
   const hasFinalEstimates = tasks.some((t) => t.finalEstimate);
-  const hasAnyComments = tasks.some((t) => Object.keys(t.comments).length > 0);
+  const colSpan = participants.length + 3 + (hasFinalEstimates ? 1 : 0);
 
   return (
     <div className="relative">
-      {hasAnyComments && (
-        <div className="flex justify-end mb-2">
-          <button
-            type="button"
-            onClick={() => setShowComments((v) => !v)}
-            aria-pressed={showComments}
-            className="text-xs text-efi-text-tertiary hover:text-efi-text-secondary transition-colors cursor-pointer"
-          >
-            {showComments ? 'Hide comments' : 'Show comments'}
-          </button>
-        </div>
-      )}
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[600px]">
           <thead>
@@ -93,42 +83,86 @@ export function ResultsTable({ tasks, participants }: ResultsTableProps) {
           <tbody>
             {tasks.map((task) => {
               const level = getConsensusLevel(task.estimates);
+              const hasComments = Object.values(task.comments).some(
+                (c) => !isDefaultComment(c, commentTemplate ?? ''),
+              );
+              const isExpanded = expandedTaskId === task.taskId;
+
               return (
-                <tr
-                  key={task.taskId}
-                  className={`border border-transparent rounded-lg ${consensusColor(level)} hover:bg-white/5 transition-colors`}
-                >
-                  <td className="py-2 px-2 text-efi-text-primary font-medium">{task.taskTitle}</td>
-                  {participants.map((name) => {
-                    const value = task.estimates[name];
-                    const taskComment = task.comments[name];
-                    const isQuestion = value === '?';
-                    return (
-                      <td
-                        key={name}
-                        className={`text-center py-2 px-2 font-medium ${isQuestion ? 'text-efi-warning bg-efi-warning/10 rounded' : 'text-efi-text-secondary'}`}
-                      >
-                        {value ?? '-'}
-                        {showComments && taskComment && (
-                          <p className="text-[10px] text-efi-text-tertiary font-normal mt-0.5 whitespace-pre-line break-words max-w-[150px] mx-auto">
-                            {taskComment}
-                          </p>
-                        )}
-                      </td>
-                    );
-                  })}
-                  <td className="text-center py-2 px-2 text-efi-gold-light font-semibold">
-                    {task.average != null ? task.average.toFixed(1) : '-'}
-                  </td>
-                  <td className="text-center py-2 px-2 text-efi-gold-light font-semibold">
-                    {task.median != null ? task.median : '-'}
-                  </td>
-                  {hasFinalEstimates && (
-                    <td className="text-center py-2 px-2 text-efi-success font-bold">
-                      {task.finalEstimate ?? '-'}
+                <Fragment key={task.taskId}>
+                  <tr
+                    className={`border border-transparent rounded-lg ${consensusColor(level)} hover:bg-white/5 transition-colors ${hasComments ? 'cursor-pointer' : ''}`}
+                    onClick={() =>
+                      hasComments && setExpandedTaskId(isExpanded ? null : task.taskId)
+                    }
+                  >
+                    <td className="py-2 px-2 text-efi-text-primary font-medium">
+                      {task.taskTitle}
                     </td>
+                    {participants.map((name) => {
+                      const value = task.estimates[name];
+                      const taskComment = task.comments[name];
+                      const isQuestion = value === '?';
+                      const hasCustomComment =
+                        taskComment && !isDefaultComment(taskComment, commentTemplate ?? '');
+                      return (
+                        <td
+                          key={name}
+                          className={`text-center py-2 px-2 font-medium ${isQuestion ? 'text-efi-warning bg-efi-warning/10 rounded' : 'text-efi-text-secondary'}`}
+                        >
+                          {value ?? '-'}
+                          {hasCustomComment && (
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-efi-gold-light/50 ml-1 align-middle" />
+                          )}
+                        </td>
+                      );
+                    })}
+                    <td className="text-center py-2 px-2 text-efi-gold-light font-semibold">
+                      {task.average != null ? task.average.toFixed(1) : '-'}
+                    </td>
+                    <td className="text-center py-2 px-2 text-efi-gold-light font-semibold">
+                      {task.median != null ? task.median : '-'}
+                    </td>
+                    {hasFinalEstimates && (
+                      <td className="text-center py-2 px-2 text-efi-success font-bold">
+                        {task.finalEstimate ?? '-'}
+                      </td>
+                    )}
+                  </tr>
+                  {isExpanded && (
+                    <tr>
+                      <td colSpan={colSpan} className="px-4 py-3 border-t border-white/8">
+                        <div className="space-y-1.5 text-xs">
+                          {participants.map((name) => {
+                            const comment = task.comments[name];
+                            if (!comment) return null;
+                            const isDefault = isDefaultComment(comment, commentTemplate ?? '');
+                            if (isDefault) {
+                              return (
+                                <div key={name}>
+                                  <span className="text-efi-text-secondary font-medium">
+                                    {name}:
+                                  </span>
+                                  <span className="text-efi-text-tertiary/50 ml-2 italic">
+                                    (default)
+                                  </span>
+                                </div>
+                              );
+                            }
+                            return (
+                              <div key={name}>
+                                <span className="text-efi-text-secondary font-medium">{name}:</span>
+                                <span className="text-efi-text-tertiary ml-2 whitespace-pre-line">
+                                  {comment}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </td>
+                    </tr>
                   )}
-                </tr>
+                </Fragment>
               );
             })}
           </tbody>

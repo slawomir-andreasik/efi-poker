@@ -6,9 +6,13 @@ interface SortControlsProps {
   sortDirection: SortDirection;
   onlyUnestimated: boolean;
   unestimatedCount: number;
+  onlyNeedsComment: boolean;
+  needsCommentCount: number;
+  hasCommentTemplate: boolean;
   onSortFieldChange: (field: SortField) => void;
   onSortDirectionChange: (direction: SortDirection) => void;
   onOnlyUnestimatedChange: (value: boolean) => void;
+  onOnlyNeedsCommentChange: (value: boolean) => void;
 }
 
 const SORT_OPTIONS: { value: SortField; label: string }[] = [
@@ -21,10 +25,21 @@ export function SortControls({
   sortDirection,
   onlyUnestimated,
   unestimatedCount,
+  onlyNeedsComment,
+  needsCommentCount,
+  hasCommentTemplate,
   onSortFieldChange,
   onSortDirectionChange,
   onOnlyUnestimatedChange,
+  onOnlyNeedsCommentChange,
 }: SortControlsProps) {
+  const filterBtnClass = (active: boolean) =>
+    `px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none ${
+      active
+        ? 'bg-white/10 text-efi-text-primary border-white/15'
+        : 'text-efi-text-secondary border-white/10 hover:text-efi-text-primary hover:bg-white/8'
+    }`;
+
   return (
     <div className="flex flex-wrap items-center gap-2 mb-4">
       {/* Segmented buttons */}
@@ -62,14 +77,21 @@ export function SortControls({
       <button
         type="button"
         onClick={() => onOnlyUnestimatedChange(!onlyUnestimated)}
-        className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:outline-none ${
-          onlyUnestimated
-            ? 'bg-white/10 text-efi-text-primary border-white/15'
-            : 'text-efi-text-secondary border-white/10 hover:text-efi-text-primary hover:bg-white/8'
-        }`}
+        className={filterBtnClass(onlyUnestimated)}
       >
         Only unestimated{unestimatedCount > 0 ? ` (${unestimatedCount})` : ''}
       </button>
+
+      {/* Needs comment filter - only shown when room has a template */}
+      {hasCommentTemplate && (
+        <button
+          type="button"
+          onClick={() => onOnlyNeedsCommentChange(!onlyNeedsComment)}
+          className={filterBtnClass(onlyNeedsComment)}
+        >
+          Needs comment{needsCommentCount > 0 ? ` (${needsCommentCount})` : ''}
+        </button>
+      )}
     </div>
   );
 }

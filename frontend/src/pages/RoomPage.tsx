@@ -51,8 +51,8 @@ export function RoomPage() {
     isLoading: loading,
     error,
   } = useQuery({
-    queryKey: queryKeys.rooms.detail(roomId!),
-    queryFn: () => roomApi.detail(roomId!, slug!),
+    queryKey: queryKeys.rooms.detail(roomId as string),
+    queryFn: () => roomApi.detail(roomId as string, slug as string),
     enabled: Boolean(roomId && slug),
     refetchInterval: (query) => {
       const status = query.state.data?.status;
@@ -69,11 +69,14 @@ export function RoomPage() {
     sortField,
     sortDirection,
     onlyUnestimated,
+    onlyNeedsComment,
     unestimatedCount,
+    needsCommentCount,
     setSortField,
     setSortDirection,
     setOnlyUnestimated,
-  } = useSortedTasks(room?.tasks ?? [], roomId ?? '');
+    setOnlyNeedsComment,
+  } = useSortedTasks(room?.tasks ?? [], roomId ?? '', room?.commentTemplate);
 
   const submitEstimate = useSubmitEstimate(slug ?? '');
   const deleteEstimate = useDeleteEstimate(slug ?? '');
@@ -177,7 +180,7 @@ export function RoomPage() {
 
   // Split: LIVE rooms get their own dedicated view
   if (room?.roomType === 'LIVE') {
-    return <LiveRoomView slug={slug!} roomId={roomId!} room={room} auth={auth} />;
+    return <LiveRoomView slug={slug as string} roomId={roomId as string} room={room} auth={auth} />;
   }
 
   const isRevealed = room?.status === 'REVEALED' || room?.status === 'CLOSED';
@@ -241,7 +244,7 @@ export function RoomPage() {
 
       {/* Admin join banner */}
       {isAdmin && !hasParticipant && !isRevealed && (
-        <AdminJoinBanner slug={slug!} onJoined={() => {}} />
+        <AdminJoinBanner slug={slug as string} onJoined={() => {}} />
       )}
 
       {/* Session ended banner (non-admin participants) */}
@@ -256,7 +259,7 @@ export function RoomPage() {
       {/* Room settings (admin only) */}
       {isAdmin && room && (
         <div className="mb-6">
-          <RoomSettings slug={slug!} room={room} />
+          <RoomSettings slug={slug as string} room={room} />
         </div>
       )}
 
@@ -276,9 +279,13 @@ export function RoomPage() {
               sortDirection={sortDirection}
               onlyUnestimated={onlyUnestimated}
               unestimatedCount={unestimatedCount}
+              onlyNeedsComment={onlyNeedsComment}
+              needsCommentCount={needsCommentCount}
+              hasCommentTemplate={Boolean(room?.commentTemplate)}
               onSortFieldChange={setSortField}
               onSortDirectionChange={setSortDirection}
               onOnlyUnestimatedChange={setOnlyUnestimated}
+              onOnlyNeedsCommentChange={setOnlyNeedsComment}
             />
           )}
 
@@ -308,6 +315,7 @@ export function RoomPage() {
                 commentTemplate={room?.commentTemplate}
                 commentRequired={room?.commentRequired}
                 myComment={task.myEstimate?.comment}
+                explicitCommentSave={onlyNeedsComment}
               />
             ))}
 

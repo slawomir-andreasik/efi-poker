@@ -30,6 +30,7 @@ interface TaskCardProps {
   commentTemplate?: string;
   commentRequired?: boolean;
   myComment?: string;
+  explicitCommentSave?: boolean;
 }
 
 export const TaskCard = memo(function TaskCard({
@@ -53,6 +54,7 @@ export const TaskCard = memo(function TaskCard({
   commentTemplate,
   commentRequired = false,
   myComment,
+  explicitCommentSave = false,
 }: TaskCardProps) {
   const hasVoted = selectedSp !== null;
   const isNA = selectedSp === SP_NOT_APPLICABLE;
@@ -93,6 +95,7 @@ export const TaskCard = memo(function TaskCard({
               {questionVotesCount != null && questionVotesCount > 0 && !revealed && (
                 <div
                   className="flex items-center justify-center w-6 h-6 rounded-full bg-efi-warning/20 text-efi-warning border border-efi-warning/30 text-xs font-bold mr-1 cursor-help"
+                  role="img"
                   title={`${questionVotesCount} person${questionVotesCount > 1 ? 's' : ''} have questions/doubts. Please clarify.`}
                   aria-label={`${questionVotesCount} person${questionVotesCount > 1 ? 's' : ''} have questions or doubts`}
                 >
@@ -142,6 +145,7 @@ export const TaskCard = memo(function TaskCard({
             }
           }}
           saving={saving}
+          explicitSave={explicitCommentSave}
         />
       )}
 
