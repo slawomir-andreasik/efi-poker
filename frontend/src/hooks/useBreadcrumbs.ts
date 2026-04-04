@@ -36,8 +36,8 @@ export function useBreadcrumbs(): UseBreadcrumbsResult {
 
   // Fetch rooms for room title (TanStack cache deduplicates with other queries)
   const { data: rooms } = useQuery({
-    queryKey: queryKeys.projects.rooms(slug!),
-    queryFn: () => projectApi.rooms(slug!),
+    queryKey: queryKeys.projects.rooms(slug as string),
+    queryFn: () => projectApi.rooms(slug as string),
     enabled: Boolean(slug),
     staleTime: 10_000,
   });
@@ -45,6 +45,7 @@ export function useBreadcrumbs(): UseBreadcrumbsResult {
 
   const path = location.pathname;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: granular deps avoid re-render on every poll (currentRoom ref changes each cycle)
   const segments = useMemo(() => {
     const result: BreadcrumbSegment[] = [];
 
@@ -118,7 +119,6 @@ export function useBreadcrumbs(): UseBreadcrumbsResult {
     }
 
     return result;
-    // biome-ignore lint/correctness/useExhaustiveDependencies: granular deps avoid re-render on every poll (currentRoom ref changes each cycle)
   }, [
     path,
     slug,

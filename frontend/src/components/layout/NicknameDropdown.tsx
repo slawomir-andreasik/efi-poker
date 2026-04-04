@@ -116,11 +116,15 @@ export function NicknameDropdown({
         <div className="absolute right-0 top-full mt-1 glass-crystal rounded-lg shadow-xl min-w-48 z-50 overflow-hidden">
           {editing ? (
             <div className="p-3">
-              <label className="text-[10px] text-efi-text-tertiary uppercase tracking-wider mb-1.5 block">
+              <label
+                htmlFor="nickname-input"
+                className="text-[10px] text-efi-text-tertiary uppercase tracking-wider mb-1.5 block"
+              >
                 New nickname
               </label>
               <TextInput
                 ref={inputRef}
+                id="nickname-input"
                 type="text"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}

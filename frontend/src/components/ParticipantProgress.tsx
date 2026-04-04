@@ -32,8 +32,8 @@ export function ParticipantProgress({ roomId, slug }: ParticipantProgressProps) 
   return (
     <CollapsibleSection icon={Users} label="Participant Progress" defaultOpen>
       <div className="space-y-2">
-        {sortedParticipants.map((p, i) => (
-          <ParticipantRow key={`${p.nickname}-${i}`} participant={p} />
+        {sortedParticipants.map((p) => (
+          <ParticipantRow key={p.nickname} participant={p} />
         ))}
       </div>
     </CollapsibleSection>

@@ -24,8 +24,8 @@ export function RoomAnalyticsPage() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: queryKeys.analytics.room(roomId!),
-    queryFn: () => analyticsApi.room(roomId!, slug!),
+    queryKey: queryKeys.analytics.room(roomId as string),
+    queryFn: () => analyticsApi.room(roomId as string, slug as string),
     enabled: Boolean(roomId && slug),
   });
 

@@ -92,9 +92,9 @@ export function RoundHistoryPanel({ history }: RoundHistoryPanelProps) {
                 <div className="px-3 pb-3 border-t border-white/8">
                   {entry.votes.length > 0 ? (
                     <div className="flex flex-wrap gap-1.5 pt-2.5">
-                      {entry.votes.map((vote, i) => (
+                      {entry.votes.map((vote) => (
                         <span
-                          key={`${vote.nickname}-${i}`}
+                          key={`${vote.nickname}-${vote.storyPoints}`}
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
                             vote.storyPoints === '?'
                               ? 'bg-efi-warning/15 text-efi-warning border border-efi-warning/25'

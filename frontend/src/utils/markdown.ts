@@ -1,4 +1,5 @@
 import { getTaskSp, type TaskEstimate } from '@/components/ResultsTable';
+import { isDefaultComment } from '@/hooks/useSortedTasks';
 
 function escapeMarkdown(text: string): string {
   return text.replace(/\|/g, '\\|');
@@ -17,12 +18,21 @@ function blockquoteComment(comment: string): string {
     .join('\n');
 }
 
-function renderTask(task: TaskEstimate, participants: string[], lines: string[]): void {
+function renderTask(
+  task: TaskEstimate,
+  participants: string[],
+  lines: string[],
+  commentTemplate?: string,
+): void {
   lines.push(`### ${task.taskTitle}`);
 
   for (const name of participants) {
     const sp = task.estimates[name];
-    const comment = task.comments[name];
+    const rawComment = task.comments[name];
+    const comment =
+      rawComment && commentTemplate && isDefaultComment(rawComment, commentTemplate)
+        ? undefined
+        : rawComment;
 
     if (sp == null) {
       lines.push(`- ${name}: -`);
@@ -55,6 +65,7 @@ export function formatResultsAsMarkdown(
   roomTitle: string,
   tasks: TaskEstimate[],
   participants: string[],
+  commentTemplate?: string,
 ): string {
   const lines: string[] = [`# Results: ${roomTitle}`, ''];
 
@@ -62,7 +73,7 @@ export function formatResultsAsMarkdown(
     return `${lines.join('\n').trimEnd()}\n`;
   }
 
-  for (const task of tasks) renderTask(task, participants, lines);
+  for (const task of tasks) renderTask(task, participants, lines, commentTemplate);
 
   const agreed = tasks.filter((t) => isConsensus(t));
   const totalSp = tasks.reduce((sum, t) => sum + getTaskSp(t), 0);

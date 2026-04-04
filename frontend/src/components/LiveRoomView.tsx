@@ -430,7 +430,7 @@ export function LiveRoomView({ slug, roomId, room: initialRoom, auth }: LiveRoom
                           comment: newComment || undefined,
                         })
                         .then(() => {
-                          clearDraftComment(liveState.taskId!);
+                          clearDraftComment(liveState.taskId as string);
                           showSaveIndicator();
                         })
                         .catch((err) => {

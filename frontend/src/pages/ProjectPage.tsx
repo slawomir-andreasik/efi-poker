@@ -100,29 +100,29 @@ export function ProjectPage() {
     isLoading: loading,
     error,
   } = useQuery({
-    queryKey: queryKeys.projects.detail(slug!),
-    queryFn: () => projectApi.detail(slug!),
+    queryKey: queryKeys.projects.detail(slug as string),
+    queryFn: () => projectApi.detail(slug as string),
     enabled: Boolean(slug),
     refetchInterval: (query) => (query.state.status === 'error' ? false : 10_000),
   });
 
   const { data: rooms } = useQuery({
-    queryKey: queryKeys.projects.rooms(slug!),
-    queryFn: () => projectApi.rooms(slug!),
+    queryKey: queryKeys.projects.rooms(slug as string),
+    queryFn: () => projectApi.rooms(slug as string),
     enabled: Boolean(slug && project),
     refetchInterval: project ? 10_000 : false,
   });
 
   const { data: room } = useQuery({
-    queryKey: queryKeys.rooms.admin(selectedRoomId!),
-    queryFn: () => roomApi.admin(selectedRoomId!, slug!),
+    queryKey: queryKeys.rooms.admin(selectedRoomId as string),
+    queryFn: () => roomApi.admin(selectedRoomId as string, slug as string),
     enabled: Boolean(selectedRoomId && slug),
     refetchInterval: 3_000,
   });
 
   const { data: participants } = useQuery({
-    queryKey: queryKeys.projects.participants(slug!),
-    queryFn: () => projectApi.participants(slug!),
+    queryKey: queryKeys.projects.participants(slug as string),
+    queryFn: () => projectApi.participants(slug as string),
     enabled: Boolean(slug && project),
     refetchInterval: isAdmin && project ? 30_000 : undefined,
   });
@@ -250,7 +250,7 @@ export function ProjectPage() {
   async function handleExportCsv(roomId: string) {
     setExporting(true);
     try {
-      const csv = await roomApi.resultsExport(roomId, slug!);
+      const csv = await roomApi.resultsExport(roomId, slug as string);
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -653,7 +653,7 @@ export function ProjectPage() {
 
                 {/* Room settings (admin) */}
                 <div className="mb-6">
-                  <RoomSettings key={room.id} slug={slug!} room={room} />
+                  <RoomSettings key={room.id} slug={slug as string} room={room} />
                 </div>
 
                 {/* Share link */}
@@ -751,8 +751,9 @@ export function ProjectPage() {
                                 ) : (
                                   <div className="flex items-start gap-1">
                                     <div className="flex-1 min-w-0">
-                                      <span
-                                        className="text-efi-text-primary cursor-pointer hover:text-efi-gold-light transition-colors"
+                                      <button
+                                        type="button"
+                                        className="text-efi-text-primary cursor-pointer hover:text-efi-gold-light transition-colors text-left"
                                         onClick={() =>
                                           setEditingTask({
                                             id: task.id,
@@ -762,7 +763,7 @@ export function ProjectPage() {
                                         }
                                       >
                                         {task.title}
-                                      </span>
+                                      </button>
                                       {task.description && (
                                         <p className="text-xs text-efi-text-secondary mt-0.5 line-clamp-2">
                                           <Linkify text={task.description} />
@@ -1004,6 +1005,7 @@ export function ProjectPage() {
 
         {/* New Room Modal */}
         {showForm && (
+          // biome-ignore lint/a11y/noStaticElementInteractions: modal backdrop
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-[fade-in_0.2s_ease-out]"
             onClick={(e) => {
@@ -1035,7 +1037,7 @@ export function ProjectPage() {
                   className="w-full rounded-lg bg-efi-well border border-efi-gold-light/20 px-3 py-2 text-efi-text-primary placeholder-efi-text-tertiary text-base focus:outline-none focus:border-efi-gold resize-none focus-visible:ring-2 focus-visible:ring-efi-gold focus-visible:ring-offset-2 focus-visible:ring-offset-efi-obsidian"
                 />
                 <div>
-                  <label className="block text-xs text-efi-text-secondary mb-1.5">Room Type</label>
+                  <span className="block text-xs text-efi-text-secondary mb-1.5">Room Type</span>
                   <div className="flex gap-2">
                     <div className="flex-1 flex flex-col">
                       <button
@@ -1095,7 +1097,7 @@ export function ProjectPage() {
                 )}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs text-efi-text-secondary">
+                    <label htmlFor="comment-template" className="text-xs text-efi-text-secondary">
                       Comment Template (optional)
                     </label>
                     <div className="flex gap-2">
@@ -1120,6 +1122,7 @@ export function ProjectPage() {
                     </div>
                   </div>
                   <TextArea
+                    id="comment-template"
                     value={commentTemplate}
                     onChange={(e) => setCommentTemplate(e.target.value)}
                     placeholder="Paste your team's comment template..."
@@ -1237,6 +1240,7 @@ export function ProjectPage() {
 
       <div className="space-y-3">
         {roomList.map((r) => (
+          // biome-ignore lint/a11y/useSemanticElements: card with nested buttons can't be <a>
           <div
             key={r.id}
             role="link"

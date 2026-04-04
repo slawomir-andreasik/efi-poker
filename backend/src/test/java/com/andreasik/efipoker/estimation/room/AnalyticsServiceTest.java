@@ -386,5 +386,65 @@ class AnalyticsServiceTest extends BaseUnitTest {
       assertThat(result.getSummary().getConsensusCount()).isEqualTo(0);
       assertThat(result.getSummary().getTotalStoryPoints()).isCloseTo(0.0, within(0.001));
     }
+
+    @Test
+    void should_exclude_comment_only_drafts_from_analytics() {
+      // Arrange
+      UUID roomId = UUID.randomUUID();
+      UUID projectId = UUID.randomUUID();
+      UUID taskId = UUID.randomUUID();
+      UUID p1Id = UUID.randomUUID();
+      UUID p2Id = UUID.randomUUID();
+
+      Project project = Project.builder().id(projectId).name("P").slug("p").build();
+      Room room =
+          Room.builder()
+              .id(roomId)
+              .project(project)
+              .slug("DRF-TST")
+              .title("Draft Test")
+              .status(RoomStatus.REVEALED.name())
+              .build();
+
+      Task task = Task.builder().id(taskId).title("Task").room(room).build();
+      Participant p1 = Participant.builder().id(p1Id).nickname("Alice").project(project).build();
+      Participant p2 = Participant.builder().id(p2Id).nickname("Bob").project(project).build();
+
+      // Alice voted with SP, Bob only left a comment (no SP)
+      Estimate voted =
+          Estimate.builder()
+              .id(UUID.randomUUID())
+              .task(task)
+              .participant(p1)
+              .storyPoints("5")
+              .comment("looks good")
+              .build();
+      Estimate draftOnly =
+          Estimate.builder()
+              .id(UUID.randomUUID())
+              .task(task)
+              .participant(p2)
+              .storyPoints(null)
+              .comment("thinking about this...")
+              .build();
+
+      given(roomService.getRoom(roomId)).willReturn(room);
+      given(taskService.listByRoom(roomId)).willReturn(List.of(task));
+      given(participantService.listParticipants(projectId)).willReturn(List.of(p1, p2));
+      given(estimateService.getEstimatesByTaskIds(List.of(taskId)))
+          .willReturn(Map.of(taskId, List.of(voted, draftOnly)));
+
+      // Act
+      RoomAnalyticsResponse result = analyticsService.computeRoomAnalytics(roomId);
+
+      // Assert - draft should NOT appear in vote distribution
+      TaskAnalyticsEntry taskEntry = result.getTaskAnalytics().get(0);
+      assertThat(taskEntry.getVoteDistribution()).containsEntry("5", 1);
+      assertThat(taskEntry.getVoteDistribution()).doesNotContainKey(null);
+      assertThat(taskEntry.getVoteDistribution()).hasSize(1);
+
+      // Only Alice counted as participating (voted)
+      assertThat(result.getSummary().getParticipationRate()).isCloseTo(50.0, within(0.1));
+    }
   }
 }

@@ -1,4 +1,5 @@
 import type {
+  EstimateResponse,
   ParticipantProgressResponse,
   ParticipantResponse,
   ProjectAdminResponse,
@@ -6,6 +7,7 @@ import type {
   RoomDetailResponse,
   RoomResponse,
   RoomResultsResponse,
+  TaskWithEstimateResponse,
 } from '@/api/types';
 
 export function mockProject(overrides?: Partial<ProjectResponse>): ProjectResponse {
@@ -76,6 +78,35 @@ export function mockRoomResults(overrides?: Partial<RoomResultsResponse>): RoomR
     title: 'Results',
     status: 'REVEALED',
     tasks: [],
+    ...overrides,
+  };
+}
+
+export function mockEstimate(overrides?: Partial<EstimateResponse>): EstimateResponse {
+  return {
+    id: 'e-1',
+    participantId: 'p-1',
+    participantNickname: 'Alice',
+    storyPoints: '5',
+    createdAt: '2026-01-01',
+    ...overrides,
+  };
+}
+
+export function mockTask(overrides?: Partial<TaskWithEstimateResponse>): TaskWithEstimateResponse {
+  return {
+    id: 't-1',
+    title: 'Task 1',
+    sortOrder: 0,
+    myEstimate: null,
+    allEstimates: [],
+    averagePoints: null,
+    medianPoints: null,
+    finalEstimate: null,
+    votedCount: 0,
+    totalParticipants: 5,
+    revealed: false,
+    active: true,
     ...overrides,
   };
 }

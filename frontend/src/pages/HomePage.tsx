@@ -112,6 +112,7 @@ export function HomePage() {
   });
 
   // Clean up 404'd projects from localStorage
+  // biome-ignore lint/correctness/useExhaustiveDependencies: watch query status changes, not object references
   useEffect(() => {
     if (!identity) return;
     const removedSlugs = new Set<string>();
@@ -125,7 +126,6 @@ export function HomePage() {
     if (removedSlugs.size > 0) {
       setProjectEntries((prev) => prev.filter((p) => !removedSlugs.has(p.slug)));
     }
-    // biome-ignore lint/correctness/useExhaustiveDependencies: watch query status changes, not object references
   }, [roomQueries.map((q) => q.status).join(',')]);
 
   // Build projects with rooms data

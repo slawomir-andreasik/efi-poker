@@ -16,8 +16,8 @@ export function RoomJoinRedirectPage() {
   const [accumulating, setAccumulating] = useState(false);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: queryKeys.rooms.bySlug(roomSlug!),
-    queryFn: () => roomApi.bySlug(roomSlug!),
+    queryKey: queryKeys.rooms.bySlug(roomSlug as string),
+    queryFn: () => roomApi.bySlug(roomSlug as string),
     enabled: Boolean(roomSlug),
     retry: false,
   });

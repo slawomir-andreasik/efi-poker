@@ -21,10 +21,13 @@ export function Modal({ isOpen, onClose, title, maxWidth = 'max-w-md', children 
   if (!isOpen) return null;
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: modal backdrop click-to-close is a standard a11y pattern
+    // biome-ignore lint/a11y/useKeyWithClickEvents: Escape key handled via document-level listener in useEffect
     <div
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-[fade-in_0.2s_ease-out]"
       onClick={onClose}
     >
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: click only prevents event bubbling to backdrop */}
       <div
         role="dialog"
         aria-modal="true"

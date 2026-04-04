@@ -13,7 +13,7 @@ export function ProgressStats({ tasks, isRevealed }: ProgressStatsProps) {
       fullyVoted = 0,
       finalSet = 0;
     for (const t of tasks) {
-      if (t.myEstimate != null) myVotes++;
+      if (t.myEstimate?.storyPoints != null) myVotes++;
       if (t.totalParticipants > 0 && t.votedCount === t.totalParticipants) fullyVoted++;
       if (t.finalEstimate != null) finalSet++;
     }

@@ -1,5 +1,5 @@
 [versions]
-spring-boot = "4.0.4"
+spring-boot = "4.0.5"
 openapi-generator = "7.20.0"
 mapstruct = "1.6.3"
 testcontainers = "2.0.4"
