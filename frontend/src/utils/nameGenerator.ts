@@ -70,7 +70,7 @@ const ROOM_CODENAMES = [
 ];
 
 function pick(arr: readonly string[]): string {
-  return arr[Math.floor(Math.random() * arr.length)]!;
+  return arr[Math.floor(Math.random() * arr.length)] as string;
 }
 
 export function generateNickname(): string {

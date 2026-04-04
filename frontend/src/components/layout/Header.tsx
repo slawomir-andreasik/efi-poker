@@ -64,8 +64,8 @@ export function Header() {
 
   // Fetch rooms for share button (TanStack cache deduplicates with Breadcrumbs)
   const { data: rooms } = useQuery({
-    queryKey: queryKeys.projects.rooms(slug!),
-    queryFn: () => projectApi.rooms(slug!),
+    queryKey: queryKeys.projects.rooms(slug as string),
+    queryFn: () => projectApi.rooms(slug as string),
     enabled: Boolean(slug),
     staleTime: 10_000,
   });

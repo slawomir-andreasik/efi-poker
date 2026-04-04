@@ -23,6 +23,7 @@ export const Linkify = memo(function Linkify({ text }: { text: string }) {
   let match: RegExpExecArray | null;
   URL_REGEX.lastIndex = 0;
 
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex exec loop pattern
   while ((match = URL_REGEX.exec(text)) !== null) {
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));

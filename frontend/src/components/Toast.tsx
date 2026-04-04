@@ -37,7 +37,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   // Expose for e2e tests (dev only, tree-shaken in prod)
   if (process.env.NODE_ENV !== 'production') {
-    (window as any).__showToast = showToast;
+    (window as unknown as Record<string, unknown>).__showToast = showToast;
   }
 
   const typeIcons: Record<ToastType, { icon: typeof AlertCircle; color: string }> = {

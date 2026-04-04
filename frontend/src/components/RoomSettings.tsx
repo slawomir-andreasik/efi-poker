@@ -142,9 +142,15 @@ function BlurSaveInput({
 
   return (
     <div>
-      <label className="block text-xs text-efi-text-secondary mb-1">{label}</label>
+      <label
+        htmlFor={`blur-save-${label.toLowerCase().replace(/\s+/g, '-')}`}
+        className="block text-xs text-efi-text-secondary mb-1"
+      >
+        {label}
+      </label>
       {multiline ? (
         <TextArea
+          id={`blur-save-${label.toLowerCase().replace(/\s+/g, '-')}`}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onBlur={handleBlur}
@@ -155,6 +161,7 @@ function BlurSaveInput({
         />
       ) : (
         <TextInput
+          id={`blur-save-${label.toLowerCase().replace(/\s+/g, '-')}`}
           type="text"
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -204,7 +211,9 @@ function CommentTemplateField({
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <label className="text-xs text-efi-text-secondary">Comment Template</label>
+        <label htmlFor="comment-template" className="text-xs text-efi-text-secondary">
+          Comment Template
+        </label>
         <div className="flex gap-2">
           {value && (
             <button
@@ -227,6 +236,7 @@ function CommentTemplateField({
         </div>
       </div>
       <TextArea
+        id="comment-template"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onBlur={handleBlur}

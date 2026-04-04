@@ -75,10 +75,11 @@ export function DeadlineInput({ value, onChange }: DeadlineInputProps) {
 
   return (
     <div>
-      <label className="block text-xs text-efi-text-secondary mb-1">
+      <label htmlFor="deadline-input" className="block text-xs text-efi-text-secondary mb-1">
         Deadline <span className="text-efi-error">*</span>
       </label>
       <input
+        id="deadline-input"
         type="datetime-local"
         value={value}
         onChange={(e) => onChange(e.target.value)}

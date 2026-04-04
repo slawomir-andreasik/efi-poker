@@ -21,8 +21,8 @@ export function ProjectAnalyticsPage() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: queryKeys.analytics.project(slug!),
-    queryFn: () => analyticsApi.project(slug!),
+    queryKey: queryKeys.analytics.project(slug as string),
+    queryFn: () => analyticsApi.project(slug as string),
     enabled: Boolean(slug),
   });
 

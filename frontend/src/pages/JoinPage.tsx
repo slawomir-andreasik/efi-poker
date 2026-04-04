@@ -31,6 +31,7 @@ export function JoinPage() {
 
   const joinProject = useJoinProject(slug ?? '');
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: roomRedirect derived from roomParam (already in deps)
   useEffect(() => {
     if (!slug) {
       setMode('join-form');
@@ -105,7 +106,6 @@ export function JoinPage() {
     return () => {
       cancelled = true;
     };
-    // biome-ignore lint/correctness/useExhaustiveDependencies: roomRedirect derived from roomParam (already in deps)
   }, [slug, searchParams, showToast, navigate, roomParam]);
 
   async function handleJoin(e: React.FormEvent) {

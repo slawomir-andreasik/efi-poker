@@ -74,8 +74,8 @@ export function MobileSidebar({ open, onClose, onLogout }: MobileSidebarProps) {
 
   // Fetch rooms for expanded project
   const { data: rooms, isLoading: roomsLoading } = useQuery({
-    queryKey: queryKeys.projects.rooms(expandedSlug!),
-    queryFn: () => projectApi.rooms(expandedSlug!),
+    queryKey: queryKeys.projects.rooms(expandedSlug as string),
+    queryFn: () => projectApi.rooms(expandedSlug as string),
     enabled: Boolean(expandedSlug),
     staleTime: 10_000,
   });
@@ -92,9 +92,9 @@ export function MobileSidebar({ open, onClose, onLogout }: MobileSidebarProps) {
   );
 
   // Close on route change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: close sidebar on navigation, onClose is stable
   useEffect(() => {
     onClose();
-    // biome-ignore lint/correctness/useExhaustiveDependencies: close sidebar on navigation, onClose is stable
   }, [location.pathname]);
 
   // Close on Escape key
